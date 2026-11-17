@@ -1,0 +1,12 @@
+anthropic.claude-code
+arcticicestudio.nord-visual-studio-code
+bbenoist.qml
+catppuccin.catppuccin-vsc
+dracula-theme.theme-dracula
+enkia.tokyo-night
+jdinhlife.gruvbox
+miguelsolorio.fluent-icons
+miguelsolorio.symbols
+mvllow.rose-pine
+qufiwefefwoyn.kanagawa
+sainnhe.everforest

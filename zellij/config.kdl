@@ -1,0 +1,29 @@
+// ==============================================================================
+//  Quickshell Atelier - Zellij Configuration
+// ==============================================================================
+
+default_shell "zsh"
+pane_frames false
+mouse_mode true
+copy_on_select true
+mirror_session false
+
+themes {
+    atelier {
+        fg "#f4efff"
+        bg "#08060f"
+        black "#141022"
+        red "#ff6b7a"
+        green "#4ade80"
+        yellow "#ffb682"
+        blue "#7b93ff"
+        magenta "#c7a7ff"
+        cyan "#5aa0ff"
+        white "#d8dee9"
+        orange "#ff9d6c"
+    }
+}
+
+theme "atelier"
+default_layout "compact"
+simplified_ui true
