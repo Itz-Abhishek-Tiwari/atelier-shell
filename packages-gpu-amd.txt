@@ -1,0 +1,3 @@
+# Installed only when an AMD GPU is detected (lspci).
+vulkan-radeon
+lib32-vulkan-radeon

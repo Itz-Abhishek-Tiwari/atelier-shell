@@ -1,0 +1,4 @@
+# Installed only when an Intel GPU is detected (lspci).
+vulkan-intel
+lib32-vulkan-intel
+intel-media-driver

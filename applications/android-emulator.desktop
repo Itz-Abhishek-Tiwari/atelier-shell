@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=Android Emulator
+GenericName=Virtual Android phone
+Comment=Pixel 9 · Android 16 (API 36) for React Native development
+Exec=@HOME@/.config/scripts/android-emulator.sh
+Icon=/usr/share/icons/Papirus/48x48/apps/android-sdk.svg
+Terminal=false
+Categories=Development;Emulator;
+Keywords=android;emulator;avd;react;native;phone;
+Actions=cold;
+
+[Desktop Action cold]
+Name=Cold boot (ignore snapshot)
+Exec=@HOME@/.config/scripts/android-emulator.sh --cold

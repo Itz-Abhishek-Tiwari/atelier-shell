@@ -1,0 +1,8 @@
+#!/bin/sh
+# AudioTube (Kirigami) needs KDE's Qt Quick style "org.kde.desktop" (package qqc2-desktop-style).
+# Without it the app exits silently with code 255. Fall back to Fusion, which follows the
+# Atelier palette (qt6ct), until that package is installed; then this wrapper changes nothing.
+if [ -z "$QT_QUICK_CONTROLS_STYLE" ] && [ ! -f /usr/lib/qt6/qml/org/kde/desktop/qmldir ]; then
+    export QT_QUICK_CONTROLS_STYLE=Fusion
+fi
+exec /usr/bin/audiotube "$@"

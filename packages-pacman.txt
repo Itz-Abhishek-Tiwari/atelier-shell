@@ -1,0 +1,168 @@
+# Hyprland & Desktop Core
+hyprland
+hyprpaper
+kitty
+libnotify
+grim
+slurp
+swappy
+wf-recorder
+hyprsunset
+wl-clipboard
+cliphist
+jq
+fastfetch
+starship
+# polkit password prompts (started by hypr/conf/autostart.lua)
+polkit-kde-agent
+# lets root apps (gparted via pkexec) open the XWayland display
+xorg-xhost
+
+# Audio, Power & Media
+pipewire
+pipewire-pulse
+wireplumber
+playerctl
+upower
+brightnessctl
+
+# Qt6 Runtime (Quickshell)
+quickshell
+qt6-declarative
+qt6-svg
+qt6-5compat
+
+# Fonts & Icons
+ttf-jetbrains-mono-nerd
+inter-font
+noto-fonts-emoji
+
+# Build & Shell Essentials
+base-devel
+git
+zsh
+zsh-syntax-highlighting
+zsh-autosuggestions
+zsh-completions
+fzf
+eza
+bat
+btop
+openssh
+
+# Lightweight Modern CLI & Terminal Stack
+zed
+zellij
+yazi
+ripgrep
+fd
+zoxide
+
+# Developer Toolchain: Python
+python
+python-pip
+python-virtualenv
+ruff
+
+# Developer Toolchain: Node & JavaScript
+nodejs
+npm
+yarn
+pnpm
+
+# Developer Toolchain: Mobile, Android & iOS on Linux
+android-tools
+scrcpy
+jdk17-openjdk
+usbmuxd
+libimobiledevice
+
+# Developer Productivity & Containers
+lazygit
+docker
+docker-compose
+
+# Added: used by the Quickshell/Hyprland config
+hypridle
+hyprlock
+bluez
+bluez-utils
+networkmanager
+power-profiles-daemon
+cava
+wtype
+ffmpeg
+xdg-desktop-portal-hyprland
+dolphin
+ark
+unrar
+archlinux-xdg-menu
+gsettings-desktop-schemas
+
+# Wayland / session plumbing
+uwsm
+qt5-wayland
+qt6-wayland
+qqc2-desktop-style
+breeze
+polkit-gnome
+network-manager-applet
+xdg-utils
+gst-plugin-pipewire
+pipewire-alsa
+pipewire-jack
+libpulse
+# Terminal=true apps (nvim, yazi) open in the terminal picked in Settings → Default apps
+xdg-terminal-exec
+
+# Fonts, icons & themes (GTK themes are bundled in assets/gtk-themes.tar.xz)
+noto-fonts
+noto-fonts-cjk
+ttf-dejavu
+ttf-liberation
+ttf-space-mono-nerd
+papirus-icon-theme
+
+# iPhone as a webcam (quickshell/scripts/iphonecam.sh; module options in system/etc)
+dkms
+v4l2loopback-dkms
+v4l2loopback-utils
+ifuse
+
+# Apps
+loupe
+libreoffice-fresh
+ghostty
+firefox
+nautilus
+haruna
+gparted
+zathura
+zathura-pdf-mupdf
+spotify-launcher
+audiotube
+neovim
+# NamiConfig: builds Treesitter parsers (highlighting) + Snacks image previews
+tree-sitter-cli
+imagemagick
+vim
+nano
+htop
+smartmontools
+tigervnc
+stow
+unzip
+wget
+
+# Gaming (needs [multilib]; install.sh enables it)
+steam
+gamemode
+lib32-gamemode
+gamescope
+mangohud
+lib32-mangohud
+
+# System services (enabled by install.sh)
+ufw
+zram-generator
+sof-firmware
