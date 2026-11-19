@@ -1,0 +1,196 @@
+{
+    "appearance": {
+        "barPosition": "left",
+        "barWidth": 42,
+        "frame": 9,
+        "glass": 0.92,
+        "linkRounding": true,
+        "rounding": 0,
+        "wallDirection": "left",
+        "wallDuration": 800,
+        "wallTransition": "outline"
+    },
+    "bar": {
+        "minWorkspaces": 4,
+        "openOnHover": true,
+        "pinned": [
+            {
+                "cmd": "firefox",
+                "color": "peach",
+                "icon": "󰈹"
+            },
+            {
+                "cmd": "ghostty || kitty",
+                "color": "green",
+                "icon": "󰆍"
+            },
+            {
+                "cmd": "spotify-launcher || spotify",
+                "color": "green",
+                "icon": "󰓇"
+            },
+            {
+                "cmd": "vesktop || discord",
+                "color": "lavender",
+                "icon": "󰙯"
+            }
+        ],
+        "showApps": true,
+        "showClock": true,
+        "showLogo": true,
+        "showPower": true,
+        "showStatus": true,
+        "showTitle": true,
+        "showTray": true,
+        "showWorkspaces": true
+    },
+    "behavior": {
+        "autoGameMode": true,
+        "osdSeconds": 1.6,
+        "searchUrl": "https://www.google.com/search?q=",
+        "terminal": "ghostty"
+    },
+    "displays": {
+        "monitors": [
+            {
+                "mode": "1366x768@59.79Hz",
+                "output": "HDMI-A-1",
+                "position": "auto",
+                "scale": "auto",
+                "transform": 3
+            },
+            {
+                "mode": "1920x1080@120.21Hz",
+                "output": "eDP-1",
+                "position": "auto",
+                "scale": 1,
+                "transform": 0
+            }
+        ]
+    },
+    "general": {
+        "animSpeed": 1,
+        "clock24": false,
+        "userName": ""
+    },
+    "greeter": {
+        "autoSync": true,
+        "blur": 0.75,
+        "dim": 0.38,
+        "greeting": "",
+        "layout": "panel",
+        "showPower": true,
+        "showSystem": true,
+        "showWeather": true
+    },
+    "input": {
+        "accelProfile": "adaptive",
+        "capsLock": "default",
+        "followMouse": true,
+        "kbLayout": "us",
+        "kbOptions": "",
+        "kbVariant": "",
+        "layoutSwitch": "",
+        "leftHanded": false,
+        "mouseCurve": true,
+        "naturalScroll": true,
+        "numlock": false,
+        "repeatDelay": 600,
+        "repeatRate": 25,
+        "scrollFactor": 1.35,
+        "sensitivity": 0,
+        "tpClickfinger": true,
+        "tpDragLock": false,
+        "tpDwt": true,
+        "tpNatural": true,
+        "tpScroll": 0.45,
+        "tpTap": true
+    },
+    "keybinds": {
+        "custom": [
+        ],
+        "overrides": {
+        }
+    },
+    "lock": {
+        "depthClockSize": 0.12,
+        "depthColor": "auto",
+        "depthEffect": true,
+        "depthFont": "serif",
+        "depthLayout": "horizontal",
+        "depthPos": "custom",
+        "depthShadow": true,
+        "depthStyle": "glass",
+        "depthWeight": "black",
+        "depthX": 0.636,
+        "depthY": 0.285,
+        "theme": "atelier"
+    },
+    "nightLight": {
+        "from": "20:00",
+        "on": false,
+        "schedule": false,
+        "temperature": 5200,
+        "to": "07:00"
+    },
+    "notifications": {
+        "lockShowCount": true,
+        "maxPopups": 5,
+        "popupSeconds": 5
+    },
+    "phone": {
+        "mode": "auto",
+        "wifiAddress": ""
+    },
+    "recorder": {
+        "audio": "system",
+        "folder": "~/Videos/Recordings",
+        "fps": 60
+    },
+    "widgets": {
+        "clockColor": "accent",
+        "clockFont": "serif",
+        "clockSize": 164,
+        "clockWeight": "bold",
+        "dateCaps": true,
+        "dateFormat": "long",
+        "enabled": true,
+        "greetingText": "",
+        "gutter": 64,
+        "hAlign": "left",
+        "leadingZero": true,
+        "opacity": 0.9,
+        "scale": 0.8,
+        "shadow": "soft",
+        "showAmPm": true,
+        "showDate": true,
+        "showGreeting": true,
+        "showMedia": true,
+        "showSystem": true,
+        "showTasks": true,
+        "showWeather": true,
+        "tasksFile": "~/day_plan.md",
+        "textColor": "light",
+        "vAlign": "bottom",
+        "weatherLocation": "neemuch",
+        "weatherUnits": "metric"
+    },
+    "windows": {
+        "activeOpacity": 0.95,
+        "animations": true,
+        "blur": true,
+        "blurPasses": 3,
+        "dwindlePreserveSplit": true,
+        "dwindleSmartSplit": true,
+        "gapsIn": 2,
+        "gapsOut": 8,
+        "inactiveOpacity": 0.95,
+        "layout": "dwindle",
+        "masterFactor": 0.55,
+        "masterNewOnTop": false,
+        "masterOrientation": "left",
+        "rounding": 12,
+        "scrollColumnWidth": 0.5,
+        "shadow": true
+    }
+}

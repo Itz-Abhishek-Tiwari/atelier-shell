@@ -1,0 +1,1275 @@
+#!/usr/bin/env python3
+"""atelier-theme — one palette, applied everywhere.
+
+    atelier-theme list            JSON list of themes (used by the Quickshell picker)
+    atelier-theme current         id of the active theme
+    atelier-theme apply <id>      apply a theme system-wide
+    atelier-theme toggle-mode     switch between the light and dark side of the theme
+    atelier-theme setup           one-time: install the VS Code theme extensions
+    atelier-theme wallpaper [img] regenerate wallpaper-dark/-light from the wallpaper (re-applies if active)
+
+Themes are JSON files in <repo>/theming/themes/ and ~/.config/atelier/themes/.
+Targets: Quickshell, Hyprland, kitty, Ghostty, VS Code (+ Antigravity), GTK 3/4 +
+gsettings (GNOME apps), Qt/KDE apps (qt6ct palette + kdeglobals), starship, zsh (syntax highlighting, autosuggestions, fzf, bat), btop,
+Spotify (spicetify theme 'atelier'), Discord (Vesktop/Vencord/Equicord/Legcord/BetterDiscord theme).
+"""
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+HOME = Path.home()
+CONF = HOME / ".config"
+REPO_THEMES = Path(os.path.realpath(__file__)).parent / "themes"
+USER_THEMES = CONF / "atelier/themes"
+STATE_DIR = CONF / "atelier"
+STATE = STATE_DIR / "state.json"
+
+
+# ── helpers ──────────────────────────────────────────────────────────────────
+def hex6(c):
+    return c.lstrip("#")[:6].lower()
+
+
+def rgb(c):
+    h = hex6(c)
+    return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def write(path, text):
+    """Write a file, replacing a symlink (old NamiThemes links) instead of following it."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.is_symlink():
+        path.unlink()
+    tmp = path.with_name(path.name + ".atelier-tmp")
+    tmp.write_text(text)
+    tmp.replace(path)
+
+
+def run(*cmd):
+    try:
+        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=15)
+    except Exception:
+        pass
+
+
+def spawn(*cmd):
+    try:
+        subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+    except Exception:
+        pass
+
+
+def themes():
+    out = {}
+    for d in (REPO_THEMES, USER_THEMES):
+        if d.is_dir():
+            for f in sorted(d.glob("*.json")):
+                try:
+                    t = json.loads(f.read_text())
+                    out[t["id"]] = t
+                except Exception as e:
+                    print(f"skipping {f}: {e}", file=sys.stderr)
+    return out
+
+
+def state():
+    try:
+        return json.loads(STATE.read_text())
+    except Exception:
+        return {}
+
+
+def save_state(s):
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    STATE.write_text(json.dumps(s, indent=2))
+
+
+def contrast(a, b):
+    """WCAG contrast ratio of two #rrggbb colours."""
+    def lum(h):
+        r, g, b = (_lin(x / 255) for x in rgb(h))
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    x, y = lum(a), lum(b)
+    return (max(x, y) + 0.05) / (min(x, y) + 0.05)
+
+
+def deepen(col, ink, target=4.5):
+    """`col`, darkened (same hue and chroma, lower OKLCH lightness) until `ink` on it reaches
+    `target` contrast. Used for filled backgrounds (selection, active chips, buttons)."""
+    if contrast(col, ink) >= target:
+        return col
+    L, C, H = oklch_of(*rgb(col))
+    out = col
+    while L > 0.05 and contrast(out, ink) < target:
+        L -= 0.015
+        out = oklch_hex(L, C, H)
+    return out
+
+
+def resolved(t):
+    """Theme with derived roles: accent (text/icons), accentFill + onAccent (filled backgrounds).
+    Text on a filled colour is always the theme's light ink: dark text on a mid-tone accent looked
+    muddy (wallpaper themes), so the fill is deepened until the light ink reaches 4.5:1."""
+    c = dict(t["colors"])
+    c["accent"] = c.get(t.get("accent", "mauve"), t.get("accent", "#cba6f7"))
+    c["onAccent"] = c["text"] if t["variant"] == "dark" else c["base"]
+    c["accentFill"] = deepen(c["accent"], c["onAccent"])
+    c["redFill"] = deepen(c["red"], c["onAccent"])
+    return c
+
+
+def icon_theme(t):
+    """The theme's icon set (a Colloid variant) if installed, else plain Colloid-Dark/Light."""
+    icons = t.get("icons") or ""
+    icon_dirs = [HOME / ".local/share/icons", HOME / ".icons", Path("/usr/share/icons")]
+    if not icons or not any((d / icons).is_dir() for d in icon_dirs):
+        icons = "Colloid-Dark" if t["variant"] == "dark" else "Colloid-Light"
+    return icons
+
+
+# UI fonts for Qt/KDE apps (the terminal font made every Qt app's labels monospace)
+UI_FONT = ("Inter", 10)
+MONO_FONT = ("JetBrainsMono Nerd Font", 10)
+
+
+def qt_font(name, size, weight=400):
+    """qt6ct / kdeglobals font string (QFont::toString, Qt 6 format)."""
+    return f"{name},{size},-1,5,{weight},0,0,0,0,0,0,0,0,0,0,1"
+
+
+def qt_style():
+    """KDE's Breeze widget style when installed (`breeze` package), else Fusion."""
+    plugins = [Path("/usr/lib/qt6/plugins/styles"), HOME / ".local/lib/qt6/plugins/styles"]
+    return "Breeze" if any(any(p.glob("breeze*.so")) for p in plugins if p.is_dir()) else "Fusion"
+
+
+def ini_merge(path, sections):
+    """Update only the given [section] keys in an INI-style file, keeping everything else
+    (kdeglobals also holds KDE app settings: file-dialog state, shortcuts, previews…)."""
+    path = Path(path)
+    text = path.read_text() if path.exists() else ""
+    blocks = [[None, []]]                                # [section name, lines]
+    for line in text.splitlines():
+        m = re.match(r"^\[(.+)\]\s*$", line)
+        if m:
+            blocks.append([m.group(1), []])
+        else:
+            blocks[-1][1].append(line)
+    for sec, kv in sections.items():
+        blk = next((b for b in blocks if b[0] == sec), None)
+        if blk is None:
+            blk = [sec, []]
+            blocks.append(blk)
+        lines = blk[1]
+        for k, v in kv.items():
+            for i, l in enumerate(lines):
+                if re.match(rf"^{re.escape(k)}\s*=", l):
+                    lines[i] = f"{k}={v}"
+                    break
+            else:
+                j = len(lines)
+                while j and not lines[j - 1].strip():
+                    j -= 1
+                lines.insert(j, f"{k}={v}")
+    out = []
+    for name, lines in blocks:
+        if name is not None:
+            if out and out[-1].strip():
+                out.append("")
+            out.append(f"[{name}]")
+        out += lines
+    write(path, "\n".join(out).strip("\n") + "\n")
+
+
+# ── targets ──────────────────────────────────────────────────────────────────
+def t_quickshell(t, c):
+    data = dict(t)
+    data["colors"] = c
+    write(STATE_DIR / "theme.json", json.dumps(data, indent=2, ensure_ascii=False))
+    write(CONF / ".current_theme", t["variant"] + "\n")   # legacy light/dark flag
+
+
+def t_hyprland(t, c):
+    a = lambda col, al="ee": f"rgba({hex6(col)}{al})"
+    # NamiConfig look: a thin violet -> red gradient on the focused window, a muted grey on the
+    # rest, and no glow (Nami: rgba(8839efee) rgba(e64553ee) 45deg / rgba(5c5f77aa))
+    write(CONF / "hypr/theme.lua", f"""-- Generated by atelier-theme ({t['name']}). Do not edit; run `atelier-theme apply <id>`.
+return {{
+    name              = "{t['id']}",
+    -- active: mauve flowing into red at 45 deg (NamiConfig style); inactive: muted grey
+    active_border     = {{ "{a(c['mauve'])}", "{a(c['red'])}" }},
+    inactive_border   = "{a(c['surface2'], 'aa')}",
+    group_active      = {{ "{a(c['mauve'])}", "{a(c['red'])}" }},
+    group_inactive    = "{a(c['surface2'], 'aa')}",
+    groupbar_active   = "{a(c['mauve'], 'cc')}",
+    groupbar_inactive = "{a(c['surface1'], '99')}",
+    groupbar_text     = "{a(c['text'], 'ff')}",
+    -- plain, tight dark shadow (no coloured glow)
+    shadow            = 0x55{hex6(c['crust'])},
+    shadow_inactive   = 0x33{hex6(c['crust'])},
+}}
+""")
+    # Recolour the running compositor without a full `hyprctl reload` (a reload re-runs the
+    # whole config and can make the cursor hitch); theme.lua covers the next login.
+    run("hyprctl", "eval",
+        'local t = dofile(os.getenv("HOME") .. "/.config/hypr/theme.lua"); hl.config({ '
+        'general = { col = { active_border = { colors = t.active_border, angle = 45 }, inactive_border = t.inactive_border } }, '
+        'decoration = { shadow = { color = t.shadow, color_inactive = t.shadow_inactive } }, '
+        'group = { col = { border_active = { colors = t.group_active, angle = 45 }, border_inactive = t.group_inactive }, '
+        'groupbar = { col = { active = t.groupbar_active, inactive = t.groupbar_inactive }, text_color = t.groupbar_text } } })')
+
+
+def term_colors(t, c):
+    return {"bg": c["base"], "fg": c["text"], "cursor": c["accent"], "sel_bg": c["surface1"], "sel_fg": c["text"], "ansi": t["ansi"]}
+
+
+def t_kitty(t, c):
+    tc = term_colors(t, c)
+    lines = [f"# Generated by atelier-theme ({t['name']})",
+             f"foreground {tc['fg']}", f"background {tc['bg']}",
+             f"selection_foreground {tc['sel_fg']}", f"selection_background {tc['sel_bg']}",
+             f"cursor {tc['cursor']}", f"cursor_text_color {c['base']}", f"url_color {c['blue']}",
+             f"active_border_color {c['accent']}", f"inactive_border_color {c['surface1']}",
+             f"active_tab_foreground {c['crust']}", f"active_tab_background {c['accent']}",
+             f"inactive_tab_foreground {c['text']}", f"inactive_tab_background {c['mantle']}",
+             f"tab_bar_background {c['crust']}", f"mark1_background {c['lavender']}"]
+    lines += [f"color{i} {col}" for i, col in enumerate(tc["ansi"])]
+    write(CONF / "kitty/theme.conf", "\n".join(lines) + "\n")
+    run("pkill", "-SIGUSR1", "-x", "kitty")
+
+
+def t_ghostty(t, c):
+    tc = term_colors(t, c)
+    lines = [f"# Generated by atelier-theme ({t['name']})"]
+    lines += [f"palette = {i}={col}" for i, col in enumerate(tc["ansi"])]
+    lines += [f"background = {tc['bg']}", f"foreground = {tc['fg']}", f"cursor-color = {tc['cursor']}",
+              f"cursor-text = {c['base']}", f"selection-background = {tc['sel_bg']}",
+              f"selection-foreground = {tc['sel_fg']}"]
+    write(CONF / "ghostty/themes/atelier", "\n".join(lines) + "\n")
+    cfg = CONF / "ghostty/config"
+    if cfg.exists():
+        s = cfg.read_text()
+        s = re.sub(r"(?m)^theme\s*=.*$", "theme = atelier", s) if re.search(r"(?m)^theme\s*=", s) else "theme = atelier\n" + s
+        s = re.sub(r"(?m)^cursor-color\s*=.*\n", "", s)   # the theme sets the cursor colour
+        cfg.write_text(s)
+    run("pkill", "-SIGUSR2", "-x", "ghostty")             # ghostty: reload config
+
+
+def vscode_colors(t, c):
+    """Calm, borderless VS Code chrome from the palette: one surface (base) for editor, sidebar,
+    panel, tabs, title and status bar, hairline separators, floating widgets on mantle, the
+    accent only for focus marks. Applied over any colour theme (workbench.colorCustomizations)."""
+    dark = t["variant"] == "dark"
+    A = lambda role, a: "#" + hex6(c[role]) + a          # role colour with alpha
+    none = "#00000000"
+    hair = A("surface0", "cc" if dark else "ff")
+    base, mantle = c["base"], c["mantle"]
+    col = {
+        "focusBorder": none, "contrastBorder": none, "foreground": c["subtext1"],
+        "descriptionForeground": c["overlay1"], "disabledForeground": c["overlay0"],
+        "icon.foreground": c["subtext0"], "errorForeground": c["red"],
+        "widget.shadow": "#00000055" if dark else "#00000018", "widget.border": hair,
+        "selection.background": A("accent", "40"), "sash.hoverBorder": c["accent"],
+        "textLink.foreground": c["accent"], "textLink.activeForeground": c["accent"],
+        "window.activeBorder": base, "window.inactiveBorder": base,
+        # title bar + command centre
+        "titleBar.activeBackground": base, "titleBar.inactiveBackground": base,
+        "titleBar.activeForeground": c["subtext0"], "titleBar.inactiveForeground": c["overlay0"],
+        "titleBar.border": hair,
+        "commandCenter.background": A("surface0", "70"), "commandCenter.border": none,
+        "commandCenter.foreground": c["subtext0"], "commandCenter.activeBackground": c["surface0"],
+        "commandCenter.activeForeground": c["text"], "commandCenter.inactiveBorder": none,
+        # activity bar (side or top)
+        "activityBar.background": base, "activityBar.foreground": c["text"],
+        "activityBar.inactiveForeground": c["overlay0"], "activityBar.border": hair,
+        "activityBar.activeBorder": c["accent"], "activityBar.activeBackground": none,
+        "activityBarTop.foreground": c["text"], "activityBarTop.inactiveForeground": c["overlay0"],
+        "activityBarTop.activeBorder": c["accent"],
+        "activityBarBadge.background": c["accentFill"], "activityBarBadge.foreground": c["onAccent"],
+        # side bar + lists
+        "sideBar.background": base, "sideBar.foreground": c["subtext0"], "sideBar.border": hair,
+        "sideBarTitle.foreground": c["subtext0"], "sideBarSectionHeader.background": base,
+        "sideBarSectionHeader.foreground": c["subtext1"], "sideBarSectionHeader.border": none,
+        "list.activeSelectionBackground": A("surface0", "d0"), "list.activeSelectionForeground": c["text"],
+        "list.inactiveSelectionBackground": A("surface0", "80"), "list.inactiveSelectionForeground": c["text"],
+        "list.hoverBackground": A("surface0", "60"), "list.hoverForeground": c["text"],
+        "list.focusOutline": none, "list.focusAndSelectionOutline": none, "list.inactiveFocusOutline": none,
+        "list.highlightForeground": c["accent"], "list.dropBackground": A("accent", "20"),
+        "tree.indentGuidesStroke": A("surface1", "90"), "tree.inactiveIndentGuidesStroke": A("surface0", "90"),
+        # editor groups + tabs: no boxes, a thin accent line under the active tab
+        "editorGroupHeader.tabsBackground": base, "editorGroupHeader.tabsBorder": none,
+        "editorGroupHeader.noTabsBackground": base, "editorGroup.border": hair,
+        "editorGroup.dropBackground": A("accent", "18"),
+        "tab.activeBackground": base, "tab.inactiveBackground": base, "tab.hoverBackground": A("surface0", "50"),
+        "tab.activeForeground": c["text"], "tab.inactiveForeground": c["overlay1"],
+        "tab.unfocusedActiveForeground": c["subtext0"], "tab.unfocusedInactiveForeground": c["overlay0"],
+        "tab.border": none, "tab.activeBorderTop": none, "tab.unfocusedActiveBorderTop": none,
+        "tab.activeBorder": c["accent"], "tab.unfocusedActiveBorder": none,
+        "tab.activeModifiedBorder": c["accent"], "tab.inactiveModifiedBorder": A("accent", "80"),
+        "breadcrumb.background": base, "breadcrumb.foreground": c["overlay1"],
+        "breadcrumb.focusForeground": c["text"], "breadcrumb.activeSelectionForeground": c["accent"],
+        # editor
+        "editor.background": base, "editor.foreground": c["text"],
+        "editor.lineHighlightBackground": A("surface0", "55"), "editor.lineHighlightBorder": none,
+        "editor.selectionBackground": A("accent", "38"), "editor.inactiveSelectionBackground": A("accent", "1c"),
+        "editor.selectionHighlightBackground": A("accent", "1c"),
+        "editor.wordHighlightBackground": A("surface1", "60"), "editor.wordHighlightStrongBackground": A("surface1", "90"),
+        "editor.findMatchBackground": A("peach", "55"), "editor.findMatchHighlightBackground": A("peach", "28"),
+        "editor.rangeHighlightBackground": A("surface0", "60"),
+        "editorCursor.foreground": c["accent"],
+        "editorLineNumber.foreground": A("overlay0", "b0"), "editorLineNumber.activeForeground": c["subtext1"],
+        "editorIndentGuide.background1": A("surface0", "b0"), "editorIndentGuide.activeBackground1": c["surface2"],
+        "editorWhitespace.foreground": A("overlay0", "60"), "editorRuler.foreground": A("surface0", "b0"),
+        "editorBracketMatch.background": A("surface1", "70"), "editorBracketMatch.border": none,
+        "editorGutter.background": base, "editorGutter.addedBackground": c["green"],
+        "editorGutter.modifiedBackground": c["blue"], "editorGutter.deletedBackground": c["red"],
+        "editorOverviewRuler.border": none, "editorOverviewRuler.background": base,
+        "editorError.foreground": c["red"], "editorWarning.foreground": c["yellow"],
+        "editorInfo.foreground": c["blue"], "editorHint.foreground": c["teal"],
+        "editorInlayHint.background": A("surface0", "80"), "editorInlayHint.foreground": c["overlay1"],
+        "editorCodeLens.foreground": c["overlay0"], "editorLink.activeForeground": c["accent"],
+        "editorStickyScroll.background": base, "editorStickyScroll.border": hair,
+        "editorStickyScrollHover.background": c["surface0"], "minimap.background": base,
+        # floating widgets
+        "editorWidget.background": mantle, "editorWidget.border": hair, "editorWidget.foreground": c["text"],
+        "editorSuggestWidget.background": mantle, "editorSuggestWidget.border": hair,
+        "editorSuggestWidget.foreground": c["subtext1"], "editorSuggestWidget.selectedBackground": c["surface0"],
+        "editorSuggestWidget.selectedForeground": c["text"], "editorSuggestWidget.highlightForeground": c["accent"],
+        "editorHoverWidget.background": mantle, "editorHoverWidget.border": hair,
+        "quickInput.background": mantle, "quickInput.foreground": c["text"], "quickInputTitle.background": mantle,
+        "quickInputList.focusBackground": c["surface0"], "quickInputList.focusForeground": c["text"],
+        "quickInputList.focusIconForeground": c["text"],
+        "pickerGroup.foreground": c["accent"], "pickerGroup.border": hair,
+        "menu.background": mantle, "menu.foreground": c["text"], "menu.border": hair,
+        "menu.selectionBackground": c["surface0"], "menu.selectionForeground": c["text"],
+        "menu.separatorBackground": hair, "menubar.selectionBackground": c["surface0"],
+        "notifications.background": mantle, "notifications.border": hair,
+        "notificationCenterHeader.background": mantle, "notificationToast.border": hair,
+        "peekView.border": c["accent"], "peekViewEditor.background": mantle, "peekViewResult.background": mantle,
+        "peekViewTitle.background": mantle, "peekViewEditor.matchHighlightBackground": A("peach", "40"),
+        "peekViewResult.matchHighlightBackground": A("peach", "40"),
+        "peekViewResult.selectionBackground": c["surface0"],
+        # controls
+        "input.background": A("surface0", "90"), "input.border": none, "input.foreground": c["text"],
+        "input.placeholderForeground": c["overlay0"], "inputOption.activeBorder": none,
+        "inputOption.activeBackground": A("accent", "30"), "inputOption.activeForeground": c["text"],
+        "dropdown.background": mantle, "dropdown.border": hair, "dropdown.foreground": c["text"],
+        "dropdown.listBackground": mantle,
+        "button.background": c["accentFill"], "button.foreground": c["onAccent"],
+        "button.hoverBackground": mix(c["accentFill"], c["onAccent"], 0.12), "button.border": none,
+        "button.separator": A("text", "40"),
+        "button.secondaryBackground": c["surface0"], "button.secondaryForeground": c["text"],
+        "button.secondaryHoverBackground": c["surface1"],
+        "checkbox.background": c["surface0"], "checkbox.border": none,
+        "badge.background": c["accentFill"], "badge.foreground": c["onAccent"],
+        "progressBar.background": c["accent"],
+        "keybindingLabel.background": c["surface0"], "keybindingLabel.foreground": c["text"],
+        "keybindingLabel.border": none, "keybindingLabel.bottomBorder": none,
+        "scrollbar.shadow": none, "scrollbarSlider.background": A("overlay0", "30"),
+        "scrollbarSlider.hoverBackground": A("overlay0", "50"), "scrollbarSlider.activeBackground": A("overlay0", "70"),
+        "settings.headerForeground": c["text"], "settings.modifiedItemIndicator": c["accent"],
+        "settings.focusedRowBackground": A("surface0", "40"), "settings.focusedRowBorder": none,
+        # panel + status bar
+        "panel.background": base, "panel.border": hair, "panelSection.border": hair,
+        "panelTitle.activeForeground": c["text"], "panelTitle.inactiveForeground": c["overlay0"],
+        "panelTitle.activeBorder": c["accent"],
+        "statusBar.background": base, "statusBar.foreground": c["overlay1"], "statusBar.border": hair,
+        "statusBar.focusBorder": none, "statusBar.noFolderBackground": base, "statusBar.noFolderBorder": hair,
+        "statusBar.debuggingBackground": base, "statusBar.debuggingForeground": c["peach"],
+        "statusBar.debuggingBorder": hair,
+        "statusBarItem.hoverBackground": A("surface0", "90"), "statusBarItem.activeBackground": c["surface0"],
+        "statusBarItem.remoteBackground": base, "statusBarItem.remoteForeground": c["accent"],
+        "statusBarItem.prominentBackground": c["surface0"], "statusBarItem.focusBorder": none,
+        "statusBarItem.errorBackground": base, "statusBarItem.errorForeground": c["red"],
+        "statusBarItem.warningBackground": base, "statusBarItem.warningForeground": c["yellow"],
+        # git + diff
+        "gitDecoration.modifiedResourceForeground": c["yellow"], "gitDecoration.addedResourceForeground": c["green"],
+        "gitDecoration.untrackedResourceForeground": c["green"], "gitDecoration.deletedResourceForeground": c["red"],
+        "gitDecoration.ignoredResourceForeground": c["overlay0"], "gitDecoration.conflictingResourceForeground": c["peach"],
+        "diffEditor.insertedTextBackground": A("green", "22"), "diffEditor.removedTextBackground": A("red", "22"),
+        "diffEditor.insertedLineBackground": A("green", "12"), "diffEditor.removedLineBackground": A("red", "12"),
+        "diffEditor.border": hair,
+        # terminal
+        "terminal.background": base, "terminal.foreground": c["text"], "terminal.border": hair,
+        "terminalCursor.foreground": c["accent"], "terminal.selectionBackground": A("accent", "38"),
+        "welcomePage.background": base, "walkThrough.embeddedEditorBackground": mantle,
+    }
+    names = ["Black", "Red", "Green", "Yellow", "Blue", "Magenta", "Cyan", "White"]
+    ansi = t.get("ansi") or []
+    if len(ansi) >= 16:
+        for i, n in enumerate(names):
+            col[f"terminal.ansi{n}"] = ansi[i]
+            col[f"terminal.ansiBright{n}"] = ansi[i + 8]
+    return col
+
+
+def vscode_syntax(t, c):
+    """Syntax colours from the palette roles (Catppuccin-style mapping), for themes without a
+    VS Code extension of their own (the wallpaper themes run on Default Dark/Light Modern)."""
+    rules = [
+        (["comment", "punctuation.definition.comment"], c["overlay1"], "italic"),
+        (["string", "punctuation.definition.string"], c["green"], ""),
+        (["string.regexp", "constant.character.escape"], c["pink"], ""),
+        (["constant.numeric", "constant.language", "constant.other", "support.constant"], c["peach"], ""),
+        (["keyword", "storage", "storage.type", "storage.modifier", "keyword.control"], c["mauve"], ""),
+        (["keyword.operator", "punctuation.accessor", "punctuation.separator.key-value"], c["sky"], ""),
+        (["entity.name.function", "support.function", "meta.function-call entity.name.function"], c["blue"], ""),
+        (["entity.name.type", "entity.name.class", "support.type", "support.class",
+          "entity.other.inherited-class", "entity.name.namespace"], c["yellow"], ""),
+        (["variable", "variable.other"], c["text"], ""),
+        (["variable.parameter"], c["red"], "italic"),
+        (["variable.language"], c["red"], "italic"),
+        (["variable.other.property", "support.variable.property", "meta.object-literal.key",
+          "support.type.property-name"], c["lavender"], ""),
+        (["entity.name.tag"], c["blue"], ""),
+        (["entity.other.attribute-name"], c["yellow"], "italic"),
+        (["meta.decorator", "entity.name.function.decorator", "punctuation.decorator"], c["peach"], ""),
+        (["punctuation", "meta.brace"], c["subtext0"], ""),
+        (["markup.heading", "entity.name.section"], c["accent"], "bold"),
+        (["markup.bold"], c["text"], "bold"), (["markup.italic"], c["text"], "italic"),
+        (["markup.inline.raw", "markup.fenced_code"], c["green"], ""),
+        (["markup.underline.link"], c["blue"], "underline"),
+        (["markup.inserted"], c["green"], ""), (["markup.deleted"], c["red"], ""),
+    ]
+    tm = []
+    for scopes, fg, style in rules:
+        s = {"foreground": fg}
+        if style:
+            s["fontStyle"] = style
+        tm.append({"scope": scopes, "settings": s})
+    semantic = {
+        "function": c["blue"], "method": c["blue"], "parameter": {"foreground": c["red"], "italic": True},
+        "property": c["lavender"], "variable": c["text"], "variable.readonly": c["peach"],
+        "type": c["yellow"], "class": c["yellow"], "interface": c["yellow"], "enum": c["yellow"],
+        "struct": c["yellow"], "namespace": c["yellow"], "typeParameter": c["yellow"],
+        "enumMember": c["teal"], "keyword": c["mauve"], "string": c["green"], "number": c["peach"],
+        "comment": {"foreground": c["overlay1"], "italic": True}, "macro": c["peach"],
+        "decorator": c["peach"], "selfParameter": {"foreground": c["red"], "italic": True},
+    }
+    return {"textMateRules": tm}, {"enabled": True, "rules": semantic}
+
+
+def set_vscode_theme(settings_path, theme_name, dark, colors=None, syntax=None):
+    p = Path(settings_path)
+    if not p.parent.exists():
+        return
+    text = p.read_text() if p.exists() else "{}"
+    try:
+        data = json.loads(text) if text.strip() else {}
+        data["workbench.colorTheme"] = theme_name
+        data["window.autoDetectColorScheme"] = False
+        if colors is not None:
+            data["workbench.colorCustomizations"] = colors
+        # palette syntax only under the themes that need it; extension themes keep their own
+        scope = f"[{theme_name}]"                         # must match the theme id exactly
+        tm, sem = syntax or ({}, {})
+        data["editor.tokenColorCustomizations"] = {scope: tm} if syntax else {}
+        data["editor.semanticTokenColorCustomizations"] = {scope: sem} if syntax else {}
+        p.write_text(json.dumps(data, indent=4, ensure_ascii=False) + "\n")
+    except json.JSONDecodeError:
+        # settings.json with comments: patch the single key in place
+        if '"workbench.colorTheme"' in text:
+            text = re.sub(r'"workbench\.colorTheme"\s*:\s*"[^"]*"', f'"workbench.colorTheme": "{theme_name}"', text)
+        else:
+            text = text.replace("{", "{\n    \"workbench.colorTheme\": \"%s\"," % theme_name, 1)
+        p.write_text(text)
+
+
+BUILTIN_VSCODE = {"Default Dark Modern": "Dark Modern", "Default Light Modern": "Light Modern",
+                  "Dark Modern": "Dark Modern", "Light Modern": "Light Modern"}
+
+
+def t_vscode(t, c):
+    v = t.get("vscode") or {}
+    dark = t["variant"] == "dark"
+    theme = v.get("theme") or ("Dark Modern" if dark else "Light Modern")
+    # VS Code 1.10x renamed the built-ins ("Default Dark Modern" -> "Dark Modern"); old palettes
+    # still carry the old id, and a token scope on the old id silently matches nothing
+    theme = BUILTIN_VSCODE.get(theme, theme)
+    colors = vscode_colors(t, c)
+    # the built-in Modern themes get palette syntax; extension themes (Catppuccin, Nord, ...) keep theirs
+    syntax = vscode_syntax(t, c) if theme in BUILTIN_VSCODE.values() else None
+    for app in ("Code", "Antigravity"):
+        set_vscode_theme(CONF / app / "User/settings.json", theme, dark, colors, syntax)
+
+
+def t_gtk(t, c):
+    dark = t["variant"] == "dark"
+    css = f"""/* Generated by atelier-theme ({t['name']}) — libadwaita / GTK named colours */
+@define-color accent_color {c['accent']};
+@define-color accent_bg_color {c['accentFill']};
+@define-color accent_fg_color {c['onAccent']};
+@define-color destructive_color {c['red']};
+@define-color destructive_bg_color {c['redFill']};
+@define-color destructive_fg_color {c['onAccent']};
+@define-color success_color {c['green']};
+@define-color success_bg_color {c['green']};
+@define-color warning_color {c['yellow']};
+@define-color warning_bg_color {c['yellow']};
+@define-color error_color {c['red']};
+@define-color error_bg_color {c['red']};
+@define-color window_bg_color {c['base']};
+@define-color window_fg_color {c['text']};
+@define-color view_bg_color {c['base']};
+@define-color view_fg_color {c['text']};
+@define-color headerbar_bg_color {c['mantle']};
+@define-color headerbar_fg_color {c['text']};
+@define-color headerbar_backdrop_color {c['base']};
+@define-color headerbar_border_color {c['surface0']};
+@define-color sidebar_bg_color {c['mantle']};
+@define-color sidebar_fg_color {c['text']};
+@define-color sidebar_backdrop_color {c['mantle']};
+@define-color secondary_sidebar_bg_color {c['crust']};
+@define-color card_bg_color {c['surface0']};
+@define-color card_fg_color {c['text']};
+@define-color dialog_bg_color {c['mantle']};
+@define-color dialog_fg_color {c['text']};
+@define-color popover_bg_color {c['mantle']};
+@define-color popover_fg_color {c['text']};
+@define-color thumbnail_bg_color {c['surface0']};
+@define-color thumbnail_fg_color {c['text']};
+/* GTK3 (Colloid) names */
+@define-color theme_bg_color {c['base']};
+@define-color theme_fg_color {c['text']};
+@define-color theme_base_color {c['base']};
+@define-color theme_text_color {c['text']};
+@define-color theme_selected_bg_color {c['accentFill']};
+@define-color theme_selected_fg_color {c['onAccent']};
+@define-color insensitive_bg_color {c['mantle']};
+@define-color borders {c['surface0']};
+"""
+    # The theme's own GTK package (downloaded: Colloid variants, Tokyonight, Rosepine), with a
+    # Colloid-Catppuccin fallback if it isn't installed.
+    theme_dirs = [HOME / ".themes", HOME / ".local/share/themes", Path("/usr/share/themes")]
+
+    def theme_dir(name):
+        return next((d / name for d in theme_dirs if name and (d / name / "gtk-4.0/gtk.css").is_file()), None)
+
+    gtk_theme = t.get("gtk") or ""
+    td = theme_dir(gtk_theme)
+    if td is None:
+        gtk_theme = "Colloid-Dark-Catppuccin" if dark else "Colloid-Light-Catppuccin"
+        td = theme_dir(gtk_theme)
+    # libadwaita (GTK4/GNOME apps) only reads ~/.config/gtk-4.0: import the package, then our palette on top
+    imp = f'@import url("file://{td}/gtk-4.0/gtk.css");\n' if td else ""
+    write(CONF / "gtk-4.0/gtk.css", imp + css)
+    imp_dark = f'@import url("file://{td}/gtk-4.0/gtk-dark.css");\n' if td and (td / "gtk-4.0/gtk-dark.css").is_file() else ""
+    write(CONF / "gtk-4.0/gtk-dark.css", (imp_dark + "/* Generated by atelier-theme */\n") if dark else "/* light theme: nothing to add */\n")
+    # GTK3 apps use the theme package directly (set below); no colour overrides needed
+    write(CONF / "gtk-3.0/gtk.css", f"/* Generated by atelier-theme ({t['name']}): GTK3 apps use the {gtk_theme} theme package */\n")
+    icons = icon_theme(t)
+    for ini in (CONF / "gtk-3.0/settings.ini", CONF / "gtk-4.0/settings.ini"):
+        if ini.exists():
+            s = ini.read_text()
+            for k, v in (("gtk-theme-name", gtk_theme), ("gtk-icon-theme-name", icons),
+                         ("gtk-application-prefer-dark-theme", "1" if dark else "0")):
+                s = re.sub(rf"(?m)^{k}=.*$", f"{k}={v}", s) if re.search(rf"(?m)^{k}=", s) else s.rstrip() + f"\n{k}={v}\n"
+            ini.write_text(s)
+    run("gsettings", "set", "org.gnome.desktop.interface", "color-scheme", "prefer-dark" if dark else "prefer-light")
+    run("gsettings", "set", "org.gnome.desktop.interface", "gtk-theme", gtk_theme)
+    run("gsettings", "set", "org.gnome.desktop.interface", "icon-theme", icons)
+    # Qt apps (and the shell, on its next start) read the icon theme from qt5ct/qt6ct
+    for qconf in (CONF / "qt5ct/qt5ct.conf", CONF / "qt6ct/qt6ct.conf"):
+        if qconf.exists():
+            q = qconf.read_text()
+            q = re.sub(r"(?m)^icon_theme=.*$", f"icon_theme={icons}", q) if re.search(r"(?m)^icon_theme=", q) \
+                else re.sub(r"(?m)^\[Appearance\]$", f"[Appearance]\nicon_theme={icons}", q, count=1)
+            qconf.write_text(q)
+
+
+def qt_roles(t, c, state):
+    """22 QPalette roles for qt6ct, in QPalette::ColorRole order."""
+    def q(h, a=0xFF): return f"#{a:02x}{hex6(h)}"
+    dark = t["variant"] == "dark"
+    text = {"active": c["text"], "inactive": c["overlay1"], "disabled": c["overlay0"]}[state]
+    hi = c["accentFill"] if state != "disabled" else c["surface0"]
+    return [
+        q(text), q(c["surface1"] if state != "disabled" else c["surface0"]), q(c["surface2"]), q(c["surface0"]),
+        q(c["crust"]), q(c["mantle"]), q(text), q(c["text"]), q(text),             # WindowText..ButtonText
+        q(c["base"]), q(c["mantle"]), q(c["crust"]), q(hi), q(c["onAccent"] if state != "disabled" else c["overlay0"]),
+        q(c["blue"]), q(c["lavender"]), q(c["mantle"]), q("#ffffff"),               # Link, LinkVisited, AlternateBase, NoRole
+        q(c["base"]), q(c["text"]), q(c["text"], 0x80), q(c["accent"]),             # ToolTipBase/Text, Placeholder, Accent
+    ]
+
+
+def t_qt(t, c):
+    """Qt apps (qt6ct platform theme + Fusion): live palette from the theme, KDE colours for KDE apps."""
+    colors = "[ColorScheme]\n" + "\n".join(
+        f"{state}_colors=" + ", ".join(qt_roles(t, c, state)) for state in ("active", "inactive", "disabled")) + "\n"
+    for name in ("qt6ct", "qt5ct"):
+        d = CONF / name
+        write(d / "colors/atelier.conf", colors)
+    icons = icon_theme(t)
+    style = qt_style()
+    ui, mono = qt_font(*UI_FONT), qt_font(*MONO_FONT)
+    # The Fusion fix-up stylesheets only suit Fusion; Breeze draws its own scrollbars/sliders.
+    qss = HOME / ".local/share/qt6ct/qss"
+    sheets = ", ".join(str(qss / f) for f in ("fusion-fixes.qss", "scrollbar-simple.qss", "sliders-simple.qss", "tooltip-simple.qss")
+                       if (qss / f).is_file()) if style == "Fusion" else ""
+    ini_merge(CONF / "qt6ct/qt6ct.conf", {
+        "Appearance": {"color_scheme_path": str(CONF / "qt6ct/colors/atelier.conf"), "custom_palette": "true",
+                       "style": style, "standard_dialogs": "default", "icon_theme": icons},
+        "Interface": {"stylesheets": sheets or "@Invalid()"},
+        "Fonts": {"general": f'"{ui}"', "fixed": f'"{mono}"'},
+    })
+
+    # KDE colour scheme (kdeglobals) so KDE apps such as Dolphin paint with the same palette
+    def rgb_s(h): r, g, b = rgb(h); return f"{r},{g},{b}"
+    def sect(bg, alt, fg, sel=False):
+        return {
+            "BackgroundNormal": bg, "BackgroundAlternate": alt, "ForegroundNormal": fg,
+            "ForegroundActive": c["accent"], "ForegroundInactive": c["overlay1"], "ForegroundLink": c["blue"],
+            "ForegroundVisited": c["lavender"], "ForegroundNegative": c["red"], "ForegroundNeutral": c["yellow"],
+            "ForegroundPositive": c["green"], "DecorationFocus": c["accent"], "DecorationHover": c["accent"],
+        }
+    parts = {
+        "Colors:View": sect(c["base"], c["mantle"], c["text"]),
+        "Colors:Window": sect(c["mantle"], c["base"], c["text"]),
+        "Colors:Button": sect(c["surface0"], c["surface1"], c["text"]),
+        "Colors:Selection": {**sect(c["accentFill"], c["accentFill"], c["onAccent"]), "ForegroundActive": c["onAccent"],
+                             "ForegroundInactive": c["onAccent"], "ForegroundLink": c["onAccent"], "ForegroundVisited": c["onAccent"],
+                             "DecorationFocus": c["accent"], "DecorationHover": c["accent"]},
+        "Colors:Tooltip": sect(c["base"], c["mantle"], c["text"]),
+        "Colors:Complementary": sect(c["crust"], c["mantle"], c["text"]),
+        "Colors:Header": sect(c["mantle"], c["base"], c["text"]),
+    }
+    # Window-manager colours (KDE apps' own title areas / headers use these)
+    wm = {"activeBackground": c["mantle"], "activeForeground": c["text"], "activeBlend": c["mantle"],
+          "inactiveBackground": c["crust"], "inactiveForeground": c["overlay1"], "inactiveBlend": c["crust"]}
+    colors = {sec: {k: rgb_s(v) for k, v in kv.items()} for sec, kv in parts.items()}
+    colors["Colors:Header][Inactive"] = {k: rgb_s(v) for k, v in sect(c["crust"], c["mantle"], c["overlay1"]).items()}
+    colors["WM"] = {k: rgb_s(v) for k, v in wm.items()}
+
+    # The colour scheme file itself (what KColorSchemeManager lists)
+    scheme = {"General": {"ColorScheme": "Atelier", "Name": "Atelier"}, **colors}
+    write(HOME / ".local/share/color-schemes/Atelier.colors",
+          "\n\n".join(f"[{s}]\n" + "\n".join(f"{k}={v}" for k, v in kv.items()) for s, kv in scheme.items()) + "\n")
+
+    # kdeglobals: merged, never overwritten. It also stores KDE apps' own settings.
+    ini_merge(CONF / "kdeglobals", {
+        **scheme,
+        "UiSettings": {"ColorScheme": "Atelier"},      # what KDE apps (KColorSchemeManager) read
+        "KDE": {"widgetStyle": style},
+        "Icons": {"Theme": icons},
+        "General": {"ColorScheme": "Atelier", "Name": "Atelier", "font": ui, "fixed": mono,
+                    "menuFont": ui, "toolBarFont": ui, "smallestReadableFont": qt_font(UI_FONT[0], 8)},
+    })
+
+
+MOCHA_ROLES = None
+
+
+def t_starship(t, c):
+    """Re-map the existing mocha palette onto this theme (keeps your prompt layout)."""
+    global MOCHA_ROLES
+    p = CONF / "starship.toml"
+    if not p.exists():
+        return
+    s = p.read_text()
+    m = re.search(r"(?ms)^\[palettes\.mocha\]\n(.*?)(?=^\[|\Z)", s)
+    if not m:
+        return
+    mocha = themes().get("catppuccin-mocha")
+    if not mocha:
+        return
+    ref = {k: rgb(v) for k, v in mocha["colors"].items()}
+
+    def nearest(h):
+        x = rgb(h)
+        return min(ref, key=lambda k: sum((a - b) ** 2 for a, b in zip(ref[k], x)))
+
+    out = [f"[palettes.atelier]  # generated by atelier-theme ({t['name']})"]
+    for line in m.group(1).splitlines():
+        km = re.match(r'\s*([\w-]+)\s*=\s*"(#[0-9a-fA-F]{6})"', line)
+        if km:
+            out.append(f'{km.group(1)} = "{c[nearest(km.group(2))]}"')
+    s = re.sub(r"(?ms)^\[palettes\.atelier\].*?(?=^\[|\Z)", "", s).rstrip() + "\n\n" + "\n".join(out) + "\n"
+    s = re.sub(r'(?m)^palette\s*=\s*".*"$', 'palette = "atelier"', s)
+    p.write_text(s)
+
+
+def t_zsh(t, c):
+    fzf = (f"--color=bg+:{c['surface0']},bg:-1,spinner:{c['peach']},hl:{c['red']},fg:{c['text']},header:{c['red']},"
+           f"info:{c['accent']},pointer:{c['accent']},marker:{c['green']},fg+:{c['text']},prompt:{c['accent']},"
+           f"hl+:{c['red']},border:{c['surface1']},gutter:-1")
+    write(STATE_DIR / "theme.zsh", f"""# Generated by atelier-theme ({t['name']}) — sourced by ~/.zshrc
+typeset -gA ZSH_HIGHLIGHT_STYLES
+ZSH_HIGHLIGHT_STYLES[default]='fg={c['text']}'
+ZSH_HIGHLIGHT_STYLES[command]='fg={c['green']}'
+ZSH_HIGHLIGHT_STYLES[builtin]='fg={c['green']}'
+ZSH_HIGHLIGHT_STYLES[alias]='fg={c['green']}'
+ZSH_HIGHLIGHT_STYLES[function]='fg={c['green']}'
+ZSH_HIGHLIGHT_STYLES[precommand]='fg={c['green']},italic'
+ZSH_HIGHLIGHT_STYLES[unknown-token]='fg={c['red']}'
+ZSH_HIGHLIGHT_STYLES[reserved-word]='fg={c['accent']}'
+ZSH_HIGHLIGHT_STYLES[commandseparator]='fg={c['subtext0']}'
+ZSH_HIGHLIGHT_STYLES[path]='fg={c['text']},underline'
+ZSH_HIGHLIGHT_STYLES[globbing]='fg={c['peach']}'
+ZSH_HIGHLIGHT_STYLES[single-hyphen-option]='fg={c['sky']}'
+ZSH_HIGHLIGHT_STYLES[double-hyphen-option]='fg={c['sky']}'
+ZSH_HIGHLIGHT_STYLES[single-quoted-argument]='fg={c['yellow']}'
+ZSH_HIGHLIGHT_STYLES[double-quoted-argument]='fg={c['yellow']}'
+ZSH_HIGHLIGHT_STYLES[dollar-quoted-argument]='fg={c['yellow']}'
+ZSH_HIGHLIGHT_STYLES[back-quoted-argument]='fg={c['pink']}'
+ZSH_HIGHLIGHT_STYLES[redirection]='fg={c['accent']}'
+ZSH_HIGHLIGHT_STYLES[comment]='fg={c['overlay0']},italic'
+ZSH_HIGHLIGHT_STYLES[arg0]='fg={c['green']}'
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg={c['overlay0']}'
+export BAT_THEME='{t.get('bat', 'base16')}'
+export FZF_DEFAULT_OPTS='{fzf}'
+""")
+
+
+def mix(a, b, t):
+    """Blend two hex colours (t = 0 → a, 1 → b)."""
+    ra, rb = rgb(a), rgb(b)
+    return "#" + "".join(f"{round(x + (y - x) * t):02x}" for x, y in zip(ra, rb))
+
+
+def t_nvim(t, c):
+    """NvChad (base46) theme 'atelier': ~/.config/nvim/lua/themes/atelier.lua. Running Neovims
+    watch that file (lua/configs/atelier.lua) and reload their highlights live."""
+    nv = CONF / "nvim"
+    if not (nv / "lua/chadrc.lua").exists():
+        return
+    b30 = {
+        "white": c["text"], "darker_black": c["mantle"], "black": c["base"],
+        "black2": mix(c["base"], c["surface0"], .5), "one_bg": c["surface0"], "one_bg2": c["surface1"],
+        "one_bg3": c["surface2"], "grey": c["surface2"], "grey_fg": c["overlay0"], "grey_fg2": c["overlay1"],
+        "light_grey": c["subtext0"], "red": c["red"], "baby_pink": mix(c["pink"], c["red"], .4), "pink": c["pink"],
+        "line": c["surface0"], "green": c["green"], "vibrant_green": mix(c["green"], c["teal"], .4),
+        "nord_blue": c["accent"], "blue": c["blue"], "yellow": c["yellow"], "sun": mix(c["yellow"], c["peach"], .3),
+        "purple": c["mauve"], "dark_purple": c["lavender"], "teal": c["teal"], "orange": c["peach"],
+        "cyan": c["sky"], "statusline_bg": c["mantle"], "lightbg": c["surface0"], "pmenu_bg": c["accent"],
+        "folder_bg": c["blue"],
+    }
+    b16 = {
+        "base00": c["base"], "base01": mix(c["base"], c["surface0"], .5), "base02": c["surface0"],
+        "base03": c["surface1"], "base04": c["surface2"], "base05": c["subtext1"], "base06": mix(c["subtext1"], c["text"], .5),
+        "base07": c["text"], "base08": c["red"], "base09": c["peach"], "base0A": c["yellow"], "base0B": c["green"],
+        "base0C": c["sky"], "base0D": c["blue"], "base0E": c["mauve"], "base0F": c["pink"],
+    }
+    tbl = lambda d: "{\n" + "".join(f'  {k} = "{v}",\n' for k, v in d.items()) + "}"
+    write(nv / "lua/themes/atelier.lua", f"""-- Generated by atelier-theme ({t["name"]}). Edits are overwritten on the next theme switch.
+local M = {{}}
+
+M.base_30 = {tbl(b30)}
+
+M.base_16 = {tbl(b16)}
+
+M.polish_hl = {{
+  defaults = {{
+    CursorLineNr = {{ fg = "{c["accent"]}", bold = true }},
+    FloatBorder = {{ fg = "{c["surface2"]}" }},
+    Visual = {{ bg = "{mix(c["base"], c["accent"], .22)}" }},
+  }},
+}}
+
+M.type = "{t["variant"]}"
+
+M = require("base46").override_theme(M, "atelier")
+
+return M
+""")
+
+
+def t_btop(t, c):
+    keys = {
+        "main_bg": "", "main_fg": c["text"], "title": c["text"], "hi_fg": c["blue"], "selected_bg": c["surface1"],
+        "selected_fg": c["blue"], "inactive_fg": c["overlay1"], "graph_text": c["subtext0"], "meter_bg": c["surface1"],
+        "proc_misc": c["accent"], "cpu_box": c["accent"], "mem_box": c["green"], "net_box": c["red"], "proc_box": c["blue"],
+        "div_line": c["overlay0"], "temp_start": c["green"], "temp_mid": c["yellow"], "temp_end": c["red"],
+        "cpu_start": c["teal"], "cpu_mid": c["sapphire"], "cpu_end": c["lavender"], "free_start": c["accent"],
+        "free_mid": c["lavender"], "free_end": c["blue"], "cached_start": c["sapphire"], "cached_mid": c["blue"],
+        "cached_end": c["lavender"], "available_start": c["peach"], "available_mid": c["red"], "available_end": c["red"],
+        "used_start": c["green"], "used_mid": c["teal"], "used_end": c["sky"], "download_start": c["peach"],
+        "download_mid": c["red"], "download_end": c["red"], "upload_start": c["green"], "upload_mid": c["teal"],
+        "upload_end": c["sky"], "process_start": c["sapphire"], "process_mid": c["lavender"], "process_end": c["accent"],
+    }
+    write(CONF / "btop/themes/atelier.theme", "\n".join(f'theme[{k}]="{v}"' for k, v in keys.items()) + "\n")
+    conf = CONF / "btop/btop.conf"
+    s = conf.read_text() if conf.exists() else ""
+    for k, v in (("color_theme", '"atelier"'), ("theme_background", "false")):
+        s = re.sub(rf"(?m)^{k}\s*=.*$", f"{k} = {v}", s) if re.search(rf"(?m)^{k}\s*=", s) else s + f"{k} = {v}\n"
+    write(conf, s)
+
+
+SPICETIFY = shutil.which("spicetify") or str(HOME / ".spicetify/spicetify")
+SPOTIFY_DIRS = [HOME / ".local/share/spotify-launcher/install/usr/share/spotify", Path("/opt/spotify"),
+                Path("/usr/share/spotify")]
+
+
+SPOTIFY_LIVE_JS = """// atelierLive: recolour Spotify live when atelier-theme rewrites colors.css / user.css.
+// Generated by atelier-theme. Polls the two local files (only while Spotify is visible).
+(function atelierLive() {
+  const files = ["colors.css", "user.css"];
+  const last = {};
+  async function check() {
+    if (document.hidden) return;
+    for (const f of files) {
+      try {
+        const r = await fetch(f + "?atelier=" + Date.now(), { cache: "no-store" });
+        if (!r.ok) continue;
+        const text = await r.text();
+        if (last[f] === undefined) { last[f] = text; continue; }
+        if (text === last[f]) continue;
+        last[f] = text;
+        const old = document.querySelector('link.userCSS[href^="' + f + '"]');
+        if (!old) continue;
+        const next = old.cloneNode();
+        next.href = f + "?atelier=" + Date.now();
+        next.onload = () => old.remove();          // swap after load: no unstyled flash
+        old.after(next);
+      } catch (e) {}
+    }
+  }
+  check();
+  setInterval(check, 1500);
+  document.addEventListener("visibilitychange", check);
+})();
+"""
+
+
+def spotify_dir():
+    return next((d for d in SPOTIFY_DIRS if (d / "Apps").is_dir()), None)
+
+
+def t_spotify(t, c):
+    """Spotify via spicetify: theme 'atelier', colour scheme rewritten from the palette."""
+    sdir = spotify_dir()
+    if not sdir or not Path(SPICETIFY).exists():
+        return
+    h = lambda k: hex6(c[k])
+    dark = t["variant"] == "dark"
+    colors = {
+        "text": h("text"), "subtext": h("subtext0"), "main": h("base"), "main-elevated": h("surface0"),
+        "highlight": h("surface0"), "highlight-elevated": h("surface1"), "sidebar": h("mantle"),
+        "player": h("mantle"), "card": h("surface0"), "shadow": h("crust"), "selected-row": h("subtext1"),
+        "button": h("accent"), "button-active": h("accent"), "button-secondary": h("subtext0"),
+        "button-disabled": h("overlay0"), "tab-active": h("surface1"), "notification": h("surface0"),
+        "notification-error": h("red"), "misc": h("overlay0"), "play-button": h("accent"),
+        "play-button-active": h("accent"), "progress-fg": h("accent"), "progress-bg": h("surface1"),
+        "heart": h("red"), "pagelink-active": h("text"), "radio-btn-active": h("accent"),
+    }
+    tdir = CONF / "spicetify/Themes/atelier"
+    write(tdir / "color.ini", "[atelier]\n" + "".join(f"{k:<20}= {v}\n" for k, v in colors.items()))
+    write(tdir / "user.css", f"""/* generated by atelier-theme — edits are overwritten */
+:root {{ --atelier-radius: 14px; color-scheme: {"dark" if dark else "light"}; }}
+body, .encore-text, button, input {{ font-family: "Inter", "Spotify Circular", sans-serif !important; }}
+.Root__nav-bar, .Root__main-view, .Root__right-sidebar > *, .main-nowPlayingBar-container {{
+  border-radius: var(--atelier-radius) !important; }}
+.main-card-card, .main-trackList-trackListRow, .main-entityHeader-image {{ border-radius: 12px !important; }}
+.main-trackList-trackListRow:hover {{ background-color: var(--spice-highlight) !important; }}
+::selection {{ background: rgba(var(--spice-rgb-button), .35); }}
+""")
+    # Live recolour: an extension inside Spotify re-reads colors.css/user.css and swaps the
+    # stylesheets when they change (no Spotify reload, music keeps playing).
+    write(CONF / "spicetify/Extensions/atelierLive.js", SPOTIFY_LIVE_JS)
+    cfg = CONF / "spicetify/config-xpui.ini"
+    m = re.search(r"(?m)^extensions[ \t]*=[ \t]*(.*)$", cfg.read_text() if cfg.exists() else "")
+    exts = [e for e in (m.group(1).strip() if m else "").split("|") if e]
+    has_live = "atelierLive.js" in exts
+    if not has_live:
+        exts.append("atelierLive.js")
+    ini_merge(cfg, {
+        "Setting": {"spotify_path": str(sdir), "prefs_path": str(CONF / "spotify/prefs"),
+                    "current_theme": "atelier", "color_scheme": "atelier", "inject_css": "1",
+                    "replace_colors": "1", "check_spicetify_update": "0"},
+        "AdditionalOptions": {"extensions": "|".join(exts)},
+    })
+    # spotify-launcher reinstalls Spotify on update, which drops the patch: re-apply when needed.
+    patched = (sdir / "Apps/xpui").is_dir() and not (sdir / "Apps/xpui.spa").exists()
+    cmd = ["refresh"] if patched and has_live else (["apply"] if patched else ["backup", "apply"])
+    r = subprocess.run([SPICETIFY, "-q", "-n", *cmd], capture_output=True, text=True, timeout=120,
+                       input="y\n")
+    if r.returncode != 0 and patched:
+        subprocess.run([SPICETIFY, "-q", "-n", "restore", "backup", "apply"], capture_output=True,
+                       text=True, timeout=120, input="y\n")
+
+
+DISCORD_DIRS = ["vesktop", "Vencord", "equibop", "Equicord", "legcord", "BetterDiscord"]
+
+
+def t_discord(t, c):
+    """Discord clients with theme folders (Vesktop/Vencord, Equicord, Legcord, BetterDiscord)."""
+    dark = t["variant"] == "dark"
+    r = lambda k: ", ".join(map(str, rgb(c[k])))
+    css = f"""/**
+ * @name Atelier
+ * @author atelier-theme
+ * @description Follows the system Atelier theme ({t["name"]}). Generated — edits are overwritten.
+ * @version 1.0.0
+ */
+:root, .theme-dark, .theme-light, .theme-darker, .theme-midnight, .visual-refresh {{
+  --atelier-accent: {c["accent"]};
+  /* visual-refresh surfaces */
+  --background-base-lowest: {c["crust"]} !important;
+  --background-base-lower: {c["mantle"]} !important;
+  --background-base-low: {c["mantle"]} !important;
+  --background-surface-high: {c["surface0"]} !important;
+  --background-surface-higher: {c["surface0"]} !important;
+  --background-surface-highest: {c["surface1"]} !important;
+  --chat-background-default: {c["base"]} !important;
+  --app-frame-background: {c["crust"]} !important;
+  --bg-base-primary: {c["base"]} !important;
+  --bg-base-secondary: {c["mantle"]} !important;
+  --bg-base-tertiary: {c["crust"]} !important;
+  --bg-surface-overlay: {c["mantle"]} !important;
+  --bg-surface-raised: {c["surface0"]} !important;
+  --modal-background: {c["base"]} !important;
+  --modal-footer-background: {c["mantle"]} !important;
+  --input-background: {c["surface0"]} !important;
+  --chat-input-container-background: {c["surface0"]} !important;
+  /* legacy surfaces */
+  --background-primary: {c["base"]} !important;
+  --background-secondary: {c["mantle"]} !important;
+  --background-secondary-alt: {c["crust"]} !important;
+  --background-tertiary: {c["crust"]} !important;
+  --background-floating: {c["mantle"]} !important;
+  --background-nested-floating: {c["surface0"]} !important;
+  --background-accent: {c["surface1"]} !important;
+  --background-mobile-primary: {c["base"]} !important;
+  --background-mobile-secondary: {c["mantle"]} !important;
+  --channeltextarea-background: {c["surface0"]} !important;
+  --deprecated-card-bg: {c["surface0"]} !important;
+  --background-mod-subtle: rgba({r("overlay0")}, .12) !important;
+  --background-mod-normal: rgba({r("overlay0")}, .2) !important;
+  --background-mod-strong: rgba({r("overlay0")}, .3) !important;
+  --background-modifier-hover: rgba({r("overlay0")}, .14) !important;
+  --background-modifier-active: rgba({r("overlay0")}, .22) !important;
+  --background-modifier-selected: rgba({r("overlay0")}, .28) !important;
+  --background-modifier-accent: rgba({r("overlay0")}, .2) !important;
+  --border-subtle: rgba({r("overlay0")}, .18) !important;
+  --border-normal: rgba({r("overlay0")}, .26) !important;
+  --border-strong: rgba({r("overlay0")}, .36) !important;
+  /* text */
+  --text-default: {c["text"]} !important;
+  --text-normal: {c["text"]} !important;
+  --text-strong: {c["text"]} !important;
+  --text-subtle: {c["subtext0"]} !important;
+  --text-muted: {c["overlay1"]} !important;
+  --text-link: {c["blue"]} !important;
+  --text-positive: {c["green"]} !important;
+  --text-warning: {c["yellow"]} !important;
+  --text-danger: {c["red"]} !important;
+  --text-brand: {c["accent"]} !important;
+  --header-primary: {c["text"]} !important;
+  --header-secondary: {c["subtext0"]} !important;
+  --channels-default: {c["overlay1"]} !important;
+  --channel-icon: {c["overlay1"]} !important;
+  --interactive-normal: {c["subtext0"]} !important;
+  --interactive-hover: {c["text"]} !important;
+  --interactive-active: {c["text"]} !important;
+  --interactive-muted: {c["surface2"]} !important;
+  --icon-default: {c["subtext0"]} !important;
+  --icon-strong: {c["text"]} !important;
+  --icon-muted: {c["overlay0"]} !important;
+  /* accent */
+  --brand-experiment: {c["accent"]} !important;
+  --brand-500: {c["accent"]} !important;
+  --brand-560: {c["accent"]} !important;
+  --brand-600: {c["accent"]} !important;
+  --button-filled-brand-background: {c["accentFill"]} !important;
+  --button-filled-brand-background-hover: {deepen(c["lavender"] if c["accent"] != c["lavender"] else c["blue"], c["onAccent"])} !important;
+  --button-filled-brand-text: {c["onAccent"]} !important;
+  --control-brand-foreground: {c["accent"]} !important;
+  --control-brand-foreground-new: {c["accent"]} !important;
+  --mention-foreground: {c["accent"]} !important;
+  --mention-background: rgba({r("accent")}, .14) !important;
+  --info-positive-foreground: {c["green"]} !important;
+  --info-warning-foreground: {c["yellow"]} !important;
+  --info-danger-foreground: {c["red"]} !important;
+  --status-positive: {c["green"]} !important;
+  --status-warning: {c["yellow"]} !important;
+  --status-danger: {c["red"]} !important;
+  --scrollbar-auto-thumb: {c["surface1"]} !important;
+  --scrollbar-thin-thumb: {c["surface1"]} !important;
+  --scrollbar-auto-track: transparent !important;
+}}
+.theme-light, .theme-dark {{ color-scheme: {"dark" if dark else "light"}; }}
+::selection {{ background: rgba({r("accent")}, .32); }}
+"""
+    for name in DISCORD_DIRS:
+        base = CONF / name
+        if not base.is_dir():
+            continue
+        tdir = base / "themes"
+        write(tdir / "atelier.theme.css", css)
+        # Vencord-based clients: switch the theme on (merge, keep any other enabled themes)
+        sf = base / "settings/settings.json"
+        if sf.exists():
+            try:
+                s = json.loads(sf.read_text())
+                en = s.setdefault("enabledThemes", [])
+                if "atelier.theme.css" not in en:
+                    en.append("atelier.theme.css")
+                    write(sf, json.dumps(s, indent=4))
+            except Exception:
+                pass
+
+
+TARGETS = [t_quickshell, t_hyprland, t_kitty, t_ghostty, t_vscode, t_gtk, t_qt, t_starship, t_zsh, t_btop,
+           t_spotify, t_discord, t_nvim]
+
+
+# ── commands ─────────────────────────────────────────────────────────────────
+def apply(tid):
+    ts = themes()
+    if tid not in ts:
+        sys.exit(f"unknown theme: {tid} (have: {', '.join(ts)})")
+    t = ts[tid]
+    c = resolved(t)
+    failed = []
+    for fn in TARGETS:
+        try:
+            fn(t, c)
+        except Exception as e:
+            failed.append(f"{fn.__name__[2:]}: {e}")
+    s = state()
+    s["current"] = tid
+    s["last_" + t["variant"]] = tid
+    save_state(s)
+    print(json.dumps({"status": "ok" if not failed else "partial", "theme": tid, "failed": failed}))
+
+
+# ── wallpaper themes ─────────────────────────────────────────────────────────
+# "wallpaper-dark" / "wallpaper-light": palettes built around the wallpaper's main colour (OKLCH,
+# Material-You-like). Written to ~/.config/atelier/themes and regenerated when the wallpaper changes.
+WALL_FILE = HOME / ".cache/current_wallpaper"
+WALL_IDS = ("wallpaper-dark", "wallpaper-light")
+# semantic roles keep their meaning (red = error …); hues in OKLCH degrees
+ROLE_HUES = {"red": 20, "peach": 50, "yellow": 95, "green": 145, "teal": 180, "sky": 215,
+             "sapphire": 235, "blue": 260, "lavender": 280, "mauve": 305, "pink": 345}
+
+
+def _lin(u):
+    return u / 12.92 if u <= 0.04045 else ((u + 0.055) / 1.055) ** 2.4
+
+
+def _gam(u):
+    return 12.92 * u if u <= 0.0031308 else 1.055 * u ** (1 / 2.4) - 0.055
+
+
+def oklch_of(r, g, b):
+    import math
+    r, g, b = (_lin(x / 255) for x in (r, g, b))
+    l = (0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b) ** (1 / 3)
+    m = (0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b) ** (1 / 3)
+    s = (0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b) ** (1 / 3)
+    L = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s
+    A = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s
+    B = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s
+    return L, math.hypot(A, B), math.degrees(math.atan2(B, A)) % 360
+
+
+def oklch_hex(L, C, H):
+    """OKLCH → #rrggbb, reducing chroma until the colour fits sRGB."""
+    import math
+    for _ in range(40):
+        a, b = C * math.cos(math.radians(H)), C * math.sin(math.radians(H))
+        l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3
+        m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3
+        s = (L - 0.0894841775 * a - 1.2914855480 * b) ** 3
+        rgb_ = (4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+                -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+                -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s)
+        if all(-1e-4 <= v <= 1.0001 for v in rgb_) or C < 1e-3:
+            return "#" + "".join(f"{round(max(0, min(1, _gam(max(0, v)))) * 255):02x}" for v in rgb_)
+        C *= 0.92
+    return "#808080"
+
+
+def wallpaper_analyse(path):
+    """The wallpaper's real colours: tint of its darks and lights, plus up to two accent colours."""
+    import math
+    from PIL import Image
+    im = Image.open(path)
+    im.seek(0)
+    im = im.convert("RGB")
+    im.thumbnail((160, 160))
+    q = im.quantize(colors=32, method=Image.Quantize.MEDIANCUT)
+    pal = q.getpalette()
+    counts = q.getcolors(256) or []
+    total = sum(n for n, _ in counts) or 1
+    cl = []
+    for n, i in counts:
+        L, C, H = oklch_of(*pal[i * 3:i * 3 + 3])
+        cl.append((L, C, H, n / total))
+
+    def tint(sel):                                     # share-weighted mean in a/b → (C, H)
+        w = sum(x[3] for x in sel)
+        if not w:
+            return 0.0, 0.0
+        A = sum(x[1] * math.cos(math.radians(x[2])) * x[3] for x in sel) / w
+        B = sum(x[1] * math.sin(math.radians(x[2])) * x[3] for x in sel) / w
+        return math.hypot(A, B), math.degrees(math.atan2(B, A)) % 360
+
+    dark = tint([x for x in cl if x[0] < 0.5]) if any(x[0] < 0.5 for x in cl) else tint(cl)
+    light = tint([x for x in cl if x[0] > 0.65]) if any(x[0] > 0.65 for x in cl) else tint(cl)
+    # accent candidates: real colours (not greys), scored by how much of the image they cover × chroma
+    cand = sorted((x for x in cl if x[1] >= 0.045 and 0.25 <= x[0] <= 0.93),
+                  key=lambda x: -(x[3] ** 0.5) * min(x[1], 0.2))
+    seeds = []
+    for x in cand:
+        if all(abs((x[2] - y[2] + 540) % 360 - 180) > 35 for y in seeds):
+            seeds.append(x)
+        if len(seeds) == 2:
+            break
+    return {"dark": dark, "light": light, "seeds": seeds}
+
+
+def wallpaper_theme(w, dark):
+    seeds = w["seeds"]
+    mono = not seeds                                   # black-and-white / grey wallpaper
+    nC, nH = w["dark"] if dark else w["light"]
+    nC = min(nC, 0.035)
+    H = seeds[0][2] if seeds else nH
+    vivid = min(1.0, max(0.35, (seeds[0][1] / 0.12) if seeds else 0.35))   # wallpaper colourfulness
+
+    def harm(h):                                       # pull role hues toward the wallpaper's hue
+        d = (H - h + 540) % 360 - 180
+        return (h + max(-15, min(15, d * 0.25))) % 360
+
+    if dark:
+        neutrals = {"crust": .14, "mantle": .17, "base": .205, "surface0": .26, "surface1": .31, "surface2": .36,
+                    "overlay0": .50, "overlay1": .58, "subtext0": .75, "subtext1": .82, "text": .92}
+        roleL, accL = .80, (.70, .86)
+    else:
+        neutrals = {"crust": .88, "mantle": .925, "base": .965, "surface0": .895, "surface1": .855, "surface2": .80,
+                    "overlay0": .62, "overlay1": .55, "subtext0": .45, "subtext1": .38, "text": .26}
+        roleL, accL = .56, (.42, .58)
+    roleC = (.11 if dark else .14) * vivid
+    colors = {k: oklch_hex(L, nC, nH) for k, L in neutrals.items()}
+    for role, h in ROLE_HUES.items():
+        colors[role] = oklch_hex(roleL + (.07 if role == "yellow" else 0), roleC, harm(h))
+
+    def nearest(h, taken=()):
+        return min((r for r in ROLE_HUES if r not in taken),
+                   key=lambda r: abs((ROLE_HUES[r] - h + 540) % 360 - 180))
+
+    if mono:
+        # the wallpaper has no colour: accent is its own light (dark theme) / dark (light theme) tone
+        accent = "lavender"                            # a decorative slot: keep red/yellow/green meaningful
+        colors[accent] = oklch_hex(.88 if dark else .30, nC, nH)
+    else:
+        taken = []
+        for sL, sC, sH, _ in seeds:                    # put the real wallpaper colours in the palette
+            r = nearest(sH, taken)
+            taken.append(r)
+            colors[r] = oklch_hex(max(accL[0], min(accL[1], sL)), min(sC, 0.18), sH)
+        accent = taken[0]
+    c = colors
+    if dark:
+        ansi = [c["surface1"], c["red"], c["green"], c["yellow"], c["blue"], c["pink"], c["teal"], c["subtext1"],
+                c["surface2"], c["red"], c["green"], c["yellow"], c["blue"], c["pink"], c["teal"], c["subtext0"]]
+    else:
+        ansi = [c["subtext1"], c["red"], c["green"], c["yellow"], c["blue"], c["pink"], c["teal"], c["surface2"],
+                c["subtext0"], c["red"], c["green"], c["yellow"], c["blue"], c["pink"], c["teal"], c["surface1"]]
+    v = "dark" if dark else "light"
+    return {
+        "id": f"wallpaper-{v}", "name": f"Wallpaper {v.title()}", "variant": v, "accent": accent,
+        "pair": "wallpaper-light" if dark else "wallpaper-dark",
+        "description": "Monochrome, from your wallpaper" if mono else "Colours from your wallpaper",
+        "colors": colors, "ansi": ansi,
+        "vscode": {"theme": "Dark Modern" if dark else "Light Modern"},
+        "bat": "base16",
+    }
+
+
+def cmd_wallpaper(path=None, force=False):
+    """Regenerate the wallpaper themes; re-apply if one of them is active."""
+    path = path or (WALL_FILE.read_text().strip() if WALL_FILE.exists() else "")
+    if not path or not Path(path).is_file():
+        sys.exit(f"no wallpaper image: {path!r}")
+    p = Path(path)
+    stamp = f"{p.resolve()}:{p.stat().st_mtime_ns}"
+    prev = USER_THEMES / "wallpaper-dark.json"
+    try:
+        same = json.loads(prev.read_text()).get("source") == stamp
+    except Exception:
+        same = False
+    cur = state().get("current", "")
+    if not (same and not force):
+        w = wallpaper_analyse(path)
+        for dark in (True, False):
+            t = wallpaper_theme(w, dark)
+            t["source"] = stamp
+            write(USER_THEMES / f"{t['id']}.json", json.dumps(t, indent=2))
+    if cur in WALL_IDS and not (same and not force):
+        apply(cur)
+    else:
+        print(json.dumps({"status": "ok", "generated": not same, "applied": False}))
+
+
+def cmd_list():
+    cur = state().get("current", "")
+    out = []
+    for t in themes().values():
+        c = resolved(t)
+        out.append({"id": t["id"], "name": t["name"], "variant": t["variant"], "description": t.get("description", ""),
+                    "current": t["id"] == cur,
+                    "swatch": {k: c[k] for k in ("base", "mantle", "crust", "surface0", "surface1", "surface2",
+                                                 "text", "subtext0", "subtext1", "accent", "onAccent", "mauve",
+                                                 "red", "peach", "yellow", "green", "teal", "sapphire", "blue",
+                                                 "lavender", "pink") if k in c}})
+    out.sort(key=lambda x: (x["variant"] != "dark", x["name"]))
+    print(json.dumps(out, ensure_ascii=False))
+
+
+def toggle_mode():
+    ts = themes()
+    s = state()
+    cur = ts.get(s.get("current", ""), ts.get("catppuccin-mocha"))
+    target = cur.get("pair") or ""
+    if target not in ts:
+        want = "light" if cur["variant"] == "dark" else "dark"
+        target = s.get("last_" + want) or ("catppuccin-latte" if want == "light" else "catppuccin-mocha")
+    apply(target)
+
+
+def setup():
+    """Install every theme's VS Code extension + the minimal icon themes (one-time, needs network)."""
+    exts = sorted({(t.get("vscode") or {}).get("extension") for t in themes().values()} - {None, ""})
+    exts += ["miguelsolorio.symbols", "miguelsolorio.fluent-icons"]   # file icons + product icons
+    for editor in ("code", "antigravity"):
+        if not shutil.which(editor):
+            continue
+        try:
+            have = subprocess.run([editor, "--list-extensions"], capture_output=True, text=True, timeout=60).stdout.lower().split()
+        except Exception:
+            have = []
+        for e in exts:
+            if e.lower() not in have:
+                print(f"{editor}: installing {e}", flush=True)
+                subprocess.run([editor, "--install-extension", e], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def main():
+    if len(sys.argv) < 2:
+        print(__doc__)
+        return
+    cmd = sys.argv[1]
+    if cmd == "list":
+        cmd_list()
+    elif cmd == "current":
+        print(state().get("current", ""))
+    elif cmd == "apply" and len(sys.argv) > 2:
+        apply(sys.argv[2])
+    elif cmd == "toggle-mode":
+        toggle_mode()
+    elif cmd == "wallpaper":
+        args = [a for a in sys.argv[2:] if a != "--force"]
+        cmd_wallpaper(args[0] if args else None, "--force" in sys.argv)
+    elif cmd == "setup":
+        setup()
+    else:
+        print(__doc__)
+
+
+if __name__ == "__main__":
+    main()
