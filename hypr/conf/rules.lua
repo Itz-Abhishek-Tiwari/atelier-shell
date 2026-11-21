@@ -81,18 +81,7 @@ hl.window_rule({
     rounding    = 0,
 })
 
--- Quickshell Settings app: a normal floating, solid window in the centre
-hl.window_rule({
-    name    = "atelier-settings",
-    match   = { title = "^(Atelier Settings)$" },
-    float   = true,
-    center  = true,
-    -- glass like the rest of the shell: the app draws its own translucent surface, so no extra
-    -- window opacity, and a REAL blur (it floats over other windows; the cached wallpaper blur
-    -- would show the wallpaper instead of what is behind it)
-    opacity = 1.0,
-    xray    = false,
-})
+-- (Settings is a drawer inside quickshell-drawers now; it needs no window rule)
 
 -- Apps can't maximize themselves (keeps tiling in charge)
 hl.window_rule({
