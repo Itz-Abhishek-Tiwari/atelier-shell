@@ -66,6 +66,8 @@ bind(mainMod .. " + comma",         hl.dsp.exec_cmd(qs .. "settings toggle"),   
 bind(mainMod .. " + Shift + C",     hl.dsp.exec_cmd(qs .. "camera toggle"),        "Shell · Camera")
 bind(mainMod .. " + Tab",           hl.dsp.exec_cmd(qs .. "overview toggle"),      "Shell · Overview")
 bind(mainMod .. " + Shift + V",     hl.dsp.exec_cmd(qs .. "clipboard toggle"),     "Shell · Clipboard history")
+bind(mainMod .. " + semicolon",       hl.dsp.exec_cmd(qs .. "emoji toggle"),         "Shell · Emoji picker")
+bind(mainMod .. " + Shift + semicolon", hl.dsp.exec_cmd(qs .. "emoji gifs"),         "Shell · GIF finder")
 bind(mainMod .. " + M",             hl.dsp.exec_cmd(qs .. "media toggle"),         "Shell · Music")
 bind(mainMod .. " + G",             hl.dsp.exec_cmd(qs .. "games toggle"),         "Shell · Game library")
 bind(mainMod .. " + Alt + W",       hl.dsp.exec_cmd(qs .. "wallpaper toggle"),     "Shell · Wallpapers")
