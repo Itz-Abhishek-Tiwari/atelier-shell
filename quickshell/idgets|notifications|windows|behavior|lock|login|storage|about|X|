@@ -1,0 +1,1 @@
+            function open(page: string): void { settingsApp.open(page); }     bar|bar|widgets|notifications|windows|behavior|lock|login|storage|about
