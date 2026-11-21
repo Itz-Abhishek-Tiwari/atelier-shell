@@ -53,7 +53,6 @@ ShellRoot {
     property string edgeHover: ""         // "media" while the pointer is on the top-edge sensor
 
     function toggleOverlay(name, centerY) {
-        console.info("TRACE toggleOverlay", name, "active=" + activeOverlay, "hoverMode=" + hoverMode, Date.now() % 100000);
         // the on-screen keyboard is independent: it stays open while other overlays come and go
         if (name === "keyboard") { osk.toggle(); return; }
         // Settings on a given page ("settings:<page>"): switch page if it is already open
