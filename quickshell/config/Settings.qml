@@ -22,6 +22,7 @@ Singleton {
     readonly property var greeter: adapter.greeter
     readonly property var recorder: adapter.recorder
     readonly property var phone: adapter.phone
+    readonly property var emoji: adapter.emoji
     readonly property var nightLight: adapter.nightLight
     readonly property var input: adapter.input
     readonly property var displays: adapter.displays
@@ -112,6 +113,13 @@ Singleton {
             property JsonObject phone: JsonObject {     // iPhone as a webcam (services/PhoneCam.qml)
                 property string mode: "auto"            // auto (USB → hotspot → Wi-Fi) | usb | hotspot | wifi
                 property string wifiAddress: ""         // Wi-Fi mode: the iPhone's IP; empty = <name>.local
+            }
+
+            property JsonObject emoji: JsonObject {     // emoji picker + GIF finder (modules/drawers/EmojiOverlay.qml)
+                property bool typeOnPick: true          // also type the emoji into the window you were in (wtype)
+                property int tone: 0                    // skin tone: 0 default, 1 light … 5 dark
+                property string gifProvider: "giphy"    // giphy | tenor
+                property string gifKey: ""              // API key (free); kept only in ~/.config/atelier/settings.json
             }
 
             property JsonObject recorder: JsonObject {  // screen recording (services/Recorder.qml)

@@ -126,6 +126,8 @@ qs ipc call mode set game|dev|normal      # also: cycle, toggleGame, toggleDev, 
 | Default apps: browser, files, editor, pictures, video, music, PDF, archives, terminal | Settings → Default apps (writes `~/.config/mimeapps.list`; `quickshell/scripts/default-apps.py list\|set`) |
 | Power menu | `SUPER + Backspace` |
 | Clipboard history | `SUPER + Shift + V` |
+| Emoji picker | `SUPER + ;` |
+| GIF finder (free GIPHY/Tenor key in Settings → General) | `SUPER + Shift + ;` |
 | On-screen keyboard | `SUPER + /` |
 | Game library (fullscreen) | `SUPER + G` |
 | Record screen (pick an area / stop) | `SUPER + Shift + R` (whole screen: `SUPER + Alt + R`, or `R` in the screenshot picker) |

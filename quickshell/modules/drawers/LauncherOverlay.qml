@@ -79,6 +79,8 @@ Item {
         { key: "keyboard",  title: "On-screen keyboard", subtitle: "Type with the mouse (Super+/)",        glyph: "󰌌", color: Atelier.sapphire, words: "keyboard virtual on-screen osk type typing keys", overlay: "keyboard" },
         { key: "settings",  title: "Settings",        subtitle: "Customize the shell (Super+,)",         glyph: "󰒓", color: Atelier.accent, words: "settings preferences customize options config bar widgets windows", overlay: "settings" },
         { key: "clipboard", title: "Clipboard",       subtitle: "Clipboard history",                    glyph: "󰅌", color: Atelier.yellow, words: "clipboard history copy paste", overlay: "clipboard" },
+        { key: "emoji",     title: "Emoji",           subtitle: "Pick an emoji · Super+;",              glyph: "󰞅", color: Atelier.yellow, words: "emoji emoticon smiley face symbol picker", overlay: "emoji" },
+        { key: "gifs",      title: "GIFs",            subtitle: "Find a GIF · Super+Shift+;",           glyph: "󰵸", color: Atelier.pink,   words: "gif gifs giphy tenor meme reaction animated", overlay: "gifs" },
         { key: "calendar",  title: "Calendar",        subtitle: "Month view",                           glyph: "󰃭", color: Atelier.green, words: "calendar date month day", overlay: "calendar" },
         { key: "session",   title: "Session",         subtitle: "Lock, sleep, log out, restart, power", glyph: "󰐥", color: Atelier.red, words: "session power menu logout shutdown", overlay: "power" },
         { key: "lock",      title: "Lock Screen",     subtitle: "hyprlock",                             glyph: "󰌾", color: Atelier.blue, words: "lock screen", cmd: "qs ipc call lock lock || hyprlock" },

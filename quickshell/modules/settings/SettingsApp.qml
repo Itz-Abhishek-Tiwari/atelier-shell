@@ -37,8 +37,8 @@ Item {
           keys: "bar panel position workspaces tray clock pinned apps hover logo power title" },
         { id: "widgets",       group: "Personalise", icon: "󰕮", label: "Desktop",         sub: "The clock and text on your desktop",
           keys: "desktop widget clock date weather greeting tasks media music font shadow" },
-        { id: "general",       group: "System",      icon: "󰒓", label: "General",         sub: "Clock, web search, iPhone camera and recording",
-          keys: "name 24-hour clock time search engine google duckduckgo bing web recording record screen fps sound animation speed motion iphone camera webcam droidcam" },
+        { id: "general",       group: "System",      icon: "󰒓", label: "General",         sub: "Clock, web search, camera, recording, emoji",
+          keys: "name 24-hour clock time search engine google duckduckgo bing web recording record screen fps sound animation speed motion iphone camera webcam droidcam emoji emoticon gif gifs giphy tenor skin tone" },
         { id: "defaults",      group: "System",      icon: "󰀻", label: "Default apps",    sub: "Browser, files, editor, media and terminal",
           keys: "default apps applications open with browser web email mail file manager folders text editor code images pictures photos viewer video player music audio pdf documents archives zip terminal mime xdg" },
         { id: "windows",       group: "System",      icon: "󰖲", label: "Windows",         sub: "Tiling layout, gaps, blur and animations",
@@ -1035,6 +1035,28 @@ Item {
                                     value: String(Settings.recorder.fps); onPicked: (id) => Settings.recorder.fps = Number(id) }
                                 SettingField { label: "Save to"; placeholder: "~/Videos/Recordings"; fieldWidth: 260
                                     text: Settings.recorder.folder; onCommitted: (t) => Settings.recorder.folder = t.trim() || "~/Videos/Recordings" }
+                            }
+                            SettingCard {
+                                title: "Emoji & GIFs"; icon: "󰞅"; tint: Atelier.yellow
+                                SettingRow { label: "Open"
+                                    description: "Super+; for emoji · Super+Shift+; for GIFs · Tab switches between them"
+                                    Chip { icon: "󰞅"; text: "Emoji"; tint: Atelier.yellow; interactive: true; implicitHeight: 32
+                                        onClicked: win.requestOverlay("emoji") } }
+                                SettingSwitch { label: "Type the emoji for me"
+                                    description: "Also types it into the window you were in (needs wtype). Off: only copies it"
+                                    checked: Settings.emoji.typeOnPick; onToggled: (v) => Settings.emoji.typeOnPick = v }
+                                SettingChoice { label: "Skin tone"; description: "For emoji that have one"
+                                    options: [{ id: "0", label: "✋" }, { id: "1", label: "✋🏻" }, { id: "2", label: "✋🏼" },
+                                              { id: "3", label: "✋🏽" }, { id: "4", label: "✋🏾" }, { id: "5", label: "✋🏿" }]
+                                    value: String(Settings.emoji.tone); onPicked: (id) => Settings.emoji.tone = Number(id) }
+                                SettingChoice { label: "GIF service"; description: "Both are free with a key; safe search is always on"
+                                    options: [{ id: "giphy", label: "GIPHY" }, { id: "tenor", label: "Tenor" }]
+                                    value: Settings.emoji.gifProvider; onPicked: (id) => Settings.emoji.gifProvider = id }
+                                SettingField { label: "API key"; fieldWidth: 280
+                                    description: Settings.emoji.gifProvider === "tenor" ? "console.cloud.google.com → enable the Tenor API → create a key"
+                                                                                       : "developers.giphy.com → Create an app → API key"
+                                    placeholder: "Paste your key"
+                                    text: Settings.emoji.gifKey; onCommitted: (t) => Settings.emoji.gifKey = t.trim() }
                             }
                         }
 
