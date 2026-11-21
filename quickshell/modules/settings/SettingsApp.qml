@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import Quickshell.Widgets
 import qs.components
 import qs.config
@@ -9,21 +10,22 @@ import qs.modules.background
 import qs.modules.bar
 import qs.services
 
-// The Atelier Settings app: its own window (built with Quickshell), edits settings.json
-// live through the Settings singleton. Open with Super+, · `qs ipc call settings open <page>` ·
+// The Atelier Settings app: a drawer out of the right edge (an Item inside DrawerHost, so no
+// window, render thread or GL context of its own), edits settings.json live through the
+// Settings singleton. Open with Super+, · `qs ipc call settings open <page>` ·
 // the launcher ("settings") · the control center's gear.
 // Layout follows desktop system-settings apps: searchable, grouped sidebar; one page at a
 // time in a centred column; one accent colour for every control.
-FloatingWindow {
+Item {
     id: win
     visible: false
-    title: "Atelier Settings"
-    color: "transparent"     // glass: drawn below with the shell's surface, blurred by Hyprland
-    implicitWidth: 980
-    implicitHeight: 700
-    minimumSize: Qt.size(800, 540)
+    anchors.fill: parent     // fills the shared DrawerHost window
 
     signal requestOverlay(string name)
+    signal closedSignal()
+    property bool isLight: false
+    property bool animActive: false
+    property real openedAt: 0
 
     property string page: "appearance"
     readonly property var pages: [
@@ -98,11 +100,30 @@ FloatingWindow {
     ]
     readonly property bool customSearch: !searchPresets.some(p => p.id === Settings.behavior.searchUrl)
 
-    function toggle() { visible = !visible; }
+    function toggle() { if (visible && animActive) close(); else open(); }
     function open(p) {
         const old = { behavior: "general" };          // pages that were renamed or merged
         if (p) page = old[p] || (pages.some(x => x.id === p) ? p : page);
+        if (!animActive) openedAt = Date.now();
         visible = true;
+        animActive = true;
+        focusTimer.restart();
+    }
+    function close() {
+        if (!animActive) return;
+        animActive = false;
+        closeTimer.restart();
+        closedSignal();
+    }
+    Timer { id: focusTimer; interval: 40; onTriggered: keys.forceActiveFocus() }
+    Timer { id: closeTimer; interval: Atelier.durClose + 40; onTriggered: if (!win.animActive) win.visible = false }
+
+    // The drawer sits above every window and holds the keyboard, so a window that Settings
+    // starts (photo picker, terminal for chfn/pacman, file manager, qylock preview) would open
+    // behind it. Step aside as soon as a new window maps.
+    Connections {
+        target: Hyprland
+        function onRawEvent(ev) { if (win.animActive && ev.name === "openwindow") win.close(); }
     }
 
     // ── helpers ─────────────────────────────────────────────────────────────
@@ -126,13 +147,23 @@ FloatingWindow {
         stdout: StdioCollector { onStreamFinished: about.version = text.trim() }
     }
 
-    // the same glass surface as the bar, frame and drawers
-    Rectangle { anchors.fill: parent; color: Atelier.surface }
+    // outside click closes (the drawer body below swallows its own clicks)
+    MouseArea { anchors.fill: parent; onClicked: win.close() }
+
+    EdgeDrawer {
+        id: drawer
+        edge: "right"
+        open: win.animActive
+        bodyWidth: Math.min(1000, win.width - Atelier.insetLeft - Atelier.insetRight - 120)
+        bodyHeight: Math.min(780, win.height - Atelier.insetTop - Atelier.insetBottom - 2 * Atelier.fillet - 24)
 
     Item {
+        id: keys
         anchors.fill: parent
         focus: true
-        Keys.onEscapePressed: win.visible = false
+        MouseArea { anchors.fill: parent; acceptedButtons: Qt.AllButtons; onWheel: (w) => w.accepted = false }   // no click-through to the closer
+        // Esc closes; ignore auto-repeat and keys in the first moment (the opening key may still be held)
+        Keys.onEscapePressed: (e) => { if (!e.isAutoRepeat && Date.now() - win.openedAt > 350) win.close(); }
         Keys.onPressed: (e) => {          // Ctrl+F jumps to search
             if (e.key === Qt.Key_F && (e.modifiers & Qt.ControlModifier)) { searchIn.forceActiveFocus(); e.accepted = true; }
         }
@@ -143,9 +174,12 @@ FloatingWindow {
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            width: 248
+            anchors.margins: 8
+            width: 240
+            radius: Math.max(8, Atelier.rounding - 8)      // concentric with the drawer's corners
             color: Qt.alpha(Atelier.crust, 0.32)
-            Rectangle { anchors.right: parent.right; anchors.top: parent.top; anchors.bottom: parent.bottom; width: 1; color: Atelier.outline }
+            border.width: 1
+            border.color: Atelier.outline
 
             ColumnLayout {
                 anchors.fill: parent
@@ -331,7 +365,7 @@ FloatingWindow {
                         color: closeMa.containsMouse ? Qt.alpha(Atelier.red, 0.2) : Atelier.container
                         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                         Text { anchors.centerIn: parent; text: "󰅖"; font.family: Atelier.font; font.pixelSize: 13; color: closeMa.containsMouse ? Atelier.red : Atelier.subtext }
-                        MouseArea { id: closeMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: win.visible = false }
+                        MouseArea { id: closeMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: win.close() }
                     }
                 }
 
@@ -1994,6 +2028,7 @@ FloatingWindow {
                 }
             }
         }
+    }
     }
     // ── A lock-screen theme in the gallery (Settings → Lock screen) ─────────
     component LockThemeCard: Rectangle {

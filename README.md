@@ -141,7 +141,7 @@ Add your own as JSON in `theming/themes/` or `~/.config/atelier/themes/`.
 
 ## Hardware settings and profiles
 
-The Settings app (`SUPER + ,`) configures the machine, not just the shell. Everything applies
+The Settings app (`SUPER + ,`, a drawer from the right edge) configures the machine, not just the shell. Everything applies
 live and is also written to `hypr/atelier-settings.lua`, so it holds at the next login.
 
 | Page | What it does |

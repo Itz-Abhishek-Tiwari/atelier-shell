@@ -56,9 +56,13 @@ ShellRoot {
         console.info("TRACE toggleOverlay", name, "active=" + activeOverlay, "hoverMode=" + hoverMode, Date.now() % 100000);
         // the on-screen keyboard is independent: it stays open while other overlays come and go
         if (name === "keyboard") { osk.toggle(); return; }
-        // the Settings app is a window, not a drawer
-        if (name === "settings") { closeAllOverlays(); settingsApp.toggle(); return; }
-        if (name.startsWith("settings:")) { closeAllOverlays(); settingsApp.open(name.slice(9)); return; }
+        // Settings on a given page ("settings:<page>"): switch page if it is already open
+        if (name.startsWith("settings:")) {
+            if (activeOverlay !== "settings") { closeAllOverlays(); activeOverlay = "settings"; }
+            hoverMode = false;
+            settingsApp.open(name.slice(9));
+            return;
+        }
         // screen recording: stop if running, otherwise pick what to record (same picker)
         if (name.startsWith("record")) {
             if (Recorder.recording) { Recorder.stop(); return; }
@@ -102,6 +106,7 @@ ShellRoot {
         else if (name === "games") gamesOverlay.open();
         else if (name === "media") mediaOverlay.open();
         else if (name === "keybinds") keybindsOverlay.open();
+        else if (name === "settings") settingsApp.open();
         // keep the keyboard stacked above whatever just opened (it types into overlays too)
         if (osk.shown) oskRaise.restart();
     }
@@ -124,6 +129,7 @@ ShellRoot {
         gamesOverlay.close();
         mediaOverlay.close();
         keybindsOverlay.close();
+        settingsApp.close();
     }
 
     // 0. Wallpaper, drawn by the shell (crossfades on change; replaces hyprpaper)
@@ -168,12 +174,6 @@ ShellRoot {
     OnScreenKeyboard { id: osk }
     Timer { id: oskRaise; interval: 150; onTriggered: osk.raise() }
 
-    // Settings app (its own window; edits settings.json live)
-    SettingsApp {
-        id: settingsApp
-        onRequestOverlay: (name) => shellRoot.toggleOverlay(name)
-    }
-
     // Lock screen (iPhone-style; real WlSessionLock + PAM)
     LockScreen { id: lockScreen }
 
@@ -204,7 +204,7 @@ ShellRoot {
                        || launcherOverlay.visible || calendarOverlay.visible || wallpaperOverlay.visible
                        || clipboardOverlay.visible || cameraOverlay.visible || controlCenter.visible || themeOverlay.visible
                        || overviewOverlay.visible || gamesOverlay.visible || mediaOverlay.visible
-                       || keybindsOverlay.visible || appsOverlay.visible
+                       || keybindsOverlay.visible || appsOverlay.visible || settingsApp.visible
         popupVisible: notificationPopups.visible || osd.visible || toastPopup.visible
         osdItem: osd.visible ? osd.inputItem : null
         notifItem: notificationPopups.visible ? notificationPopups.inputItem : null
@@ -338,6 +338,15 @@ ShellRoot {
                 if (shellRoot.activeOverlay === "wallpaper") shellRoot.activeOverlay = "";
             }
         }
+        // Settings (right-edge drawer; edits settings.json live)
+        SettingsApp {
+            id: settingsApp
+            isLight: shellRoot.isLight
+            onRequestOverlay: (name) => shellRoot.toggleOverlay(name)
+            onClosedSignal: {
+                if (shellRoot.activeOverlay === "settings") shellRoot.activeOverlay = "";
+            }
+        }
         // Notification pop-ups (the shell is the notification daemon — see Notifs.qml)
         NotificationPopups { id: notificationPopups }
 
@@ -447,9 +456,9 @@ ShellRoot {
 
         IpcHandler {
             target: "settings"
-            function toggle(): void { settingsApp.toggle(); }
-            function open(page: string): void { settingsApp.open(page); }     // page: appearance|bar|widgets|general|windows|notifications|display|displays|input|sound|shortcuts|lock|login|storage|profiles|about
-            function close(): void { settingsApp.visible = false; }
+            function toggle(): void { shellRoot.toggleOverlay("settings"); }
+            function open(page: string): void { shellRoot.toggleOverlay("settings:" + page); }     // page: appearance|bar|widgets|general|windows|notifications|display|displays|input|sound|shortcuts|lock|login|storage|profiles|about
+            function close(): void { if (shellRoot.activeOverlay === "settings") shellRoot.closeAllOverlays(); }
             function cycleLayout(): string {
                 const l = Settings.cycleLayout();
                 toastPopup.showToast("Layout: " + l.charAt(0).toUpperCase() + l.slice(1), "󰕰", Atelier.accent);
