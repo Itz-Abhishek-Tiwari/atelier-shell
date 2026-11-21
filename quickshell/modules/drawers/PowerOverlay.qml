@@ -1,0 +1,261 @@
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls
+import Quickshell
+import Quickshell.Io
+import Quickshell.Wayland
+import qs.components
+import qs.config
+
+Item {
+    id: powerRoot
+    visible: false
+    anchors.fill: parent    // fills the shared DrawerHost window
+
+
+
+    property bool isLight: false
+    property bool animActive: false
+    property string uptimeStr: "…"
+    property int selectedIndex: 0 // 0: Lock, 1: Sleep, 2: Logout, 3: Reboot, 4: Power
+
+    // Space Mono Typography & Catppuccin Mocha colors
+    readonly property string fontMono: "SpaceMono Nerd Font Propo"
+    readonly property color colBase: isLight
+        ? Qt.rgba(245/255, 247/255, 250/255, 0.96)
+        : Qt.rgba(24/255, 22/255, 28/255, 0.94)
+    readonly property color colBorder: isLight
+        ? Qt.rgba(0, 0, 0, 0.08)
+        : Qt.rgba(255, 255, 255, 0.08)
+    readonly property color colMauve:   Atelier.accent
+    readonly property color colLavend:  Atelier.lavender
+    readonly property color colBlue:    Atelier.blue
+    readonly property color colGreen:   Atelier.green
+    readonly property color colYellow:  Atelier.yellow
+    readonly property color colRed:     Atelier.red
+    readonly property color colText:    isLight ? Atelier.text : Atelier.text
+    readonly property color colSubtext: isLight ? Atelier.subtext : Atelier.subtext
+    readonly property color colSurface: isLight ? Qt.rgba(0, 0, 0, 0.05) : Qt.rgba(255, 255, 255, 0.06)
+    readonly property color colSurf0:   isLight ? Qt.rgba(0, 0, 0, 0.03) : Qt.rgba(255, 255, 255, 0.04)
+
+    signal closedSignal()
+
+    Process {
+        id: uptimeProc
+        command: ["sh", "-c", "uptime -p | sed -E 's/^up //; s/ weeks?/w/; s/ days?/d/; s/ hours?/h/; s/ minutes?/m/; s/,//g'"]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                powerRoot.uptimeStr = text.trim() || "up";
+            }
+        }
+    }
+
+    Process {
+        id: powerProc
+        command: ["sh", "-c", "true"]
+        running: false
+    }
+
+    function runAction(cmd) {
+        powerRoot.close();
+        powerProc.running = false;
+        powerProc.command = ["sh", "-c", cmd];
+        powerProc.running = true;
+    }
+
+    function execSelected() {
+        if (selectedIndex === 0) runAction("qs ipc call lock lock || hyprlock");
+        else if (selectedIndex === 1) runAction("systemctl suspend");
+        else if (selectedIndex === 2) runAction("hyprctl dispatch 'hl.dsp.exit()' 2>/dev/null || hyprctl dispatch exit");
+        else if (selectedIndex === 3) runAction("systemctl reboot");
+        else if (selectedIndex === 4) runAction("systemctl poweroff");
+    }
+
+    function toggle() {
+        if (visible && animActive) {
+            close();
+        } else {
+            open();
+        }
+    }
+
+    function open() {
+        visible = true;
+        animActive = true;
+        selectedIndex = 0;
+        uptimeProc.running = true;
+        focusTimer.restart();
+    }
+
+    function close() {
+        animActive = false;
+        closeTimer.restart();
+        closedSignal();
+    }
+
+    Timer {
+        id: focusTimer
+        interval: 50
+        repeat: false
+        onTriggered: focusItem.forceActiveFocus()
+    }
+
+    Timer {
+        id: closeTimer
+        interval: Atelier.durClose + 40
+        repeat: false
+        onTriggered: {
+            if (!powerRoot.animActive) {
+                powerRoot.visible = false;
+            }
+        }
+    }
+
+    Item {
+        id: focusItem
+        anchors.fill: parent
+        focus: true
+
+        Keys.onEscapePressed: powerRoot.close()
+
+        Keys.onUpPressed: {
+            powerRoot.selectedIndex = (powerRoot.selectedIndex <= 0) ? 4 : powerRoot.selectedIndex - 1;
+        }
+        Keys.onDownPressed: {
+            powerRoot.selectedIndex = (powerRoot.selectedIndex < 0 || powerRoot.selectedIndex >= 4) ? 0 : powerRoot.selectedIndex + 1;
+        }
+        Keys.onLeftPressed: {
+            powerRoot.selectedIndex = (powerRoot.selectedIndex <= 0) ? 4 : powerRoot.selectedIndex - 1;
+        }
+        Keys.onRightPressed: {
+            powerRoot.selectedIndex = (powerRoot.selectedIndex < 0 || powerRoot.selectedIndex >= 4) ? 0 : powerRoot.selectedIndex + 1;
+        }
+        Keys.onTabPressed: {
+            powerRoot.selectedIndex = (powerRoot.selectedIndex < 0 || powerRoot.selectedIndex >= 4) ? 0 : powerRoot.selectedIndex + 1;
+        }
+        Keys.onBacktabPressed: {
+            powerRoot.selectedIndex = (powerRoot.selectedIndex <= 0) ? 4 : powerRoot.selectedIndex - 1;
+        }
+        Keys.onReturnPressed: powerRoot.execSelected()
+        Keys.onEnterPressed: powerRoot.execSelected()
+        Keys.onSpacePressed: powerRoot.execSelected()
+
+        Keys.onPressed: (event) => {
+            var k = event.text.toLowerCase();
+            if (k === "l") {
+                powerRoot.runAction("qs ipc call lock lock || hyprlock");
+            } else if (k === "s") {
+                powerRoot.runAction("systemctl suspend");
+            } else if (k === "e" || k === "q") {
+                powerRoot.runAction("hyprctl dispatch 'hl.dsp.exit()' 2>/dev/null || hyprctl dispatch exit");
+            } else if (k === "r") {
+                powerRoot.runAction("systemctl reboot");
+            } else if (k === "p") {
+                powerRoot.runAction("systemctl poweroff");
+            }
+        }
+
+        // Click-catcher for dismiss on outside click (no scrim: it was being blurred full-screen)
+        Rectangle {
+            anchors.fill: parent
+            color: "transparent"
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: powerRoot.close()
+            }
+        }
+
+        // ── Session drawer on the right edge (Caelestia-style) ─────────────────
+        EdgeDrawer {
+            id: powerCard
+            edge: "right"
+            open: powerRoot.animActive
+            bodyWidth: 112
+            bodyHeight: 5 * 72 + 4 * 10 + 2 * 18 + 44
+
+            ColumnLayout {
+                anchors.fill: parent
+                anchors.margins: 18
+                spacing: 10
+
+                Repeater {
+                    // 0: Lock  1: Sleep  2: Logout  3: Reboot  4: Power Off
+                    model: [
+                        { icon: "󰌾", key: "L", accent: powerRoot.colBlue,   cmd: "qs ipc call lock lock || hyprlock",                         idx: 0 },
+                        { icon: "󰤄", key: "S", accent: powerRoot.colLavend, cmd: "systemctl suspend",                                                      idx: 1 },
+                        { icon: "󰍃", key: "E", accent: powerRoot.colYellow, cmd: "hyprctl dispatch 'hl.dsp.exit()' 2>/dev/null || hyprctl dispatch exit", idx: 2 },
+                        { icon: "󰑓", key: "R", accent: powerRoot.colGreen,  cmd: "systemctl reboot",                                                       idx: 3 },
+                        { icon: "⏻",  key: "P", accent: powerRoot.colRed,    cmd: "systemctl poweroff",                                                     idx: 4 }
+                    ]
+
+                    Rectangle {
+                        id: sessBtn
+                        required property var modelData
+                        readonly property bool isActive: powerRoot.selectedIndex === modelData.idx
+
+                        Layout.alignment: Qt.AlignHCenter
+                        implicitWidth: 72
+                        implicitHeight: 72
+                        // M3-expressive shape morph: rounded square -> squircle when selected
+                        radius: isActive ? 26 : 36
+                        color: isActive
+                            ? Qt.rgba(modelData.accent.r, modelData.accent.g, modelData.accent.b, 0.22)
+                            : powerRoot.colSurf0
+                        border.width: 1
+                        border.color: isActive
+                            ? Qt.rgba(modelData.accent.r, modelData.accent.g, modelData.accent.b, 0.6)
+                            : (powerRoot.isLight ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.06))
+                        scale: btnMa.pressed ? 0.90 : (btnMa.containsMouse ? 1.06 : 1.0)
+
+                        Behavior on radius { NumberAnimation { duration: 260; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
+                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            anchors.verticalCenterOffset: -4
+                            text: sessBtn.modelData.icon
+                            font.family: powerRoot.fontMono
+                            font.pixelSize: 24
+                            color: sessBtn.isActive ? sessBtn.modelData.accent : powerRoot.colText
+                            Behavior on color { ColorAnimation { duration: 150 } }
+                        }
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.bottom: parent.bottom
+                            anchors.bottomMargin: 7
+                            text: sessBtn.modelData.key
+                            font.family: powerRoot.fontMono
+                            font.pixelSize: 9
+                            font.bold: true
+                            color: sessBtn.isActive ? sessBtn.modelData.accent : powerRoot.colSubtext
+                            opacity: 0.8
+                        }
+
+                        MouseArea {
+                            id: btnMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onEntered: powerRoot.selectedIndex = sessBtn.modelData.idx
+                            onClicked: powerRoot.runAction(sessBtn.modelData.cmd)
+                        }
+                    }
+                }
+
+                Text {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.topMargin: 4
+                    text: powerRoot.uptimeStr
+                    font.family: powerRoot.fontMono
+                    font.pixelSize: 10
+                    color: powerRoot.colSubtext
+                }
+            }
+        }
+    }
+}

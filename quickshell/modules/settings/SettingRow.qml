@@ -1,0 +1,64 @@
+import QtQuick
+import QtQuick.Layouts
+import qs.config
+
+// One row of a grouped list (native settings style): label + description on the left, the
+// control on the right (put the control inside). Rows after the first get a hairline divider.
+Item {
+    id: row
+
+    property string label: ""
+    property string description: ""
+    default property alias control: slot.data
+
+    Layout.fillWidth: true
+    implicitHeight: Math.max(50, inner.implicitHeight + 22)
+
+    // divider between rows (not above the first one in its group)
+    Rectangle {
+        visible: row.y > 1
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 1
+        color: Atelier.outline
+    }
+
+    RowLayout {
+        id: inner
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: 18
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 2
+            Text {
+                Layout.fillWidth: true
+                text: row.label
+                font.family: Atelier.fontUi
+                font.pixelSize: 13
+                font.weight: Font.Medium
+                color: Atelier.text
+                elide: Text.ElideRight
+            }
+            Text {
+                Layout.fillWidth: true
+                visible: text.length > 0
+                text: row.description
+                font.family: Atelier.fontUi
+                font.pixelSize: 11
+                color: Atelier.subtext
+                wrapMode: Text.Wrap
+            }
+        }
+
+        Item {
+            id: slot
+            Layout.alignment: Qt.AlignVCenter
+            implicitWidth: childrenRect.width
+            implicitHeight: childrenRect.height
+        }
+    }
+}
