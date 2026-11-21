@@ -1,0 +1,11 @@
+// Zed key bindings — https://zed.dev/docs/key-bindings
+[
+  {
+    "context": "Workspace",
+    "bindings": {
+      // Claude Code CLI in the terminal panel (task in tasks.json)
+      "ctrl-alt-c": ["task::Spawn", { "task_name": "Claude Code" }],
+      "ctrl-alt-shift-c": ["task::Spawn", { "task_name": "Claude Code: continue last session" }]
+    }
+  }
+]

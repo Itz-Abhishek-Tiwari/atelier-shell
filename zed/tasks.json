@@ -1,0 +1,31 @@
+// Zed tasks — https://zed.dev/docs/tasks
+[
+  {
+    // Claude Code CLI in Zed's terminal, in the project root (Ctrl+Alt+C, see keymap.json).
+    // Uses `claude` from PATH (~/.local/bin/claude); until that is installed, falls back to the
+    // binary bundled with the VS Code extension (newest first).
+    "label": "Claude Code",
+    "command": "sh",
+    "args": [
+      "-c",
+      "command -v claude >/dev/null && exec claude \"$@\"; b=$(ls -d \"$HOME\"/.vscode/extensions/anthropic.claude-code-*/resources/native-binary/claude 2>/dev/null | sort -rV | head -n1); [ -n \"$b\" ] && exec \"$b\" \"$@\"; echo 'claude not found: curl -fsSL https://claude.ai/install.sh | bash'; read -r _",
+      "sh"
+    ],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "hide": "never"
+  },
+  {
+    "label": "Claude Code: continue last session",
+    "command": "sh",
+    "args": [
+      "-c",
+      "command -v claude >/dev/null && exec claude --continue; b=$(ls -d \"$HOME\"/.vscode/extensions/anthropic.claude-code-*/resources/native-binary/claude 2>/dev/null | sort -rV | head -n1); [ -n \"$b\" ] && exec \"$b\" --continue; echo 'claude not found'; read -r _"
+    ],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "reveal": "always",
+    "hide": "never"
+  }
+]
