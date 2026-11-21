@@ -77,6 +77,13 @@ ShellRoot {
             else screenshotTool.open(name === "screenshot-window" ? "window" : "region", 0);
             return;
         }
+        // emoji ⇄ GIFs are two tabs of one drawer: switch tab instead of closing and reopening
+        if ((name === "emoji" || name === "gifs") && (activeOverlay === "emoji" || activeOverlay === "gifs")
+                && activeOverlay !== name) {
+            activeOverlay = name;
+            emojiOverlay.setTab(name);
+            return;
+        }
         // clicking the icon of a hover-opened drawer pins it (instead of closing it)
         if (hoverMode && activeOverlay === name) { hoverMode = false; return; }
         if (activeOverlay === name) {
@@ -106,6 +113,7 @@ ShellRoot {
         else if (name === "media") mediaOverlay.open();
         else if (name === "keybinds") keybindsOverlay.open();
         else if (name === "settings") settingsApp.open();
+        else if (name === "emoji" || name === "gifs") emojiOverlay.open(name);
         // keep the keyboard stacked above whatever just opened (it types into overlays too)
         if (osk.shown) oskRaise.restart();
     }
@@ -129,6 +137,7 @@ ShellRoot {
         mediaOverlay.close();
         keybindsOverlay.close();
         settingsApp.close();
+        emojiOverlay.close();
     }
 
     // 0. Wallpaper, drawn by the shell (crossfades on change; replaces hyprpaper)
@@ -203,7 +212,7 @@ ShellRoot {
                        || launcherOverlay.visible || calendarOverlay.visible || wallpaperOverlay.visible
                        || clipboardOverlay.visible || cameraOverlay.visible || controlCenter.visible || themeOverlay.visible
                        || overviewOverlay.visible || gamesOverlay.visible || mediaOverlay.visible
-                       || keybindsOverlay.visible || appsOverlay.visible || settingsApp.visible
+                       || keybindsOverlay.visible || appsOverlay.visible || settingsApp.visible || emojiOverlay.visible
         popupVisible: notificationPopups.visible || osd.visible || toastPopup.visible
         osdItem: osd.visible ? osd.inputItem : null
         notifItem: notificationPopups.visible ? notificationPopups.inputItem : null
@@ -337,6 +346,15 @@ ShellRoot {
                 if (shellRoot.activeOverlay === "wallpaper") shellRoot.activeOverlay = "";
             }
         }
+        // Emoji picker + GIF finder (bottom edge; Super+; / Super+Shift+;)
+        EmojiOverlay {
+            id: emojiOverlay
+            isLight: shellRoot.isLight
+            onToastRequested: (msg, icon, clr) => toastPopup.showToast(msg, icon, clr)
+            onClosedSignal: {
+                if (shellRoot.activeOverlay === "emoji" || shellRoot.activeOverlay === "gifs") shellRoot.activeOverlay = "";
+            }
+        }
         // Settings (right-edge drawer; edits settings.json live)
         SettingsApp {
             id: settingsApp
@@ -412,6 +430,17 @@ ShellRoot {
             function toggle() { shellRoot.toggleOverlay("calendar"); }
             function open() { if (shellRoot.activeOverlay !== "calendar") shellRoot.toggleOverlay("calendar"); }
             function close() { if (shellRoot.activeOverlay === "calendar") shellRoot.closeAllOverlays(); }
+        }
+
+        IpcHandler {
+            target: "emoji"
+            function toggle(): void { shellRoot.toggleOverlay("emoji"); }
+            function gifs(): void { shellRoot.toggleOverlay("gifs"); }
+            function open(): void { if (shellRoot.activeOverlay !== "emoji") shellRoot.toggleOverlay("emoji"); }
+            function close(): void { if (shellRoot.activeOverlay === "emoji" || shellRoot.activeOverlay === "gifs") shellRoot.closeAllOverlays(); }
+            // `qs ipc call emoji search party` / `qs ipc call emoji searchGifs cat`
+            function search(q: string): void { if (shellRoot.activeOverlay !== "emoji") shellRoot.toggleOverlay("emoji"); emojiOverlay.openSearch("emoji", q); }
+            function searchGifs(q: string): void { if (shellRoot.activeOverlay !== "gifs") shellRoot.toggleOverlay("gifs"); emojiOverlay.openSearch("gifs", q); }
         }
 
         IpcHandler {
