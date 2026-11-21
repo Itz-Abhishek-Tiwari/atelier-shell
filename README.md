@@ -1,8 +1,41 @@
 # Quickshell Atelier
 
 Arch Linux + Hyprland (Lua config) desktop built around a custom **Quickshell** shell
-(framed side bar with edge drawers, launcher, overview, control center, lock screen, notifications, OSD, settings app),
-with one theme engine (`atelier-theme`) that recolours everything.
+(framed side bar with edge drawers, launcher, overview, control center, lock screen, notifications, OSD, settings,
+emoji picker and GIF finder), with one theme engine (`atelier-theme`) that recolours everything.
+
+![The Atelier desktop: framed side bar and the typographic clock in the corner](docs/screenshots/desktop.webp)
+
+## Screenshots
+
+Every panel is a drawer that grows out of the frame. Shown in the Kanagawa theme.
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/control-center.webp" alt="Control center"><br><b>Control center</b>: toggles, sliders, modes, notifications · <code>Super + C</code></td>
+<td width="50%"><img src="docs/screenshots/launcher.webp" alt="Launcher"><br><b>Launcher</b>: apps, actions, calculator, web search · <code>Super + Space</code></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/app-grid.webp" alt="App grid"><br><b>App grid</b> by category · bar logo / <code>Super + D</code></td>
+<td><img src="docs/screenshots/overview.webp" alt="Overview"><br><b>Overview</b>: workspaces with live window thumbnails, drag to move · <code>Super + Tab</code></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/settings.webp" alt="Settings"><br><b>Settings</b>: a drawer from the right edge, edits everything live · <code>Super + ,</code></td>
+<td><img src="docs/screenshots/themes.webp" alt="Theme picker"><br><b>Themes</b>: one click recolours the shell, Hyprland, terminals, GTK, Qt, VS Code, Neovim</td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/wallpapers.webp" alt="Wallpaper picker"><br><b>Wallpapers</b>: local folder + Wallhaven (safe search)</td>
+<td><img src="docs/screenshots/emoji.webp" alt="Emoji picker"><br><b>Emoji picker</b> (and a GIF tab) · <code>Super + ;</code> / <code>Super + Shift + ;</code></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/calendar.webp" alt="Calendar"><br><b>Calendar</b> from the bar clock</td>
+<td><img src="docs/screenshots/bluetooth.webp" alt="Bluetooth"><br><b>Bluetooth</b> from the bar (Wi-Fi works the same way)</td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/session-menu.webp" alt="Session menu"><br><b>Session menu</b>: lock, sleep, log out, restart, power off · <code>Super + Backspace</code></td>
+<td><img src="docs/screenshots/keybinds.webp" alt="Keyboard shortcuts"><br><b>Keyboard shortcuts</b> cheat sheet, searchable · <code>Super + Shift + /</code></td>
+</tr>
+</table>
 
 ## Install (one command)
 
