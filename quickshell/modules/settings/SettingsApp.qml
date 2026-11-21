@@ -1957,10 +1957,11 @@ Item {
                                             property bool copied: false
                                             label: modelData[0]
                                             Timer { id: copiedT; interval: 1600; onTriggered: hwRow.copied = false }
-                                            Column {
+                                            ColumnLayout {
                                                 spacing: 2
                                                 Text {
-                                                anchors.right: parent.right
+                                                Layout.alignment: Qt.AlignRight
+                                                Layout.maximumWidth: 420
                                                 font.features: hwRow.copyable ? { "tnum": 1 } : ({})
                                                 MouseArea {
                                                     visible: hwRow.copyable
@@ -1975,14 +1976,15 @@ Item {
                                                 text: modelData[1] || "…"
                                                 font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext1
                                                 horizontalAlignment: Text.AlignRight
-                                                width: Math.min(implicitWidth, 420); elide: Text.ElideRight
+                                                elide: Text.ElideRight
                                                 }
                                                 Text {
-                                                    anchors.right: parent.right
+                                                    Layout.alignment: Qt.AlignRight
+                                                    Layout.maximumWidth: 420
                                                     visible: !!modelData[2]
                                                     text: hwRow.copied ? "Copied" : (modelData[2] || "")
                                                     font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
-                                                    width: Math.min(implicitWidth, 420); elide: Text.ElideRight
+                                                    elide: Text.ElideRight
                                                     horizontalAlignment: Text.AlignRight
                                                 }
                                             }

@@ -51,7 +51,6 @@ Item {
         focusTimer.restart();
     }
     function close() {
-        console.info("TRACE overview close", Date.now() % 100000, new Error().stack.split("\n").slice(1, 3).join(" | "));
         animActive = false;
         dragGhost.active = false;
         closeTimer.restart();
