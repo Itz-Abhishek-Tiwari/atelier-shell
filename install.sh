@@ -63,7 +63,7 @@ LINKS=(
     "hypr:$CONF/hypr"
     "kitty:$CONF/kitty"
     "ghostty:$CONF/ghostty"
-    "nvim:$CONF/nvim"                       # NamiConfig (git submodule)
+    "nvim:$CONF/nvim"                       # NamiConfig (Neovim)
     "fastfetch:$CONF/fastfetch"
     "zellij:$CONF/zellij"
     "zed:$CONF/zed"
@@ -105,11 +105,6 @@ check_user() {
 
 preflight() {
     local missing=0
-    # nvim/ is a git submodule (NamiConfig): fetch it if the repo was cloned without --recursive
-    if [ -f "$SCRIPT_DIR/.gitmodules" ] && [ ! -e "$SCRIPT_DIR/nvim/init.lua" ] && command -v git >/dev/null 2>&1; then
-        log_info "Fetching submodules (nvim = NamiConfig)..."
-        run git -C "$SCRIPT_DIR" submodule update --init --recursive
-    fi
     for item in "${LINKS[@]}"; do
         if [ ! -e "$SCRIPT_DIR/${item%%:*}" ]; then
             log_error "Missing in repo: ${item%%:*}"; missing=1

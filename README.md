@@ -53,7 +53,7 @@ Not covered (do these by hand): the Android SDK/emulator images, the LastWave Ap
 | `hypr/` | `~/.config/hypr` |
 | `kitty/`, `ghostty/`, `zed/`, `zellij/`, `fastfetch/`, `qt5ct/`, `qt6ct/`, `Kvantum/`, `gtk-3.0/`, `gtk-4.0/`, `btop/`, `cava/`, `swappy/`, `zathura/`, `environment.d/` | `~/.config/<same>` |
 | `vesktop/settings/` | `~/.config/vesktop/settings` (Vencord plugins, quick CSS) |
-| `nvim/` (NamiConfig, git submodule) | `~/.config/nvim` |
+| `nvim/` (NamiConfig) | `~/.config/nvim` |
 | `config-scripts/` | `~/.config/scripts` |
 | `starship/starship.toml` | `~/.config/starship.toml` |
 | `zsh/.zshrc`, `zsh/` | `~/.zshrc`, `~/.config/zsh` |

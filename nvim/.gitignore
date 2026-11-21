@@ -1,0 +1,15 @@
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Swap & backup files
+*.swp
+*.swo
+*.swn
+*~
+*.bak
+
+# Neovim & Lazy data state (if present in config root)
+lazy-lock.json.bak
