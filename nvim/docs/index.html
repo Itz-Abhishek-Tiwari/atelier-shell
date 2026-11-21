@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NamiConfig — Modular Neovim Configuration</title>
+<meta name="description" content="A modular, registry-driven Neovim configuration built on lazy.nvim. One file drives LSP, formatters, linters and Mason for every language.">
+<link rel="stylesheet" href="styles.css">
+<script src="https://code.iconify.design/iconify-icon/1.0.8/iconify-icon.min.js"></script>
+<script>
+  // Apply saved theme before paint to avoid a flash
+  (function () {
+    const saved = localStorage.getItem('nami-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (saved ? saved === 'dark' : prefersDark) document.documentElement.classList.add('dark');
+  })();
+</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          paper:     '#EFE9DC',
+          paperdeep: '#E4DCC9',
+          ink:       '#23201B',
+          inkdark:   '#161310',
+          panel:     '#1D1A15',
+          panel2:    '#242019',
+          moss:      { DEFAULT: '#3F5D4A', light: '#5A7D66', dark: '#2E4737' },
+          brass:     { DEFAULT: '#A9812F', light: '#C7A354' },
+          rust:      '#A34A2E',
+          slate2:    '#8A8272',
+        },
+        fontFamily: {
+          display: ['Fraunces', 'serif'],
+          sans: ['Inter', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'monospace'],
+        },
+      },
+    },
+  };
+</script>
+</head>
+<body class="bg-paper dark:bg-inkdark text-ink dark:text-[#EDE7DA] font-sans antialiased transition-colors duration-300">
+
+<!-- ── Mobile backdrop ────────────────────────────────────── -->
+<div id="sidebar-backdrop" class="fixed inset-0 bg-black/40 z-30 opacity-0 pointer-events-none transition-opacity duration-300 lg:hidden" onclick="closeSidebar()"></div>
+
+<div class="flex min-h-screen">
+
+  <!-- ── Sidebar (chapters) ──────────────────────────────── -->
+  <aside id="sidebar" class="fixed lg:sticky top-0 z-40 h-screen w-72 shrink-0 bg-paperdeep/70 dark:bg-panel/70 backdrop-blur-md border-r border-ink/10 dark:border-white/10 flex flex-col">
+    <div id="sidebar-logo-wrap" class="flex items-center gap-3 px-6 h-20 border-b border-ink/10 dark:border-white/10">
+      <div class="w-9 h-9 rounded-md overflow-hidden border border-ink/10 dark:border-white/10 grid place-items-center bg-paper dark:bg-inkdark shrink-0">
+        <img src="logo.png" alt="" class="w-full h-full object-cover">
+      </div>
+      <div class="sidebar-text-hide">
+        <div class="font-display font-semibold text-lg leading-none">NamiConfig</div>
+        <div class="text-xs text-ink/50 dark:text-[#A79C87] mt-1">Neovim, registry-driven</div>
+      </div>
+      <button class="ml-auto lg:hidden text-ink/50 dark:text-[#A79C87]" onclick="closeSidebar()" aria-label="Close menu">
+        <iconify-icon icon="tabler:x" width="20"></iconify-icon>
+      </button>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+      <p class="px-3 mb-2 text-[11px] font-semibold tracking-[0.14em] uppercase text-ink/40 dark:text-[#A79C87]">Chapters</p>
+      <button data-chapter="home" class="chapter-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors" aria-current="page">
+        <span class="font-mono text-xs text-brass w-5 shrink-0">01</span>
+        <iconify-icon icon="tabler:home-2" width="17" class="shrink-0"></iconify-icon>
+        <span class="text-sm font-medium">Home</span>
+      </button>
+      <button data-chapter="start" class="chapter-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors">
+        <span class="font-mono text-xs text-brass w-5 shrink-0">02</span>
+        <iconify-icon icon="tabler:rocket" width="17" class="shrink-0"></iconify-icon>
+        <span class="text-sm font-medium">Get Started</span>
+      </button>
+      <button data-chapter="docs" class="chapter-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors">
+        <span class="font-mono text-xs text-brass w-5 shrink-0">03</span>
+        <iconify-icon icon="tabler:book-2" width="17" class="shrink-0"></iconify-icon>
+        <span class="text-sm font-medium">Architecture</span>
+      </button>
+      <button data-chapter="keymaps" class="chapter-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors">
+        <span class="font-mono text-xs text-brass w-5 shrink-0">04</span>
+        <iconify-icon icon="tabler:keyboard" width="17" class="shrink-0"></iconify-icon>
+        <span class="text-sm font-medium">Keymaps</span>
+      </button>
+      <button data-chapter="langs" class="chapter-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors">
+        <span class="font-mono text-xs text-brass w-5 shrink-0">05</span>
+        <iconify-icon icon="tabler:language" width="17" class="shrink-0"></iconify-icon>
+        <span class="text-sm font-medium">Languages</span>
+      </button>
+      <button data-chapter="settings" class="chapter-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors">
+        <span class="font-mono text-xs text-brass w-5 shrink-0">06</span>
+        <iconify-icon icon="tabler:settings" width="17" class="shrink-0"></iconify-icon>
+        <span class="text-sm font-medium">Settings GUI</span>
+      </button>
+    </nav>
+
+    <div class="p-4 border-t border-ink/10 dark:border-white/10 space-y-2">
+      <button id="theme-toggle" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-ink/70 dark:text-[#EDE7DA] hover:bg-ink/5 dark:hover:bg-white/5 transition-colors">
+        <iconify-icon id="theme-icon" icon="tabler:moon" width="17"></iconify-icon>
+        <span id="theme-label" class="sidebar-text-hide">Dark mode</span>
+      </button>
+      <a href="https://github.com/abhishek-zsyio/NamiConfig" target="_blank" rel="noopener" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-ink/70 dark:text-[#EDE7DA] hover:bg-ink/5 dark:hover:bg-white/5 transition-colors">
+        <iconify-icon icon="tabler:brand-github" width="17"></iconify-icon>
+        <span class="sidebar-text-hide">View on GitHub</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ── Main column ─────────────────────────────────────── -->
+  <div class="flex-1 min-w-0">
+
+    <!-- Topbar -->
+    <header class="sticky top-0 z-20 h-16 flex items-center gap-4 px-5 lg:px-10 bg-paper/80 dark:bg-inkdark/80 backdrop-blur-md border-b border-ink/10 dark:border-white/10">
+      <button class="text-ink/70 dark:text-[#EDE7DA] hover:bg-ink/5 dark:hover:bg-white/5 p-1.5 rounded-lg transition-colors flex items-center justify-center" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+        <iconify-icon icon="tabler:menu-2" width="22"></iconify-icon>
+      </button>
+      <p id="crumb" class="text-sm text-ink/50 dark:text-[#A79C87] font-mono">Ch. 01 &middot; Home</p>
+      <div class="ml-auto flex items-center gap-2">
+        <button class="copy-btn hidden sm:flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-md border border-ink/15 dark:border-white/10 text-ink/70 dark:text-[#EDE7DA] hover:border-moss dark:hover:border-brass transition-colors" data-copy="git clone git@github.com:abhishek-zsyio/NamiConfig.git ~/.config/nvim && bash ~/.config/nvim/setup.sh">
+          <iconify-icon icon="tabler:copy" width="15"></iconify-icon> Copy setup
+        </button>
+        <a class="hidden sm:flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-md bg-moss dark:bg-brass text-paper dark:text-inkdark hover:bg-moss-dark dark:hover:bg-brass-light transition-colors" href="https://github.com/abhishek-zsyio/NamiConfig" target="_blank" rel="noopener">
+          <iconify-icon icon="tabler:brand-github" width="15"></iconify-icon> GitHub
+        </a>
+      </div>
+    </header>
+
+    <main class="px-5 lg:px-10">
+
+<!-- ================================================================ -->
+<!-- HOME                                                              -->
+<!-- ================================================================ -->
+<section id="home" class="chapter-pane active max-w-6xl mx-auto py-10 lg:py-14">
+
+  <!-- ── Hero Split Layout ────────────────────────────────── -->
+  <div class="flex flex-col lg:flex-row gap-10 items-center mb-16">
+    <!-- Left Column (Content) -->
+    <div class="flex-1 min-w-0">
+      <div class="flex flex-wrap items-center gap-2 mb-6">
+        <span class="inline-flex items-center gap-1.5 text-xs font-mono px-3 py-1 rounded-full border border-moss/30 dark:border-moss-light/30 text-moss dark:text-moss-light bg-moss/5"><iconify-icon icon="tabler:lock-open" width="13"></iconify-icon>Open Source</span>
+        <span class="inline-flex items-center gap-1.5 text-xs font-mono px-3 py-1 rounded-full border border-rust/30 text-rust bg-rust/5"><iconify-icon icon="tabler:bolt" width="13"></iconify-icon>lazy.nvim</span>
+      </div>
+
+      <h1 class="font-display font-semibold text-[2.5rem] sm:text-5xl lg:text-6xl leading-[1.05] mb-6">
+        The Neovim config<br><span class="squiggle">built to scale.</span>
+      </h1>
+
+      <p class="text-base sm:text-lg text-ink/65 dark:text-[#C7BFAE] leading-relaxed mb-8 max-w-xl">
+        Define a language once. It auto-wires LSP servers, Mason packages, formatters, and linters &mdash; everywhere. Full-stack ready for Web, Python, Go, Rust, SQL, and LeetCode, out of the box.
+      </p>
+
+      <div class="flex flex-wrap gap-3 mb-8">
+        <button data-nav="start" class="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-moss dark:bg-brass text-paper dark:text-inkdark font-semibold text-sm hover:opacity-90 transition-opacity">
+          Get Started <iconify-icon icon="tabler:arrow-right" width="16"></iconify-icon>
+        </button>
+        <button data-nav="docs" class="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-ink/15 dark:border-white/15 font-semibold text-sm hover:border-moss dark:hover:border-brass transition-colors">
+          Read the Docs
+        </button>
+      </div>
+
+      <div class="flex items-center gap-3 max-w-xl bg-panel rounded-lg border border-white/5 px-4 py-3">
+        <code class="font-mono text-sm text-[#a8c887] flex-1 overflow-x-auto whitespace-nowrap scrollbar-hide">git clone git@github.com:abhishek-zsyio/NamiConfig.git ~/.config/nvim &amp;&amp; bash setup.sh</code>
+        <button class="copy-btn shrink-0 text-xs font-medium px-2.5 py-1.5 rounded-md border border-white/10 text-[#EDE7DA] hover:border-brass transition-colors" data-copy="git clone git@github.com:abhishek-zsyio/NamiConfig.git ~/.config/nvim && bash ~/.config/nvim/setup.sh">
+          <iconify-icon icon="tabler:copy" width="14"></iconify-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Column (Simulator) -->
+    <div class="w-full lg:w-[420px] xl:w-[480px] shrink-0">
+      <div class="rounded-xl overflow-hidden border border-white/5 ink-panel shadow-2xl">
+        <div class="flex items-center justify-between gap-4 flex-wrap px-4 py-3 ink-panel-head">
+          <div class="flex flex-wrap gap-1.5" id="theme-pills">
+            <button class="t-pill active" data-theme="kanagawa">Kanagawa</button>
+            <button class="t-pill" data-theme="catppuccin">Mocha</button>
+            <button class="t-pill" data-theme="rose-pine">Rose Pine</button>
+            <button class="t-pill" data-theme="tokyonight">TokyoNight</button>
+            <button class="t-pill" data-theme="gruvbox">Gruvbox</button>
+            <button class="t-pill" data-theme="nord">Nord</button>
+          </div>
+          <span class="text-[10px] font-mono text-[#8A8272]">click to preview</span>
+        </div>
+        <div class="p-5 font-mono text-xs leading-[1.7] overflow-x-auto" id="sim-editor">
+          <div class="eline"><span class="ln">1</span><span class="cmt">-- lang_registry.lua -- single source of truth</span></div>
+          <div class="eline"><span class="ln">2</span><span class="kw">local</span> <span class="field">M</span> <span class="op">=</span> {}</div>
+          <div class="eline"><span class="ln">3</span></div>
+          <div class="eline"><span class="ln">4</span><span class="field">M</span><span class="op">.</span><span class="fn">langs</span> <span class="op">=</span> {</div>
+          <div class="eline"><span class="ln">5</span>&nbsp;&nbsp;<span class="field">typescript</span> <span class="op">=</span> {</div>
+          <div class="eline"><span class="ln">6</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="field">lsp</span>        <span class="op">=</span> <span class="str">"ts_ls"</span>,</div>
+          <div class="eline"><span class="ln">7</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="field">mason</span>      <span class="op">=</span> { <span class="str">"eslint_d"</span> },</div>
+          <div class="eline"><span class="ln">8</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="field">formatters</span> <span class="op">=</span> { <span class="str">"prettier"</span> },</div>
+          <div class="eline"><span class="ln">9</span>&nbsp;&nbsp;},</div>
+          <div class="eline"><span class="ln">10</span>&nbsp;&nbsp;<span class="field">python</span> <span class="op">=</span> {</div>
+          <div class="eline"><span class="ln">11</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="field">lsp</span>        <span class="op">=</span> <span class="str">"pyright"</span>,</div>
+          <div class="eline"><span class="ln">12</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="field">mason</span>      <span class="op">=</span> { <span class="str">"black"</span>, <span class="str">"ruff"</span> },</div>
+          <div class="eline"><span class="ln">13</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="field">formatters</span> <span class="op">=</span> { <span class="str">"black"</span> },<span class="cursor"></span></div>
+          <div class="eline"><span class="ln">14</span>&nbsp;&nbsp;},</div>
+          <div class="eline"><span class="ln">15</span>}</div>
+          <div class="eline"><span class="ln">16</span><span class="kw">return</span> <span class="field">M</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manuscript Divider -->
+  <div class="manuscript-divider">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M12 2C12 2 9 7 9 12C9 17 12 22 12 22C12 22 15 17 15 12C15 7 12 2" />
+      <path d="M2 12C2 12 7 9 12 9C17 9 22 12 22 12C22 12 17 15 12 15C7 15 2 12" />
+      <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+    </svg>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 mb-16">
+    <div class="p-6 border-r border-b sm:border-b-0 border-ink/10 dark:border-white/10">
+      <div class="font-display font-bold text-3xl text-moss dark:text-brass">14+</div>
+      <div class="text-xs uppercase tracking-wide text-ink/45 dark:text-[#A79C87] font-medium mt-1">Colorschemes</div>
+    </div>
+    <div class="p-6 border-b sm:border-b-0 sm:border-r border-ink/10 dark:border-white/10">
+      <div class="font-display font-bold text-3xl text-moss dark:text-brass">20+</div>
+      <div class="text-xs uppercase tracking-wide text-ink/45 dark:text-[#A79C87] font-medium mt-1">Languages</div>
+    </div>
+    <div class="p-6 border-r border-ink/10 dark:border-white/10">
+      <div class="font-display font-bold text-3xl text-moss dark:text-brass">1</div>
+      <div class="text-xs uppercase tracking-wide text-ink/45 dark:text-[#A79C87] font-medium mt-1">Registry File</div>
+    </div>
+    <div class="p-6">
+      <div class="font-display font-bold text-3xl text-moss dark:text-brass">0</div>
+      <div class="text-xs uppercase tracking-wide text-ink/45 dark:text-[#A79C87] font-medium mt-1">Duplicate Configs</div>
+    </div>
+  </div>
+
+  <!-- Manuscript Divider -->
+  <div class="manuscript-divider">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M12 2C12 2 9 7 9 12C9 17 12 22 12 22C12 22 15 17 15 12C15 7 12 2" />
+      <path d="M2 12C2 12 7 9 12 9C17 9 22 12 22 12C22 12 17 15 12 15C7 15 2 12" />
+      <circle cx="12" cy="12" r="2.5" fill="currentColor" />
+    </svg>
+  </div>
+
+  <!-- Features -->
+  <p class="text-xs font-mono uppercase tracking-[0.14em] text-ink/40 dark:text-[#A79C87] mb-2">Features</p>
+  <h2 class="font-display font-semibold text-3xl mb-10">Everything you need, nothing you don't.</h2>
+
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-16">
+    <div class="p-6 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel hover:border-moss/40 dark:hover:border-brass/40 transition-colors">
+      <iconify-icon icon="tabler:plug-connected" width="22" class="text-moss dark:text-brass mb-4 block"></iconify-icon>
+      <h3 class="font-semibold mb-2">Single Language Registry</h3>
+      <p class="text-sm text-ink/60 dark:text-[#A79C87] leading-relaxed">Define a language once in <code class="font-mono text-xs text-moss dark:text-brass">lang_registry.lua</code> &mdash; LSP, Mason, formatters and linters auto-wire from that entry.</p>
+    </div>
+    <div class="p-6 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel hover:border-moss/40 dark:hover:border-brass/40 transition-colors">
+      <iconify-icon icon="tabler:palette" width="22" class="text-moss dark:text-brass mb-4 block"></iconify-icon>
+      <h3 class="font-semibold mb-2">14+ Themes &amp; Ghostty Sync</h3>
+      <p class="text-sm text-ink/60 dark:text-[#A79C87] leading-relaxed">Switch live with <code class="font-mono text-xs text-moss dark:text-brass">&lt;leader&gt;th</code>. Your Ghostty terminal syncs automatically to whatever theme is active.</p>
+    </div>
+    <div class="p-6 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel hover:border-moss/40 dark:hover:border-brass/40 transition-colors">
+      <iconify-icon icon="tabler:trophy" width="22" class="text-moss dark:text-brass mb-4 block"></iconify-icon>
+      <h3 class="font-semibold mb-2">LeetCode + GitHub Auto-Sync</h3>
+      <p class="text-sm text-ink/60 dark:text-[#A79C87] leading-relaxed">Solve problems natively. Every submission auto-commits and pushes to your GitHub repository.</p>
+    </div>
+    <div class="p-6 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel hover:border-moss/40 dark:hover:border-brass/40 transition-colors">
+      <iconify-icon icon="tabler:align-left" width="22" class="text-moss dark:text-brass mb-4 block"></iconify-icon>
+      <h3 class="font-semibold mb-2">Conform + Nvim-Lint</h3>
+      <p class="text-sm text-ink/60 dark:text-[#A79C87] leading-relaxed">Async, non-blocking formatting and linting for every supported language, registry-driven.</p>
+    </div>
+    <div class="p-6 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel hover:border-moss/40 dark:hover:border-brass/40 transition-colors">
+      <iconify-icon icon="tabler:bug" width="22" class="text-moss dark:text-brass mb-4 block"></iconify-icon>
+      <h3 class="font-semibold mb-2">Native Debugging</h3>
+      <p class="text-sm text-ink/60 dark:text-[#A79C87] leading-relaxed">Full graphical debugger via <code class="font-mono text-xs text-moss dark:text-brass">nvim-dap</code> for Python, Go and Rust.</p>
+    </div>
+    <div class="p-6 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel hover:border-moss/40 dark:hover:border-brass/40 transition-colors">
+      <iconify-icon icon="tabler:sparkles" width="22" class="text-moss dark:text-brass mb-4 block"></iconify-icon>
+      <h3 class="font-semibold mb-2">Supermaven AI</h3>
+      <p class="text-sm text-ink/60 dark:text-[#A79C87] leading-relaxed">Inline AI completions, paired with Snacks.nvim for fuzzy pickers, file tree, and terminal splits.</p>
+    </div>
+    <div class="p-6 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel hover:border-moss/40 dark:hover:border-brass/40 transition-colors">
+      <iconify-icon icon="tabler:brand-youtube" width="22" class="text-moss dark:text-brass mb-4 block"></iconify-icon>
+      <h3 class="font-semibold mb-2">YouTube Background Player</h3>
+      <p class="text-sm text-ink/60 dark:text-[#A79C87] leading-relaxed">Stream lofi or music in background with <code class="font-mono text-xs text-moss dark:text-brass">&lt;leader&gt;yp</code> &amp; HUD controls via <code class="font-mono text-xs text-moss dark:text-brass">&lt;leader&gt;yc</code>.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================================================================ -->
+<!-- GET STARTED                                                       -->
+<!-- ================================================================ -->
+<section id="start" class="chapter-pane max-w-6xl mx-auto py-10 lg:py-14">
+  <p class="text-xs font-mono uppercase tracking-[0.14em] text-ink/40 dark:text-[#A79C87] mb-2">Installation</p>
+  <h2 class="font-display font-semibold text-4xl mb-3">Get up and running</h2>
+  <p class="text-ink/60 dark:text-[#A79C87] max-w-xl mb-8">One command installs all dependencies and bootstraps every plugin headlessly. No fiddling required.</p>
+
+  <div class="flex gap-3 items-start p-5 rounded-lg border border-moss/25 bg-moss/5 dark:bg-moss/10 mb-8">
+    <iconify-icon icon="tabler:info-circle" width="19" class="text-moss dark:text-moss-light shrink-0 mt-0.5"></iconify-icon>
+    <p class="text-sm leading-relaxed">The <code class="font-mono text-xs">setup.sh</code> script installs Homebrew, Neovim 0.10+, ripgrep, fd, lazygit, Node.js, Deno, ImageMagick, JetBrainsMono Nerd Font, and runs a headless plugin sync automatically.</p>
+  </div>
+
+  <div class="rounded-xl overflow-hidden border border-white/5 mb-10 ink-panel">
+    <div class="flex items-center justify-between px-5 py-3 ink-panel-head">
+      <span class="text-xs font-mono text-[#8A8272] flex items-center gap-2"><iconify-icon icon="tabler:terminal-2" width="15"></iconify-icon>Terminal</span>
+      <button class="copy-btn text-xs flex items-center gap-1.5 text-[#8A8272] hover:text-brass-light transition-colors" data-copy="git clone git@github.com:abhishek-zsyio/NamiConfig.git ~/.config/nvim && bash ~/.config/nvim/setup.sh"><iconify-icon icon="tabler:copy" width="14"></iconify-icon>Copy</button>
+    </div>
+    <div class="p-5 font-mono text-sm leading-[1.8] overflow-x-auto whitespace-pre"><span class="cmt"># Clone the config</span>
+git clone git@github.com:abhishek-zsyio/NamiConfig.git ~/.config/nvim
+
+<span class="cmt"># Run the automated setup script</span>
+bash ~/.config/nvim/setup.sh</div>
+  </div>
+
+  <!-- Interactive Web Installer & System Doctor -->
+  <div class="p-6 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/40 dark:bg-panel shadow-sm mb-10">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+      <div>
+        <h3 class="font-display font-semibold text-xl flex items-center gap-2">
+          <iconify-icon icon="tabler:stethoscope" width="22" class="text-moss dark:text-brass"></iconify-icon>
+          System Health Doctor &amp; Web Setup
+        </h3>
+        <p class="text-xs text-ink/60 dark:text-[#A79C87] mt-1">Check tool versions or trigger direct setup &amp; plugin sync right from your browser.</p>
+      </div>
+      <button id="run-web-setup-btn" class="px-5 py-2.5 rounded-lg bg-moss dark:bg-brass text-paper dark:text-inkdark font-semibold text-sm hover:opacity-90 transition-all flex items-center gap-2 shrink-0 shadow-sm">
+        <iconify-icon icon="tabler:player-play" width="16"></iconify-icon> Run Setup &amp; Sync
+      </button>
+    </div>
+
+    <!-- Health Doctor Badges Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3.5 mb-6" id="doctor-grid">
+      <div class="p-3 rounded-lg border border-ink/10 dark:border-white/10 bg-paper/80 dark:bg-inkdark/80 font-mono text-xs flex items-center justify-between"><span class="text-ink/60 dark:text-[#A79C87]">Neovim</span><span class="text-brass font-semibold">Checking...</span></div>
+      <div class="p-3 rounded-lg border border-ink/10 dark:border-white/10 bg-paper/80 dark:bg-inkdark/80 font-mono text-xs flex items-center justify-between"><span class="text-ink/60 dark:text-[#A79C87]">Node.js</span><span class="text-brass font-semibold">Checking...</span></div>
+      <div class="p-3 rounded-lg border border-ink/10 dark:border-white/10 bg-paper/80 dark:bg-inkdark/80 font-mono text-xs flex items-center justify-between"><span class="text-ink/60 dark:text-[#A79C87]">ripgrep</span><span class="text-brass font-semibold">Checking...</span></div>
+      <div class="p-3 rounded-lg border border-ink/10 dark:border-white/10 bg-paper/80 dark:bg-inkdark/80 font-mono text-xs flex items-center justify-between"><span class="text-ink/60 dark:text-[#A79C87]">lazygit</span><span class="text-brass font-semibold">Checking...</span></div>
+    </div>
+
+    <!-- Live Terminal Stream Output Box -->
+    <div id="setup-terminal-box" class="rounded-xl overflow-hidden border border-ink/10 dark:border-white/10 ink-panel hidden">
+      <div class="flex items-center justify-between px-4 py-2.5 ink-panel-head text-xs font-mono">
+        <span class="flex items-center gap-2 text-moss dark:text-brass font-semibold">
+          <iconify-icon icon="tabler:terminal-2" width="15"></iconify-icon> Live Setup Log Output
+        </span>
+        <span id="setup-status-badge" class="text-[10px] font-semibold px-2 py-0.5 rounded bg-brass/20 text-brass">Running...</span>
+      </div>
+      <pre id="setup-terminal-output" class="p-4 font-mono text-xs leading-relaxed max-h-64 overflow-y-auto whitespace-pre-wrap text-[#EDE7DA]"></pre>
+    </div>
+  </div>
+
+  <h3 class="font-display font-semibold text-2xl mb-5">What happens next</h3>
+  <div class="grid sm:grid-cols-2 gap-4 mb-12">
+    <div class="p-6 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel">
+      <div class="font-mono text-2xl font-bold text-brass mb-2">01</div>
+      <h4 class="font-semibold mb-1.5">Dependencies installed</h4>
+      <p class="text-sm text-ink/60 dark:text-[#A79C87] leading-relaxed">Homebrew, Neovim, ripgrep, fd, lazygit, Node.js, Deno, ImageMagick and JetBrainsMono Nerd Font.</p>
+    </div>
+    <div class="p-6 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel">
+      <div class="font-mono text-2xl font-bold text-brass mb-2">02</div>
+      <h4 class="font-semibold mb-1.5">Plugins bootstrapped</h4>
+      <p class="text-sm text-ink/60 dark:text-[#A79C87] leading-relaxed"><code class="font-mono text-xs">lazy.nvim</code> runs headlessly and clones all plugin repositories.</p>
+    </div>
+    <div class="p-6 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel">
+      <div class="font-mono text-2xl font-bold text-brass mb-2">03</div>
+      <h4 class="font-semibold mb-1.5">LSP auto-installed</h4>
+      <p class="text-sm text-ink/60 dark:text-[#A79C87] leading-relaxed">Mason reads the language registry and installs every server, formatter, linter and debugger.</p>
+    </div>
+    <div class="p-6 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel">
+      <div class="font-mono text-2xl font-bold text-brass mb-2">04</div>
+      <h4 class="font-semibold mb-1.5">Start editing</h4>
+      <p class="text-sm text-ink/60 dark:text-[#A79C87] leading-relaxed">Hover, completions, format-on-save and diagnostics are active immediately. Press <code class="font-mono text-xs">Space</code>.</p>
+    </div>
+  </div>
+
+  <div class="grid sm:grid-cols-2 gap-6 mb-12">
+    <div>
+      <h3 class="font-display font-semibold text-xl mb-4">Required</h3>
+      <ul class="space-y-2.5 text-sm">
+        <li class="flex gap-2.5"><iconify-icon icon="tabler:flower" width="17" class="text-moss dark:text-moss-light shrink-0 mt-0.5"></iconify-icon><span><strong>Neovim 0.10+</strong> &mdash; core editor</span></li>
+        <li class="flex gap-2.5"><iconify-icon icon="tabler:flower" width="17" class="text-moss dark:text-moss-light shrink-0 mt-0.5"></iconify-icon><span><strong>Git</strong> &mdash; plugin manager &amp; versioning</span></li>
+        <li class="flex gap-2.5"><iconify-icon icon="tabler:flower" width="17" class="text-moss dark:text-moss-light shrink-0 mt-0.5"></iconify-icon><span><strong>Node.js &amp; npm</strong> &mdash; TS LSP, Prettier, ESLint</span></li>
+        <li class="flex gap-2.5"><iconify-icon icon="tabler:flower" width="17" class="text-moss dark:text-moss-light shrink-0 mt-0.5"></iconify-icon><span><strong>ripgrep</strong> &mdash; Snacks live grep engine</span></li>
+        <li class="flex gap-2.5"><iconify-icon icon="tabler:flower" width="17" class="text-moss dark:text-moss-light shrink-0 mt-0.5"></iconify-icon><span><strong>fd</strong> &mdash; fast file finder</span></li>
+        <li class="flex gap-2.5"><iconify-icon icon="tabler:flower" width="17" class="text-moss dark:text-moss-light shrink-0 mt-0.5"></iconify-icon><span><strong>lazygit</strong> &mdash; embedded Git TUI</span></li>
+        <li class="flex gap-2.5"><iconify-icon icon="tabler:flower" width="17" class="text-moss dark:text-moss-light shrink-0 mt-0.5"></iconify-icon><span><strong>Python 3 + pip</strong> &mdash; Pyright, Black, Ruff, Debugpy</span></li>
+        <li class="flex gap-2.5"><iconify-icon icon="tabler:flower" width="17" class="text-moss dark:text-moss-light shrink-0 mt-0.5"></iconify-icon><span><strong>A Nerd Font</strong> &mdash; icons throughout the UI</span></li>
+        <li class="flex gap-2.5"><iconify-icon icon="tabler:flower" width="17" class="text-moss dark:text-moss-light shrink-0 mt-0.5"></iconify-icon><span><strong>make / clang</strong> &mdash; Treesitter compilation</span></li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="font-display font-semibold text-xl mb-4">Optional extras</h3>
+      <ul class="space-y-2.5 text-sm">
+        <li class="flex gap-2.5"><iconify-icon icon="tabler:brightness" width="17" class="text-brass shrink-0 mt-0.5"></iconify-icon><span><strong>Go</strong> &mdash; <code class="font-mono text-xs">plugins.extras.lang.go</code></span></li>
+        <li class="flex gap-2.5"><iconify-icon icon="tabler:brightness" width="17" class="text-brass shrink-0 mt-0.5"></iconify-icon><span><strong>Rust / cargo</strong> &mdash; <code class="font-mono text-xs">plugins.extras.lang.rust</code></span></li>
+        <li class="flex gap-2.5"><iconify-icon icon="tabler:brightness" width="17" class="text-brass shrink-0 mt-0.5"></iconify-icon><span><strong>silicon</strong> &mdash; code screenshots via <code class="font-mono text-xs">:Silicon</code></span></li>
+        <li class="flex gap-2.5"><iconify-icon icon="tabler:brightness" width="17" class="text-brass shrink-0 mt-0.5"></iconify-icon><span><strong>Ghostty</strong> &mdash; terminal theme sync</span></li>
+        <li class="flex gap-2.5"><iconify-icon icon="tabler:brightness" width="17" class="text-brass shrink-0 mt-0.5"></iconify-icon><span><strong>Deno</strong> &mdash; Markdown peek preview</span></li>
+        <li class="flex gap-2.5"><iconify-icon icon="tabler:brightness" width="17" class="text-brass shrink-0 mt-0.5"></iconify-icon><span><strong>ImageMagick</strong> &mdash; image rendering in editor</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 class="font-display font-semibold text-2xl mb-5">Manual installation</h3>
+  <div class="rounded-xl overflow-hidden border border-white/5 ink-panel">
+    <div class="flex items-center justify-between px-5 py-3 ink-panel-head">
+      <span class="text-xs font-mono text-[#8A8272] flex items-center gap-2"><iconify-icon icon="tabler:terminal-2" width="15"></iconify-icon>Terminal</span>
+      <button class="copy-btn text-xs flex items-center gap-1.5 text-[#8A8272] hover:text-brass-light transition-colors" data-copy="mv ~/.config/nvim ~/.config/nvim.bak && git clone git@github.com:abhishek-zsyio/NamiConfig.git ~/.config/nvim && nvim"><iconify-icon icon="tabler:copy" width="14"></iconify-icon>Copy</button>
+    </div>
+    <div class="p-5 font-mono text-sm leading-[1.8] overflow-x-auto whitespace-pre"><span class="cmt"># Backup existing config</span>
+mv ~/.config/nvim ~/.config/nvim.bak
+
+<span class="cmt"># Clone NamiConfig</span>
+git clone git@github.com:abhishek-zsyio/NamiConfig.git ~/.config/nvim
+
+<span class="cmt"># Launch -- lazy.nvim auto-installs all plugins on first open</span>
+nvim</div>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<!-- DOCS / ARCHITECTURE                                               -->
+<!-- ================================================================ -->
+<section id="docs" class="chapter-pane max-w-6xl mx-auto py-10 lg:py-14">
+  <p class="text-xs font-mono uppercase tracking-[0.14em] text-ink/40 dark:text-[#A79C87] mb-2">Architecture</p>
+  <h2 class="font-display font-semibold text-4xl mb-3">How NamiConfig is put together</h2>
+  <p class="text-ink/60 dark:text-[#A79C87] max-w-lg mb-12">A tour of how plugins, languages, user options and tools stay in one place without configuration sprawl.</p>
+
+  <h3 class="font-display font-semibold text-2xl mb-3 flex items-center gap-2"><span class="text-brass font-mono text-lg">1</span>The Language Registry</h3>
+  <p class="mb-5 leading-relaxed">The core design pattern lives at <code class="font-mono text-xs">lua/core/lang_registry.lua</code>. Classic Neovim setups split language config across separate files &mdash; LSP here, formatters there. NamiConfig unites all of it under one entry per language.</p>
+
+  <div class="rounded-xl overflow-hidden border border-white/5 mb-10 ink-panel">
+    <div class="flex items-center justify-between px-5 py-3 ink-panel-head">
+      <span class="text-xs font-mono text-[#8A8272]">lua/core/lang_registry.lua</span>
+      <button class="copy-btn text-xs flex items-center gap-1.5 text-[#8A8272] hover:text-brass-light transition-colors" data-copy='python = {
+  lsp        = "pyright",
+  mason      = { "black", "ruff", "debugpy" },
+  formatters = { "black" },
+  linters    = { "ruff" },
+  lsp_opts   = { filetypes = { "python" } },
+},'><iconify-icon icon="tabler:copy" width="14"></iconify-icon>Copy</button>
+    </div>
+    <div class="p-5 font-mono text-sm leading-[1.8] overflow-x-auto whitespace-pre"><span class="cmt">-- Defining a language entry in M.langs</span>
+<span class="field">python</span> <span class="op">=</span> {
+  <span class="field">lsp</span>        <span class="op">=</span> <span class="str">"pyright"</span>,
+  <span class="field">mason</span>      <span class="op">=</span> { <span class="str">"black"</span>, <span class="str">"ruff"</span>, <span class="str">"debugpy"</span> },
+  <span class="field">formatters</span> <span class="op">=</span> { <span class="str">"black"</span> },
+  <span class="field">linters</span>    <span class="op">=</span> { <span class="str">"ruff"</span> },
+  <span class="field">lsp_opts</span>   <span class="op">=</span> { <span class="field">filetypes</span> <span class="op">=</span> { <span class="str">"python"</span> } },
+},</div>
+  </div>
+
+  <p class="mb-12 leading-relaxed">On load, this table is parsed to auto-configure four things: <strong>Mason</strong> dedupes and installs formatters/linters; <strong>lspconfig</strong> sets up the server and merges <code class="font-mono text-xs">lsp_opts</code>; <strong>Conform.nvim</strong> populates <code class="font-mono text-xs">formatters_by_ft</code>; <strong>nvim-lint</strong> wires linters into save autocommands.</p>
+
+  <h3 class="font-display font-semibold text-2xl mb-3 flex items-center gap-2"><span class="text-brass font-mono text-lg">2</span>Directory Structure</h3>
+  <p class="mb-5 leading-relaxed">Core settings stay isolated from plugin specs, so themes or options can change without touching code.</p>
+
+  <div class="rounded-xl overflow-hidden border border-white/5 mb-12 ink-panel p-6 font-mono text-sm leading-[1.9] overflow-x-auto whitespace-pre"><span class="atree-dir">~/.config/nvim/</span>
+├── init.lua                    <span class="atree-note">Loads options, lazy.nvim, settings, core settings</span>
+├── lazy-lock.json              <span class="atree-note">Version lockfile tracking plugin commits</span>
+├── docs/                       <span class="atree-note">This documentation site's source files</span>
+└── lua/
+    ├── settings.lua            <span class="atree-key">&lt;-- Edit options here (theme, font size, transparent bg)</span>
+    ├── core/
+    │   ├── lang_registry.lua   <span class="atree-key">&lt;-- Single source of truth for LSPs and formatters</span>
+    │   ├── keymaps.lua         <span class="atree-note">Global keyboard shortcut declarations</span>
+    │   ├── autocmds.lua        <span class="atree-note">Editor events (highlight on yank, format triggers)</span>
+    │   ├── options.lua         <span class="atree-note">Standard vim options (line height, tabs, splits)</span>
+    │   └── settings_loader.lua <span class="atree-note">Loader that reads and parses settings.lua</span>
+    └── plugins/
+        ├── init.lua            <span class="atree-key">&lt;-- Plugin load matrix -- new plugins register here</span>
+        ├── ui/                 <span class="atree-note">Visual elements: dropbar, lualine, bufferline, snacks</span>
+        ├── editor/              <span class="atree-note">cmp completions, treesitter, comment, autopairs</span>
+        ├── lsp/                <span class="atree-note">Mason package manager, cmp-lspconfig</span>
+        ├── git/                <span class="atree-note">lazygit, diffview, gitsigns</span>
+        ├── ai/                 <span class="atree-note">Supermaven autocomplete</span>
+        ├── formatting/         <span class="atree-note">conform.nvim configuration</span>
+        ├── linting/            <span class="atree-note">nvim-lint configuration</span>
+        ├── lang/               <span class="atree-note">Per-language plugin specs (e.g. prisma.lua)</span>
+        └── extras/             <span class="atree-note">Feature-toggle packs, loaded on demand</span></div>
+
+  <div class="grid sm:grid-cols-2 gap-6 mb-12">
+    <div>
+      <h3 class="font-display font-semibold text-xl mb-3 flex items-center gap-2"><span class="text-brass font-mono text-base">3</span>Declarative Configuration</h3>
+      <p class="text-sm mb-4 leading-relaxed">The primary interface is <code class="font-mono text-xs">lua/settings.lua</code>, exposing options in logical blocks:</p>
+      <div class="rounded-lg overflow-hidden border border-white/5 ink-panel p-4 font-mono text-xs leading-[1.8] overflow-x-auto whitespace-pre"><span class="kw">return</span> {
+  <span class="field">ui</span> <span class="op">=</span> {
+    <span class="field">theme</span>       <span class="op">=</span> <span class="str">"kanagawa-wave"</span>,
+    <span class="field">transparent</span> <span class="op">=</span> <span class="kw">false</span>,
+  },
+  <span class="field">editor</span> <span class="op">=</span> {
+    <span class="field">format_on_save</span> <span class="op">=</span> <span class="kw">true</span>,
+    <span class="field">tab_size</span>       <span class="op">=</span> <span class="num">2</span>,
+  },
+  <span class="field">extras</span> <span class="op">=</span> {
+    <span class="str">"plugins.extras.lang.go"</span>,
+  },
+}</div>
+    </div>
+    <div>
+      <h3 class="font-display font-semibold text-xl mb-3 flex items-center gap-2"><span class="text-brass font-mono text-base">4</span>Dynamic Extras</h3>
+      <p class="text-sm mb-4 leading-relaxed">Opt-in plugins live in <code class="font-mono text-xs">lua/plugins/extras/</code>, loaded only when named in <code class="font-mono text-xs">settings.lua</code>:</p>
+      <div class="rounded-lg overflow-hidden border border-white/5 ink-panel p-4 font-mono text-xs leading-[1.8] overflow-x-auto whitespace-pre mb-3"><span class="field">extras</span> <span class="op">=</span> {
+  <span class="str">"plugins.extras.lang.rust"</span>,
+  <span class="str">"plugins.extras.testing.neotest"</span>,
+}</div>
+      <p class="text-xs text-ink/50 dark:text-[#A79C87] leading-relaxed">This keeps startup under 25ms &mdash; only the plugin suites your current work needs get loaded.</p>
+    </div>
+  </div>
+
+  <h3 class="font-display font-semibold text-2xl mb-5 flex items-center gap-2"><span class="text-brass font-mono text-lg">5</span>Step-by-Step Guides</h3>
+  <div class="grid sm:grid-cols-2 gap-6 mb-12">
+    <div>
+      <h4 class="font-semibold mb-3">Adding support for a new language</h4>
+      <ol class="space-y-2 text-sm text-ink/70 dark:text-[#C7BFAE] list-decimal list-inside leading-relaxed">
+        <li>Open the registry at <code class="font-mono text-xs">lua/core/lang_registry.lua</code>.</li>
+        <li>Add an entry under <code class="font-mono text-xs">M.langs</code> for the filetype.</li>
+        <li>Specify the LSP server name (from <code class="font-mono text-xs">lspconfig</code>).</li>
+        <li>List Mason utilities &mdash; formatters, linters, debug adapters.</li>
+        <li>Add formatters/linters to trigger Conform/nvim-lint.</li>
+        <li>Save and launch &mdash; Mason installs the rest automatically.</li>
+      </ol>
+    </div>
+    <div>
+      <h4 class="font-semibold mb-3">Registering a custom lazy.nvim plugin</h4>
+      <ol class="space-y-2 text-sm text-ink/70 dark:text-[#C7BFAE] list-decimal list-inside leading-relaxed">
+        <li>Create a new spec file under the matching <code class="font-mono text-xs">lua/plugins/</code> category.</li>
+        <li>Write a standard lazy plugin table.</li>
+        <li><strong>Required:</strong> import it from <code class="font-mono text-xs">lua/plugins/init.lua</code>.</li>
+        <li>Validate with the syntax-checking script.</li>
+        <li>Restart Neovim &mdash; lazy.nvim installs the new plugin.</li>
+      </ol>
+    </div>
+  </div>
+
+  <h3 class="font-display font-semibold text-2xl mb-3 flex items-center gap-2"><span class="text-brass font-mono text-lg">6</span>Global Keymap Prefixes</h3>
+  <p class="mb-5 leading-relaxed">Descriptive prefixes so bindings stay memorable via <code class="font-mono text-xs">which-key.nvim</code>:</p>
+  <div class="rounded-xl overflow-hidden border border-ink/10 dark:border-white/10 mb-12">
+    <table class="w-full text-sm">
+      <thead class="bg-paperdeep/60 dark:bg-panel2 text-left">
+        <tr>
+          <th class="px-5 py-3 text-xs uppercase tracking-wide text-ink/45 dark:text-[#A79C87] font-semibold">Prefix</th>
+          <th class="px-5 py-3 text-xs uppercase tracking-wide text-ink/45 dark:text-[#A79C87] font-semibold">Meaning</th>
+          <th class="px-5 py-3 text-xs uppercase tracking-wide text-ink/45 dark:text-[#A79C87] font-semibold">Examples</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-ink/10 dark:divide-white/10">
+        <tr><td class="px-5 py-3 font-mono text-moss dark:text-brass">&lt;leader&gt;f</td><td class="px-5 py-3">Find &amp; Search (Snacks pickers)</td><td class="px-5 py-3 text-ink/60 dark:text-[#A79C87]">ff (files), fw (grep)</td></tr>
+        <tr><td class="px-5 py-3 font-mono text-moss dark:text-brass">&lt;leader&gt;c</td><td class="px-5 py-3">Code operations &amp; LSP</td><td class="px-5 py-3 text-ink/60 dark:text-[#A79C87]">cf (format), ca (actions)</td></tr>
+        <tr><td class="px-5 py-3 font-mono text-moss dark:text-brass">&lt;leader&gt;g</td><td class="px-5 py-3">Git workflows</td><td class="px-5 py-3 text-ink/60 dark:text-[#A79C87]">gg (LazyGit), gd (Diffview)</td></tr>
+        <tr><td class="px-5 py-3 font-mono text-moss dark:text-brass">&lt;leader&gt;d</td><td class="px-5 py-3">Debugging (DAP)</td><td class="px-5 py-3 text-ink/60 dark:text-[#A79C87]">db (breakpoint), dc (continue)</td></tr>
+        <tr><td class="px-5 py-3 font-mono text-moss dark:text-brass">&lt;leader&gt;t</td><td class="px-5 py-3">Visual toggles</td><td class="px-5 py-3 text-ink/60 dark:text-[#A79C87]">th (theme switcher)</td></tr>
+        <tr><td class="px-5 py-3 font-mono text-moss dark:text-brass">&lt;leader&gt;a</td><td class="px-5 py-3">AI completions / helpers</td><td class="px-5 py-3 text-ink/60 dark:text-[#A79C87]">automatic, opens chat window</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="font-display font-semibold text-2xl mb-3 flex items-center gap-2"><span class="text-brass font-mono text-lg">7</span>Verification &amp; Testing</h3>
+  <p class="mb-5 leading-relaxed">Before committing changes, confirm the config is syntax-clean and plugins load correctly.</p>
+  <div class="rounded-xl overflow-hidden border border-white/5 ink-panel">
+    <div class="flex items-center justify-between px-5 py-3 ink-panel-head">
+      <span class="text-xs font-mono text-[#8A8272]">Verification commands</span>
+      <button class="copy-btn text-xs flex items-center gap-1.5 text-[#8A8272] hover:text-brass-light transition-colors" data-copy='nvim --headless -c "q"'><iconify-icon icon="tabler:copy" width="14"></iconify-icon>Copy</button>
+    </div>
+    <div class="p-5 font-mono text-sm leading-[1.8] overflow-x-auto whitespace-pre"><span class="cmt"># Headless validation (returns 0 if syntax is clean)</span>
+nvim --headless -c "q"
+
+<span class="cmt"># Diagnostic inspection on loaders</span>
+bash .agents/skills/namiconfig-management/scripts/validate_config.sh</div>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<!-- KEYMAPS                                                           -->
+<!-- ================================================================ -->
+<section id="keymaps" class="chapter-pane max-w-5xl mx-auto py-14">
+  <p class="text-xs font-mono uppercase tracking-[0.14em] text-ink/40 dark:text-[#A79C87] mb-2">Reference</p>
+  <h2 class="font-display font-semibold text-4xl mb-3">Keymap explorer</h2>
+  <div class="text-ink/65 dark:text-[#C7BFAE] text-sm max-w-2xl mb-8 space-y-3 leading-relaxed">
+    <p>
+      In NamiConfig, <kbd class="kbd-cap">Space</kbd> acts as the <strong>Leader Key</strong>. Pressing <kbd class="kbd-cap">Space</kbd> followed by the sequence triggers the corresponding action. 
+      Press the leader key in Neovim and pause for a second to let the <strong>which-key.nvim</strong> HUD appear and guide you through commands contextually.
+    </p>
+    <div class="flex flex-wrap gap-x-5 gap-y-2 text-xs text-ink/50 dark:text-[#A79C87] pt-1">
+      <span>Legend:</span>
+      <span><kbd class="kbd-cap">Ctrl</kbd> &rarr; Control Key</span>
+      <span><kbd class="kbd-cap">Alt</kbd> &rarr; Option / Alt Key</span>
+      <span><kbd class="kbd-cap">Shift</kbd> &rarr; Shift Key</span>
+      <span><kbd class="kbd-cap">x</kbd><span class="kbd-plus">then</span><kbd class="kbd-cap">y</kbd> &rarr; Press in sequence</span>
+    </div>
+  </div>
+
+  <div class="relative mb-5">
+    <iconify-icon icon="tabler:search" width="17" class="absolute left-4 top-1/2 -translate-y-1/2 text-ink/35 dark:text-[#8A8272]"></iconify-icon>
+    <input id="km-search" type="text" placeholder="Search keymaps — e.g. 'format', 'git', 'debug', 'leader'" class="w-full pl-11 pr-4 py-3 rounded-lg border border-ink/15 dark:border-white/10 bg-paperdeep/40 dark:bg-panel focus:border-moss dark:focus:border-brass outline-none text-sm transition-colors">
+  </div>
+
+  <div class="flex flex-wrap gap-2 mb-8" id="km-filters">
+    <button class="f-pill active" data-cat="all"><iconify-icon icon="tabler:apps" width="14"></iconify-icon>All</button>
+    <button class="f-pill" data-cat="nav"><iconify-icon icon="tabler:arrows-move" width="14"></iconify-icon>Navigation</button>
+    <button class="f-pill" data-cat="find"><iconify-icon icon="tabler:search" width="14"></iconify-icon>Find</button>
+    <button class="f-pill" data-cat="lsp"><iconify-icon icon="tabler:code" width="14"></iconify-icon>Code &amp; LSP</button>
+    <button class="f-pill" data-cat="git"><iconify-icon icon="tabler:brand-git" width="14"></iconify-icon>Git</button>
+    <button class="f-pill" data-cat="debug"><iconify-icon icon="tabler:bug" width="14"></iconify-icon>Debug</button>
+    <button class="f-pill" data-cat="leetcode"><iconify-icon icon="tabler:trophy" width="14"></iconify-icon>LeetCode</button>
+    <button class="f-pill" data-cat="ui"><iconify-icon icon="tabler:tool" width="14"></iconify-icon>Tools</button>
+  </div>
+
+  <div class="rounded-xl overflow-hidden border border-ink/10 dark:border-white/10 mb-14">
+    <table class="w-full text-sm">
+      <thead class="bg-paperdeep/60 dark:bg-panel2 text-left">
+        <tr>
+          <th class="px-5 py-3 text-xs uppercase tracking-wide text-ink/45 dark:text-[#A79C87] font-semibold">Shortcut</th>
+          <th class="px-5 py-3 text-xs uppercase tracking-wide text-ink/45 dark:text-[#A79C87] font-semibold">Description</th>
+          <th class="px-5 py-3 text-xs uppercase tracking-wide text-ink/45 dark:text-[#A79C87] font-semibold">Group</th>
+        </tr>
+      </thead>
+      <tbody id="km-body" class="divide-y divide-ink/10 dark:divide-white/10">
+        <tr data-cat="nav"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Ctrl</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">h/j/k/l</kbd></td><td class="px-5 py-3">Move between split windows</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Navigation</td></tr>
+        <tr data-cat="nav"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Tab</kbd> <span class="kbd-plus">/</span> <kbd class="kbd-cap">Shift</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">Tab</kbd></td><td class="px-5 py-3">Next / previous buffer</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Navigation</td></tr>
+        <tr data-cat="nav"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">x</kbd></td><td class="px-5 py-3">Close current buffer</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Navigation</td></tr>
+        <tr data-cat="nav"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Ctrl</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">n</kbd></td><td class="px-5 py-3">Toggle file explorer (nvim-tree)</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Navigation</td></tr>
+        <tr data-cat="nav"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Alt</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">i/h/v</kbd></td><td class="px-5 py-3">Float / horizontal / vertical terminal</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Navigation</td></tr>
+        <tr data-cat="find"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">f</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">f</kbd></td><td class="px-5 py-3">Find files (Snacks picker)</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Find</td></tr>
+        <tr data-cat="find"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">f</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">w</kbd></td><td class="px-5 py-3">Live grep across workspace</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Find</td></tr>
+        <tr data-cat="find"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">f</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">b</kbd></td><td class="px-5 py-3">Find open buffers</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Find</td></tr>
+        <tr data-cat="find"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">f</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">o</kbd></td><td class="px-5 py-3">Recent files (oldfiles)</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Find</td></tr>
+        <tr data-cat="find"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">t</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">h</kbd></td><td class="px-5 py-3">Theme picker (syncs Ghostty)</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Find</td></tr>
+        <tr data-cat="find"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">s</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">k</kbd></td><td class="px-5 py-3">Search all registered keymaps</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Find</td></tr>
+        <tr data-cat="find"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">w</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">s</kbd></td><td class="px-5 py-3">Start web docs server (live-server)</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Find</td></tr>
+        <tr data-cat="find"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">w</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">d</kbd></td><td class="px-5 py-3">Open web docs in browser</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Find</td></tr>
+        <tr data-cat="lsp"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">g</kbd> <kbd class="kbd-cap">d</kbd></td><td class="px-5 py-3">Go to definition</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Code &amp; LSP</td></tr>
+        <tr data-cat="lsp"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">g</kbd> <kbd class="kbd-cap">r</kbd></td><td class="px-5 py-3">Find all references</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Code &amp; LSP</td></tr>
+        <tr data-cat="lsp"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Shift</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">k</kbd></td><td class="px-5 py-3">Show hover documentation</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Code &amp; LSP</td></tr>
+        <tr data-cat="lsp"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">c</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">a</kbd></td><td class="px-5 py-3">Code action popup</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Code &amp; LSP</td></tr>
+        <tr data-cat="lsp"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">r</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">a</kbd></td><td class="px-5 py-3">Rename symbol under cursor</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Code &amp; LSP</td></tr>
+        <tr data-cat="lsp"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">c</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">f</kbd></td><td class="px-5 py-3">Format buffer with Conform</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Code &amp; LSP</td></tr>
+        <tr data-cat="lsp"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">c</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">l</kbd></td><td class="px-5 py-3">Lint file with nvim-lint</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Code &amp; LSP</td></tr>
+        <tr data-cat="lsp"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">r</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">r</kbd></td><td class="px-5 py-3">Run current file (Python/JS/TS/C/C++/Go/Rust/Ruby/Java/Bash)</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Code &amp; LSP</td></tr>
+        <tr data-cat="lsp"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">t</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">d</kbd></td><td class="px-5 py-3">Toggle inline diagnostics</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Code &amp; LSP</td></tr>
+        <tr data-cat="lsp"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">[</kbd> <kbd class="kbd-cap">d</kbd> <span class="kbd-plus">/</span> <kbd class="kbd-cap">]</kbd> <kbd class="kbd-cap">d</kbd></td><td class="px-5 py-3">Prev / next diagnostic</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Code &amp; LSP</td></tr>
+        <tr data-cat="lsp"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">t</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">c</kbd></td><td class="px-5 py-3">Toggle Treesitter context</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Code &amp; LSP</td></tr>
+        <tr data-cat="git"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">g</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">g</kbd></td><td class="px-5 py-3">Open LazyGit TUI</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Git</td></tr>
+        <tr data-cat="git"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">g</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">d</kbd></td><td class="px-5 py-3">Toggle Diffview side-by-side</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Git</td></tr>
+        <tr data-cat="git"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">]</kbd> <kbd class="kbd-cap">h</kbd> <span class="kbd-plus">/</span> <kbd class="kbd-cap">[</kbd> <kbd class="kbd-cap">h</kbd></td><td class="px-5 py-3">Next / previous git hunk</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Git</td></tr>
+        <tr data-cat="git"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">h</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">s</kbd></td><td class="px-5 py-3">Stage hunk at cursor</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Git</td></tr>
+        <tr data-cat="git"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">h</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">p</kbd></td><td class="px-5 py-3">Preview hunk inline</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Git</td></tr>
+        <tr data-cat="debug"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">d</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">b</kbd></td><td class="px-5 py-3">Toggle breakpoint</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Debug</td></tr>
+        <tr data-cat="debug"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">d</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">c</kbd></td><td class="px-5 py-3">Continue / start debug session</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Debug</td></tr>
+        <tr data-cat="debug"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">d</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">s</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">o</kbd></td><td class="px-5 py-3">Step over</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Debug</td></tr>
+        <tr data-cat="debug"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">d</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">s</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">i</kbd></td><td class="px-5 py-3">Step into</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Debug</td></tr>
+        <tr data-cat="debug"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">d</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">u</kbd></td><td class="px-5 py-3">Toggle DAP UI panel</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Debug</td></tr>
+        <tr data-cat="leetcode"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">l</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">c</kbd></td><td class="px-5 py-3">Open LeetCode native dashboard</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">LeetCode</td></tr>
+        <tr data-cat="leetcode"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">l</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">r</kbd></td><td class="px-5 py-3">Save &amp; run test cases</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">LeetCode</td></tr>
+        <tr data-cat="leetcode"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">l</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">s</kbd></td><td class="px-5 py-3">Submit solution &amp; sync to GitHub</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">LeetCode</td></tr>
+        <tr data-cat="leetcode"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">l</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">d</kbd></td><td class="px-5 py-3">Open problem description panel</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">LeetCode</td></tr>
+        <tr data-cat="ui"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">c</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">h</kbd></td><td class="px-5 py-3">Open cheat sheet</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Tools</td></tr>
+        <tr data-cat="ui"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">v</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">s</kbd></td><td class="px-5 py-3">Select Python virtual environment</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Tools</td></tr>
+        <tr data-cat="ui"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Space</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">s</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">c</kbd></td><td class="px-5 py-3">Screenshot selected code (silicon)</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Tools</td></tr>
+        <tr data-cat="ui"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">Ctrl</kbd><span class="kbd-plus">+</span><kbd class="kbd-cap">s</kbd></td><td class="px-5 py-3">Save file</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Tools</td></tr>
+        <tr data-cat="ui"><td class="px-5 py-3 whitespace-nowrap"><kbd class="kbd-cap">j</kbd> <kbd class="kbd-cap">k</kbd></td><td class="px-5 py-3">Escape from insert mode</td><td class="px-5 py-3 text-ink/50 dark:text-[#A79C87]">Tools</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<!-- LANGUAGES                                                         -->
+<!-- ================================================================ -->
+<section id="langs" class="chapter-pane max-w-5xl mx-auto py-14">
+  <p class="text-xs font-mono uppercase tracking-[0.14em] text-ink/40 dark:text-[#A79C87] mb-2">Language matrix</p>
+  <h2 class="font-display font-semibold text-4xl mb-3">Language support</h2>
+  <p class="text-ink/60 dark:text-[#A79C87] max-w-lg mb-8">All built-in languages auto-configure from <code class="font-mono text-xs">lang_registry.lua</code>. Opt-in extras are enabled in <code class="font-mono text-xs">settings.lua &rarr; extras</code>.</p>
+
+  <div class="relative mb-8">
+    <iconify-icon icon="tabler:search" width="17" class="absolute left-4 top-1/2 -translate-y-1/2 text-ink/35 dark:text-[#8A8272]"></iconify-icon>
+    <input id="lang-search" type="text" placeholder="Filter by language, LSP server, formatter or linter" class="w-full pl-11 pr-4 py-3 rounded-lg border border-ink/15 dark:border-white/10 bg-paperdeep/40 dark:bg-panel focus:border-moss dark:focus:border-brass outline-none text-sm transition-colors">
+  </div>
+
+  <div class="rounded-xl overflow-hidden border border-ink/10 dark:border-white/10 mb-14">
+    <table class="w-full text-sm">
+      <thead class="bg-paperdeep/60 dark:bg-panel2 text-left">
+        <tr>
+          <th class="px-5 py-3 text-xs uppercase tracking-wide text-ink/45 dark:text-[#A79C87] font-semibold">Language</th>
+          <th class="px-5 py-3 text-xs uppercase tracking-wide text-ink/45 dark:text-[#A79C87] font-semibold">LSP</th>
+          <th class="px-5 py-3 text-xs uppercase tracking-wide text-ink/45 dark:text-[#A79C87] font-semibold">Formatter</th>
+          <th class="px-5 py-3 text-xs uppercase tracking-wide text-ink/45 dark:text-[#A79C87] font-semibold">Linter</th>
+          <th class="px-5 py-3 text-xs uppercase tracking-wide text-ink/45 dark:text-[#A79C87] font-semibold">Type</th>
+        </tr>
+<!-- KEYMAPS                                                          -->
+<!-- ================================================================ -->
+<section id="keymaps" class="chapter-pane max-w-6xl mx-auto py-10 lg:py-14">
+  <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+    <div>
+      <p class="text-xs font-mono uppercase tracking-[0.14em] text-ink/40 dark:text-[#A79C87] mb-2">Reference</p>
+      <h2 class="font-display font-semibold text-4xl">Keymaps Cheat Sheet</h2>
+      <p class="text-ink/65 dark:text-[#A79C87] text-sm mt-1">Leader is <kbd class="px-1.5 py-0.5 rounded border border-ink/20 dark:border-white/20 bg-paperdeep dark:bg-panel font-mono text-xs text-moss dark:text-brass">Space</kbd>. Press <kbd class="px-1.5 py-0.5 rounded border border-ink/20 dark:border-white/20 bg-paperdeep dark:bg-panel font-mono text-xs text-moss dark:text-brass">Space</kbd> anytime to open which-key.</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="relative w-full sm:w-64">
+        <iconify-icon icon="tabler:search" width="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 dark:text-[#A79C87]"></iconify-icon>
+        <input type="text" id="km-search" placeholder="Search keymaps..." class="w-full pl-9 pr-3 py-2 rounded-lg border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark text-sm outline-none focus:ring-2 focus:ring-moss/20 dark:focus:ring-brass/20">
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-wrap gap-2 mb-6" id="km-filters">
+    <button class="f-pill active" data-cat="all">All</button>
+    <button class="f-pill" data-cat="nav">Navigation</button>
+    <button class="f-pill" data-cat="find">Find</button>
+    <button class="f-pill" data-cat="code">Code &amp; LSP</button>
+    <button class="f-pill" data-cat="git">Git</button>
+    <button class="f-pill" data-cat="debug">Debug</button>
+    <button class="f-pill" data-cat="leetcode">LeetCode</button>
+  </div>
+
+  <div class="rounded-xl overflow-hidden border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel">
+    <table class="w-full text-left text-sm border-collapse">
+      <thead>
+        <tr class="border-b border-ink/10 dark:border-white/10 text-xs font-mono text-ink/40 dark:text-[#A79C87] uppercase tracking-wider bg-paperdeep/80 dark:bg-panel/80">
+          <th class="px-5 py-3.5 font-semibold">Keybinding</th>
+          <th class="px-5 py-3.5 font-semibold">Action</th>
+          <th class="px-5 py-3.5 font-semibold hidden md:table-cell">Category</th>
+        </tr>
+      </thead>
+      <tbody id="km-body" class="divide-y divide-ink/5 dark:divide-white/5 font-mono">
+        <tr data-cat="nav"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;C-h/j/k/l&gt;</td><td class="px-5 py-3 font-sans">Move between split windows</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Navigation</td></tr>
+        <tr data-cat="nav"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;Tab&gt; / &lt;S-Tab&gt;</td><td class="px-5 py-3 font-sans">Next / Previous buffer tab</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Navigation</td></tr>
+        <tr data-cat="nav"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;x</td><td class="px-5 py-3 font-sans">Close current buffer</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Navigation</td></tr>
+        <tr data-cat="nav"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;C-n&gt;</td><td class="px-5 py-3 font-sans">Toggle file explorer drawer</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Navigation</td></tr>
+        <tr data-cat="nav"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;A-i&gt; / &lt;A-h&gt; / &lt;A-v&gt;</td><td class="px-5 py-3 font-sans">Toggle Float / Horizontal / Vertical terminal</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Navigation</td></tr>
+
+        <tr data-cat="find"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;ff</td><td class="px-5 py-3 font-sans">Find files in project</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Find</td></tr>
+        <tr data-cat="find"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;fw</td><td class="px-5 py-3 font-sans">Live grep word across project</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Find</td></tr>
+        <tr data-cat="find"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;fb</td><td class="px-5 py-3 font-sans">Find open buffers</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Find</td></tr>
+        <tr data-cat="find"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;fo</td><td class="px-5 py-3 font-sans">Recent files history</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Find</td></tr>
+        <tr data-cat="find"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;th</td><td class="px-5 py-3 font-sans">Interactive theme switcher (syncs Ghostty)</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Find</td></tr>
+
+        <tr data-cat="code"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">gd / gr / K</td><td class="px-5 py-3 font-sans">Go to definition / references / hover doc</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Code &amp; LSP</td></tr>
+        <tr data-cat="code"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;ca</td><td class="px-5 py-3 font-sans">Code actions (import, quickfix)</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Code &amp; LSP</td></tr>
+        <tr data-cat="code"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;ra</td><td class="px-5 py-3 font-sans">Rename symbol across workspace</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Code &amp; LSP</td></tr>
+        <tr data-cat="code"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;cf</td><td class="px-5 py-3 font-sans">Format file via Conform</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Code &amp; LSP</td></tr>
+        <tr data-cat="code"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;cl</td><td class="px-5 py-3 font-sans">Lint file via nvim-lint</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Code &amp; LSP</td></tr>
+        <tr data-cat="code"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;tc</td><td class="px-5 py-3 font-sans">Toggle Treesitter Context header</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Code &amp; LSP</td></tr>
+        <tr data-cat="code"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">[d / ]d</td><td class="px-5 py-3 font-sans">Jump to previous / next diagnostic</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Code &amp; LSP</td></tr>
+
+        <tr data-cat="git"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;gg</td><td class="px-5 py-3 font-sans">Open LazyGit TUI overlay</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Git</td></tr>
+        <tr data-cat="git"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;gd</td><td class="px-5 py-3 font-sans">Toggle Diffview side-by-side git diff</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Git</td></tr>
+        <tr data-cat="git"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">]h / [h</td><td class="px-5 py-3 font-sans">Jump to next / previous git hunk</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Git</td></tr>
+        <tr data-cat="git"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;hs</td><td class="px-5 py-3 font-sans">Stage hunk under cursor</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Git</td></tr>
+
+        <tr data-cat="debug"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;db</td><td class="px-5 py-3 font-sans">Toggle DAP breakpoint</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Debug</td></tr>
+        <tr data-cat="debug"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;dc</td><td class="px-5 py-3 font-sans">Continue execution / start debugger</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Debug</td></tr>
+        <tr data-cat="debug"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;dso / dsi</td><td class="px-5 py-3 font-sans">Step over / Step into</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">Debug</td></tr>
+
+        <tr data-cat="leetcode"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;lc</td><td class="px-5 py-3 font-sans">Open LeetCode problem menu</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">LeetCode</td></tr>
+        <tr data-cat="leetcode"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;lr</td><td class="px-5 py-3 font-sans">Run LeetCode test cases</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">LeetCode</td></tr>
+        <tr data-cat="leetcode"><td class="px-5 py-3 font-semibold text-moss dark:text-brass">&lt;leader&gt;ls</td><td class="px-5 py-3 font-sans">Submit solution + auto-git sync</td><td class="px-5 py-3 text-xs text-ink/50 dark:text-[#A79C87] hidden md:table-cell">LeetCode</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<!-- LANGUAGES                                                        -->
+<!-- ================================================================ -->
+<section id="langs" class="chapter-pane max-w-6xl mx-auto py-10 lg:py-14">
+  <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+    <div>
+      <p class="text-xs font-mono uppercase tracking-[0.14em] text-ink/40 dark:text-[#A79C87] mb-2">Single Source of Truth</p>
+      <h2 class="font-display font-semibold text-4xl">Language Registry</h2>
+      <p class="text-ink/65 dark:text-[#A79C87] text-sm mt-1">Defined once in <code class="font-mono text-xs text-moss dark:text-brass">lua/core/lang_registry.lua</code> &mdash; drives LSP, Mason, formatters and linters automatically.</p>
+    </div>
+    <div class="relative w-full sm:w-64">
+      <iconify-icon icon="tabler:search" width="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 dark:text-[#A79C87]"></iconify-icon>
+      <input type="text" id="lang-search" placeholder="Search language..." class="w-full pl-9 pr-3 py-2 rounded-lg border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark text-sm outline-none focus:ring-2 focus:ring-moss/20 dark:focus:ring-brass/20">
+    </div>
+  </div>
+
+  <div class="rounded-xl overflow-hidden border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel">
+    <table class="w-full text-left text-sm border-collapse">
+      <thead>
+        <tr class="border-b border-ink/10 dark:border-white/10 text-xs font-mono text-ink/40 dark:text-[#A79C87] uppercase tracking-wider bg-paperdeep/80 dark:bg-panel/80">
+          <th class="px-5 py-3.5 font-semibold">Language</th>
+          <th class="px-5 py-3.5 font-semibold">LSP Server</th>
+          <th class="px-5 py-3.5 font-semibold">Formatter</th>
+          <th class="px-5 py-3.5 font-semibold">Linter</th>
+          <th class="px-5 py-3.5 font-semibold">Status</th>
+        </tr>
+      </thead>
+      <tbody id="lang-body" class="divide-y divide-ink/5 dark:divide-white/5 font-mono text-xs">
+        <tr><td class="px-5 py-3 font-semibold">HTML</td><td class="px-5 py-3">html</td><td class="px-5 py-3">prettier</td><td class="px-5 py-3 text-ink/40">&mdash;</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">CSS / SCSS</td><td class="px-5 py-3">cssls</td><td class="px-5 py-3">prettier</td><td class="px-5 py-3 text-ink/40">&mdash;</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">JavaScript</td><td class="px-5 py-3">ts_ls</td><td class="px-5 py-3">prettier</td><td class="px-5 py-3">eslint_d</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">TypeScript</td><td class="px-5 py-3">ts_ls</td><td class="px-5 py-3">prettier</td><td class="px-5 py-3">eslint_d</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">JSON</td><td class="px-5 py-3">jsonls</td><td class="px-5 py-3">prettier</td><td class="px-5 py-3 text-ink/40">&mdash;</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">YAML</td><td class="px-5 py-3">yamlls</td><td class="px-5 py-3">prettier</td><td class="px-5 py-3 text-ink/40">&mdash;</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">Vue</td><td class="px-5 py-3">ts_ls / volar</td><td class="px-5 py-3">prettier</td><td class="px-5 py-3">eslint_d</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">Lua</td><td class="px-5 py-3">lua_ls</td><td class="px-5 py-3">stylua</td><td class="px-5 py-3 text-ink/40">&mdash;</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">Python</td><td class="px-5 py-3">pyright</td><td class="px-5 py-3">black</td><td class="px-5 py-3">ruff</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">Markdown</td><td class="px-5 py-3">marksman</td><td class="px-5 py-3">prettier</td><td class="px-5 py-3">markdownlint</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">Bash / Shell</td><td class="px-5 py-3">bashls</td><td class="px-5 py-3">shfmt</td><td class="px-5 py-3">shellcheck</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">Dockerfile</td><td class="px-5 py-3">dockerls</td><td class="px-5 py-3 text-ink/40">&mdash;</td><td class="px-5 py-3">hadolint</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">TOML</td><td class="px-5 py-3">taplo</td><td class="px-5 py-3 text-ink/40">&mdash;</td><td class="px-5 py-3 text-ink/40">&mdash;</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">Prisma</td><td class="px-5 py-3">prismals</td><td class="px-5 py-3">prettier</td><td class="px-5 py-3 text-ink/40">&mdash;</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">C / C++</td><td class="px-5 py-3">clangd</td><td class="px-5 py-3">clang-format</td><td class="px-5 py-3 text-ink/40">&mdash;</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">Java</td><td class="px-5 py-3">jdtls</td><td class="px-5 py-3">google-java-format</td><td class="px-5 py-3 text-ink/40">&mdash;</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">Ruby</td><td class="px-5 py-3 text-ink/40">&mdash;</td><td class="px-5 py-3">rubocop</td><td class="px-5 py-3">rubocop</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-moss/10 text-moss dark:text-moss-light">Built-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">Go</td><td class="px-5 py-3">gopls</td><td class="px-5 py-3">gofumpt</td><td class="px-5 py-3">golangci-lint</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-brass/10 text-brass">Opt-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">Rust</td><td class="px-5 py-3">rust_analyzer</td><td class="px-5 py-3 text-xs text-ink/50">LSP fallback</td><td class="px-5 py-3">clippy</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-brass/10 text-brass">Opt-in</span></td></tr>
+        <tr><td class="px-5 py-3 font-semibold">SQL</td><td class="px-5 py-3">sqls / Dadbod</td><td class="px-5 py-3">sql-formatter</td><td class="px-5 py-3 text-ink/40">&mdash;</td><td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full bg-brass/10 text-brass">Opt-in</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ================================================================ -->
+<!-- SETTINGS GUI                                                     -->
+<!-- ================================================================ -->
+<section id="settings" class="chapter-pane max-w-5xl mx-auto py-14">
+  <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+    <div>
+      <p class="text-xs font-mono uppercase tracking-[0.14em] text-ink/40 dark:text-[#A79C87] mb-2">GUI Configuration</p>
+      <h2 class="font-display font-semibold text-4xl">Configure Neovim</h2>
+      <p class="text-ink/65 dark:text-[#A79C87] text-sm mt-1">Changes are saved automatically and hot-reloaded instantly inside Neovim.</p>
+    </div>
+  </div>
+
+  <!-- Toolbar: Presets, Search & Export -->
+  <div class="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 p-4 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/60 dark:bg-panel mb-8">
+    <!-- Presets -->
+    <div class="flex items-center gap-2.5 flex-wrap" id="preset-container">
+      <span class="text-xs font-semibold uppercase tracking-wider text-ink/50 dark:text-[#A79C87] shrink-0 mr-1">Presets:</span>
+      <button class="preset-pill" data-preset="web"><iconify-icon icon="tabler:brand-typescript" width="15"></iconify-icon> Web Dev</button>
+      <button class="preset-pill" data-preset="systems"><iconify-icon icon="tabler:cpu" width="15"></iconify-icon> Systems (Rust/Go)</button>
+      <button class="preset-pill" data-preset="minimal"><iconify-icon icon="tabler:bolt" width="15"></iconify-icon> Minimalist</button>
+      <button class="preset-pill" data-preset="qa"><iconify-icon icon="tabler:test-pipe" width="15"></iconify-icon> QA & Testing</button>
+    </div>
+
+    <!-- Search & Export -->
+    <div class="flex items-center gap-3 shrink-0">
+      <div class="relative flex-1 sm:w-64">
+        <iconify-icon icon="tabler:search" width="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-ink/40 dark:text-[#A79C87] pointer-events-none z-10"></iconify-icon>
+        <input type="text" id="settings-search" placeholder="Search settings..." class="w-full pr-3 py-2 rounded-lg border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark text-sm outline-none focus:ring-2 focus:ring-moss/20 dark:focus:ring-brass/20">
+      </div>
+      <button id="export-lua-btn" class="px-3.5 py-2 rounded-lg border border-ink/15 dark:border-white/15 hover:border-moss dark:hover:border-brass text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap">
+        <iconify-icon icon="tabler:code" width="16"></iconify-icon> Export Lua
+      </button>
+    </div>
+  </div>
+
+  <!-- Real-Time Interactive Neovim Preview -->
+  <div class="mb-10">
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-2">
+        <iconify-icon icon="tabler:device-desktop" width="20" class="text-moss dark:text-brass"></iconify-icon>
+        <h3 class="font-semibold text-base">Live Neovim UI Preview</h3>
+      </div>
+      <span class="text-xs font-mono text-ink/40 dark:text-[#A79C87]">Updates live as you tweak settings below</span>
+    </div>
+
+    <div id="live-preview-box" class="live-preview-window ink-panel">
+      <!-- Bufferline -->
+      <div id="pv-bufferline" class="live-preview-bufferline bufferline-nvchad">
+        <div class="preview-tab active"><iconify-icon icon="tabler:file-code" width="13"></iconify-icon> settings.lua</div>
+        <div class="preview-tab"><iconify-icon icon="tabler:brand-typescript" width="13"></iconify-icon> main.ts</div>
+        <div class="preview-tab"><iconify-icon icon="tabler:file-text" width="13"></iconify-icon> README.md</div>
+      </div>
+
+      <!-- Editor Window -->
+      <div id="pv-editor" class="live-preview-editor">
+        <div class="eline"><span class="pv-ln ln">1</span><span class="cmt">-- 🌊 NamiConfig — User Settings</span></div>
+        <div class="eline"><span class="pv-ln ln">2</span><span class="kw">local</span> <span class="field">M</span> <span class="op">=</span> {}</div>
+        <div class="eline"><span class="pv-ln ln">3</span></div>
+        <div class="eline"><span class="pv-ln ln">4</span><span class="field">M</span><span class="op">.</span><span class="fn">ui</span> <span class="op">=</span> {</div>
+        <div class="eline"><span class="pv-ln ln">5</span><span class="pv-indent"></span><span class="field">theme</span> <span class="op">=</span> <span class="str" id="pv-val-theme">"tokyonight-night"</span>,</div>
+        <div class="eline"><span class="pv-ln ln">6</span><span class="pv-indent"></span><span class="field">transparent</span> <span class="op">=</span> <span class="kw" id="pv-val-trans">true</span>,</div>
+        <div class="eline hl-line"><span class="pv-ln ln">7</span><span class="pv-indent"></span><span class="field">inlay_hints</span> <span class="op">=</span> <span class="kw" id="pv-val-hints">true</span>,<span class="cursor"></span></div>
+        <div class="eline"><span class="pv-ln ln">8</span>}</div>
+        <div class="eline"><span class="pv-ln ln">9</span><span class="kw">return</span> <span class="field">M</span></div>
+      </div>
+
+      <!-- Statusline -->
+      <div id="pv-statusline" class="live-preview-statusline">
+        <div class="flex items-center gap-3">
+          <span class="mode-badge" id="pv-mode">NORMAL</span>
+          <span class="text-xs flex items-center gap-1"><iconify-icon icon="tabler:git-branch" width="13"></iconify-icon> main</span>
+          <span class="text-xs opacity-70">lua/settings.lua</span>
+        </div>
+        <div class="flex items-center gap-4 text-xs">
+          <span class="flex items-center gap-1"><iconify-icon icon="tabler:check" width="13"></iconify-icon> LSP: lua_ls</span>
+          <span>utf-8</span>
+          <span>L7:C24</span>
+          <span>78%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16" id="settings-cards-grid">
+    <!-- UI Settings Card -->
+    <div class="p-6 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel">
+      <div class="flex items-center gap-2 mb-4">
+        <iconify-icon icon="tabler:palette" width="22" class="text-moss dark:text-brass"></iconify-icon>
+        <h3 class="font-semibold text-lg">UI & Aesthetics</h3>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs uppercase tracking-wider text-ink/50 dark:text-[#A79C87] font-semibold mb-1">Theme</label>
+          <select id="setting-ui-theme" class="w-full px-3 py-2 rounded border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark focus:border-moss outline-none text-sm">
+            <optgroup label="Light Themes">
+              <option value="kanagawa-lotus">Kanagawa Lotus</option>
+              <option value="catppuccin-latte">Catppuccin Latte</option>
+              <option value="tokyonight-day">TokyoNight Day</option>
+              <option value="rose-pine-dawn">Rose Pine Dawn</option>
+              <option value="github_light">GitHub Light</option>
+              <option value="onedark-light">OneDark Light</option>
+            </optgroup>
+            <optgroup label="Dark Themes">
+              <option value="kanagawa-wave">Kanagawa Wave</option>
+              <option value="kanagawa-dragon">Kanagawa Dragon</option>
+              <option value="catppuccin-mocha">Catppuccin Mocha</option>
+              <option value="catppuccin-frappe">Catppuccin Frappe</option>
+              <option value="catppuccin-macchiato">Catppuccin Macchiato</option>
+              <option value="tokyonight-night">TokyoNight Night</option>
+              <option value="tokyonight-storm">TokyoNight Storm</option>
+              <option value="tokyonight-moon">TokyoNight Moon</option>
+              <option value="rose-pine-main">Rose Pine Main</option>
+              <option value="rose-pine-moon">Rose Pine Moon</option>
+              <option value="gruvbox">Gruvbox</option>
+              <option value="nord">Nord</option>
+              <option value="dracula">Dracula</option>
+              <option value="everforest">Everforest</option>
+              <option value="poimandres">Poimandres</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs uppercase tracking-wider text-ink/50 dark:text-[#A79C87] font-semibold mb-1">Background Style</label>
+          <select id="setting-ui-background" class="w-full px-3 py-2 rounded border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark focus:border-moss outline-none text-sm">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Transparent Background</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Disable default solid background colors</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-ui-transparent">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Dim Inactive Windows</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Visual indicator for active buffer/pane</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-ui-dim_inactive">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Indent Guides</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Show vertical indentation lines</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-ui-show_indent_guides">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Smooth Scrolling</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Enable smooth scroll animations</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-ui-smooth_scroll">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-ink/50 dark:text-[#A79C87] font-semibold mb-1">Cmdline Height</label>
+            <input type="number" id="setting-ui-cmdheight" min="0" max="3" class="w-full px-3 py-1.5 rounded border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark outline-none text-sm">
+          </div>
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-ink/50 dark:text-[#A79C87] font-semibold mb-1">Bufferline Style</label>
+            <select id="setting-ui-bufferline_style" class="w-full px-3 py-2 rounded border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark outline-none text-sm">
+              <option value="nvchad">nvchad</option>
+              <option value="solid">solid</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="manuscript-divider py-2"></div>
+
+        <div>
+          <h4 class="text-xs uppercase tracking-wider text-ink/60 dark:text-[#A79C87] font-semibold mb-2">Picker (Telescope / Snacks)</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[10px] uppercase tracking-wider text-ink/50 dark:text-[#A79C87] mb-1">Layout</label>
+              <select id="setting-ui-picker-layout" class="w-full px-3 py-1.5 rounded border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark outline-none text-sm">
+                <option value="default">default</option>
+                <option value="telescope">telescope</option>
+                <option value="ivy">ivy</option>
+                <option value="dropdown">dropdown</option>
+                <option value="vertical">vertical</option>
+                <option value="vscode">vscode</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] uppercase tracking-wider text-ink/50 dark:text-[#A79C87] mb-1">Border</label>
+              <select id="setting-ui-picker-border" class="w-full px-3 py-1.5 rounded border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark outline-none text-sm">
+                <option value="rounded">rounded</option>
+                <option value="single">single</option>
+                <option value="double">double</option>
+                <option value="solid">solid</option>
+                <option value="none">none</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mt-2">
+            <div>
+              <label class="block text-[10px] uppercase tracking-wider text-ink/50 dark:text-[#A79C87] mb-1">Width Ratio</label>
+              <input type="number" id="setting-ui-picker-width" step="0.05" min="0.1" max="1.0" class="w-full px-3 py-1.5 rounded border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark outline-none text-sm">
+            </div>
+            <div>
+              <label class="block text-[10px] uppercase tracking-wider text-ink/50 dark:text-[#A79C87] mb-1">Height Ratio</label>
+              <input type="number" id="setting-ui-picker-height" step="0.05" min="0.1" max="1.0" class="w-full px-3 py-1.5 rounded border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark outline-none text-sm">
+            </div>
+          </div>
+        </div>
+
+        <div class="manuscript-divider py-2"></div>
+
+        <div>
+          <h4 class="text-xs uppercase tracking-wider text-ink/60 dark:text-[#A79C87] font-semibold mb-2">GUI (Neovide)</h4>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[10px] uppercase tracking-wider text-ink/50 dark:text-[#A79C87] mb-1">Opacity</label>
+              <input type="number" id="setting-ui-neovide-transparency" step="0.05" min="0.5" max="1.0" class="w-full px-3 py-1.5 rounded border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark outline-none text-sm">
+            </div>
+            <div>
+              <label class="block text-[10px] uppercase tracking-wider text-ink/50 dark:text-[#A79C87] mb-1">Line Height</label>
+              <input type="number" id="setting-ui-neovide-line_height" step="0.1" min="0.8" max="3" class="w-full px-3 py-1.5 rounded border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark outline-none text-sm">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Editor Behavior Card -->
+    <div class="p-6 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel">
+      <div class="flex items-center gap-2 mb-4">
+        <iconify-icon icon="tabler:edit" width="22" class="text-moss dark:text-brass"></iconify-icon>
+        <h3 class="font-semibold text-lg">Editor Behavior</h3>
+      </div>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Highlight Current Line</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Highlight row under cursor</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-editor-highlight_current_line">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Show Line Numbers</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Display line number column</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-editor-show_line_numbers">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Relative Line Numbers</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Use relative line numbers for jumping</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-editor-relative_line_numbers">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Format on Save</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Format using Conform on file save</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-editor-format_on_save">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Auto Save</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Automatically save buffer when leaving</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-editor-auto_save">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Mouse Support</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Enable mouse clicks & scrolling in terminal</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-editor-mouse_support">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Wrap Lines</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Wrap lines longer than window width</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-editor-wrap_lines">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Split Below</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Horizontal splits open below</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-editor-split_below">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Split Right</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Vertical splits open to the right</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-editor-split_right">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Ignore Case in Search</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Case-insensitive search queries</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-editor-ignore_case_search">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-ink/50 dark:text-[#A79C87] font-semibold mb-1">Tab Size</label>
+            <input type="number" id="setting-editor-tab_size" min="1" max="8" class="w-full px-3 py-1.5 rounded border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark outline-none text-sm">
+          </div>
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-ink/50 dark:text-[#A79C87] font-semibold mb-1">Scrolloff</label>
+            <input type="number" id="setting-editor-scrolloff" min="0" max="20" class="w-full px-3 py-1.5 rounded border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark outline-none text-sm">
+          </div>
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-ink/50 dark:text-[#A79C87] font-semibold mb-1">Color Col</label>
+            <input type="text" id="setting-editor-color_column" placeholder="80" class="w-full px-3 py-1.5 rounded border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark outline-none text-sm">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LSP & General Cards -->
+    <div class="p-6 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel">
+      <div class="flex items-center gap-2 mb-4">
+        <iconify-icon icon="tabler:code" width="22" class="text-moss dark:text-brass"></iconify-icon>
+        <h3 class="font-semibold text-lg">LSP & Code Intelligence</h3>
+      </div>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Inlay Hints</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Show inline parameter & type hints</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-lsp-enable_inlay_hints">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Show Inline Errors</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Display virtual diagnostic messages inline</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-lsp-show_inline_errors">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Enable Linting</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Run linters in background with nvim-lint</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-linting-enable">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <label class="text-sm font-medium">Project Local Config</label>
+            <p class="text-xs text-ink/50 dark:text-[#A79C87]">Load .neoconf.json files automatically</p>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="setting-project-enable_config">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="manuscript-divider py-2"></div>
+
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <iconify-icon icon="tabler:folder" width="18" class="text-moss dark:text-brass"></iconify-icon>
+            <h4 class="font-semibold text-sm">File Explorer</h4>
+          </div>
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <label class="text-sm font-medium">Show Hidden Files</label>
+              <p class="text-xs text-ink/50 dark:text-[#A79C87]">Show dotfiles in nvim-tree</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="setting-explorer-show_hidden">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-ink/50 dark:text-[#A79C87] font-semibold mb-1">Explorer Position</label>
+            <select id="setting-explorer-position" class="w-full px-3 py-2 rounded border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark outline-none text-sm">
+              <option value="left">Left</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Extras & Custom Tooling Card -->
+    <div class="p-6 rounded-xl border border-ink/10 dark:border-white/10 bg-paperdeep/50 dark:bg-panel">
+      <div class="flex items-center gap-2 mb-4">
+        <iconify-icon icon="tabler:plus" width="22" class="text-moss dark:text-brass"></iconify-icon>
+        <h3 class="font-semibold text-lg">Extras & Tooling</h3>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <h4 class="text-xs uppercase tracking-wider text-ink/60 dark:text-[#A79C87] font-semibold mb-2">Opt-in Extras</h4>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium">Go Language Pack</label>
+              <label class="switch">
+                <input type="checkbox" data-extra="plugins.extras.lang.go" class="setting-extra-checkbox">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium">Rust Language Pack</label>
+              <label class="switch">
+                <input type="checkbox" data-extra="plugins.extras.lang.rust" class="setting-extra-checkbox">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium">SQL Language Pack</label>
+              <label class="switch">
+                <input type="checkbox" data-extra="plugins.extras.lang.sql" class="setting-extra-checkbox">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium">Tailwind CSS & Frontend Pack</label>
+              <label class="switch">
+                <input type="checkbox" data-extra="plugins.extras.lang.tailwindcss" class="setting-extra-checkbox">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium">Neotest Framework</label>
+              <label class="switch">
+                <input type="checkbox" data-extra="plugins.extras.testing.neotest" class="setting-extra-checkbox">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="manuscript-divider py-2"></div>
+
+        <div>
+          <h4 class="text-xs uppercase tracking-wider text-ink/60 dark:text-[#A79C87] font-semibold mb-2">Custom Tooling</h4>
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs text-ink/50 dark:text-[#A79C87] mb-1">Additional LSP Servers (Comma-separated)</label>
+              <input type="text" id="setting-custom_tools-lsp_servers" placeholder="tailwindcss, svelte" class="w-full px-3 py-1.5 rounded border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark outline-none text-sm focus:ring-2 focus:ring-moss/20 dark:focus:ring-brass/20 focus:border-moss dark:focus:border-brass">
+              <div class="mt-1.5 flex flex-wrap gap-1.5" id="custom-lsp-tags"></div>
+              <p class="text-[10px] text-ink/40 dark:text-[#A79C87]/40 mt-1">Default built-in: <span class="font-mono">ts_ls, html, cssls, jsonls, yamlls, prismals, lua_ls, bashls, taplo, pyright, jdtls, clangd, marksman, dockerls</span></p>
+            </div>
+            <div>
+              <label class="block text-xs text-ink/50 dark:text-[#A79C87] mb-1">Additional Mason Packages (Comma-separated)</label>
+              <input type="text" id="setting-custom_tools-mason_tools" placeholder="prettier, stylua" class="w-full px-3 py-1.5 rounded border border-ink/10 dark:border-white/10 bg-paper dark:bg-inkdark outline-none text-sm focus:ring-2 focus:ring-moss/20 dark:focus:ring-brass/20 focus:border-moss dark:focus:border-brass">
+              <div class="mt-1.5 flex flex-wrap gap-1.5" id="custom-mason-tags"></div>
+              <p class="text-[10px] text-ink/40 dark:text-[#A79C87]/40 mt-1">Default built-in: <span class="font-mono">eslint_d, prettier, js-debug-adapter, stylua, shfmt, shellcheck, black, ruff, rubocop, google-java-format, clang-format</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+    </main>
+
+    <footer class="border-t border-ink/10 dark:border-white/10 px-5 lg:px-10 py-10 bg-paperdeep/40 dark:bg-panel/40">
+      <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-7 h-7 text-brass shrink-0 flex items-center justify-center">
+            <svg class="w-full h-full opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10" />
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 2 L12 22 M2 12 L22 12 M5 5 L19 19 M5 19 L19 5 M12 2 C10 6 6 10 2 12 C6 14 10 18 12 22 C14 18 18 14 22 12 C18 10 14 6 12 2 Z" />
+            </svg>
+          </div>
+          <div>
+            <div class="font-display font-semibold">NamiConfig</div>
+            <div class="text-xs text-ink/45 dark:text-[#A79C87] mt-0.5">Built for Neovim 0.10+ &middot; योगः कर्मसु कौशलम्</div>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-6 text-sm">
+          <a href="https://github.com/abhishek-zsyio/NamiConfig" target="_blank" rel="noopener" class="text-ink/60 dark:text-[#A79C87] hover:text-moss dark:hover:text-brass transition-colors">GitHub</a>
+          <a href="https://github.com/abhishek-zsyio/NamiConfig/blob/main/wiki.md" target="_blank" rel="noopener" class="text-ink/60 dark:text-[#A79C87] hover:text-moss dark:hover:text-brass transition-colors">Wiki</a>
+          <a href="https://github.com/abhishek-zsyio/NamiConfig/blob/main/cheatsheet.md" target="_blank" rel="noopener" class="text-ink/60 dark:text-[#A79C87] hover:text-moss dark:hover:text-brass transition-colors">Cheatsheet</a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+</div>
+
+<div id="toasts"></div>
+<script src="app.js"></script>
+</body>
+</html>
