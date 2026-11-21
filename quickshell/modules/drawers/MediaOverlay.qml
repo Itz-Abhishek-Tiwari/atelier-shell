@@ -140,12 +140,29 @@ Item {
         printErrors: false
         onLoaded: { try { root.history = JSON.parse(text()) || []; } catch (e) { root.history = []; } }
     }
+    // a cover that no longer loads: drop it from the history so it isn't requested again
+    function forgetArt(url) {
+        if (!url || !root.history.some(x => x.art === url)) return;
+        root.history = root.history.map(x => x.art === url ? Object.assign({}, x, { art: "" }) : x);
+        historyFile.setText(JSON.stringify(root.history));
+    }
     function remember() {
         if (!root.playing || root.title === "") return;
         const h = root.history.slice();
         if (h.length > 0 && h[0].title === root.title && h[0].artist === root.artist) return;
+        let art = root.player.trackArtUrl || "";
+        // players like Firefox hand out temporary cover files that are deleted on the next track:
+        // keep our own copy, or the Recent list keeps asking for files that are gone
+        if (art.startsWith("file://")) {
+            let hsh = 0;
+            for (const ch of root.title + "\u0001" + root.artist) hsh = (hsh * 31 + ch.charCodeAt(0)) | 0;
+            const dest = Quickshell.cachePath("media-history/" + (hsh >>> 0).toString(16) + ".img");
+            Quickshell.execDetached(["sh", "-c", 'mkdir -p "${2%/*}" && cp -f -- "$1" "$2"', "sh",
+                                     decodeURIComponent(art.slice(7)), dest]);
+            art = "file://" + dest;
+        }
         const item = { title: root.title, artist: root.artist, app: root.player.identity,
-                       art: root.player.trackArtUrl || "", at: Date.now() };
+                       art: art, at: Date.now() };
         const rest = h.filter(x => !(x.title === item.title && x.artist === item.artist));
         root.history = [item].concat(rest).slice(0, 40);
         historyFile.setText(JSON.stringify(root.history));
@@ -627,6 +644,7 @@ Item {
                                 decode: 76
                                 tile: Atelier.containerHigh
                                 source: rd.modelData.art || ""
+                                onFailed: root.forgetArt(rd.modelData.art)
                             }
                             ColumnLayout {
                                 Layout.fillWidth: true
@@ -765,6 +783,7 @@ Item {
         property string placeholder: "󰎆"
         property color tile: Atelier.container
         readonly property bool ready: riImg.status === Image.Ready
+        signal failed()
         Rectangle {
             anchors.fill: parent
             radius: ri.radius
@@ -782,6 +801,7 @@ Item {
             mipmap: true
             sourceSize.width: ri.decode
             sourceSize.height: ri.decode
+            onStatusChanged: if (status === Image.Error) ri.failed()
         }
         Item {
             id: riMask
