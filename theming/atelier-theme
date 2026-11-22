@@ -11,7 +11,8 @@
 Themes are JSON files in <repo>/theming/themes/ and ~/.config/atelier/themes/.
 Targets: Quickshell, Hyprland, kitty, Ghostty, VS Code (+ Antigravity), GTK 3/4 +
 gsettings (GNOME apps), Qt/KDE apps (qt6ct palette + kdeglobals), starship, zsh (syntax highlighting, autosuggestions, fzf, bat), btop,
-Spotify (spicetify theme 'atelier'), Discord (Vesktop/Vencord/Equicord/Legcord/BetterDiscord theme).
+Spotify (spicetify theme 'atelier'), Discord (Vesktop/Vencord/Equicord/Legcord/BetterDiscord theme),
+Zed (theme 'Atelier').
 """
 import json
 import os
@@ -1013,8 +1014,132 @@ def t_discord(t, c):
                 pass
 
 
+def t_zed(t, c):
+    """Zed: themes 'Atelier Dark' / 'Atelier Light' (~/.config/zed/themes/atelier.json, git-ignored)
+    plus a generated block in settings.json (theme + theme_overrides) that Zed applies live."""
+    if not (CONF / "zed").is_dir():
+        return
+    dark = t["variant"] == "dark"
+
+    def a(col, alpha):                      # #rrggbbaa
+        return "#" + hex6(col) + f"{round(alpha * 255):02x}"
+    tc = term_colors(t, c)
+    acc = c["accent"]
+    bg, panel, chrome = c["base"], c["mantle"], c["crust"]
+    style = {
+        "background": chrome, "surface.background": panel, "elevated_surface.background": panel,
+        "panel.background": panel, "panel.focused_border": a(acc, .0),
+        "pane.focused_border": a(acc, .0), "pane_group.border": a(c["surface0"], .6),
+        "border": a(c["surface0"], .6), "border.variant": a(c["surface0"], .45),
+        "border.focused": a(acc, .55), "border.selected": a(acc, .55),
+        "border.transparent": "#00000000", "border.disabled": a(c["surface0"], .4),
+        "element.background": a(c["surface0"], .5), "element.hover": a(c["surface1"], .45),
+        "element.active": a(c["surface1"], .7), "element.selected": a(acc, .18),
+        "element.disabled": a(c["surface0"], .3),
+        "ghost_element.background": "#00000000", "ghost_element.hover": a(c["surface0"], .55),
+        "ghost_element.active": a(c["surface1"], .6), "ghost_element.selected": a(acc, .16),
+        "ghost_element.disabled": "#00000000", "drop_target.background": a(acc, .14),
+        "text": c["text"], "text.muted": c["subtext0"], "text.placeholder": c["overlay1"],
+        "text.disabled": c["overlay0"], "text.accent": acc,
+        "icon": c["subtext1"], "icon.muted": c["overlay1"], "icon.disabled": c["overlay0"],
+        "icon.placeholder": c["overlay1"], "icon.accent": acc,
+        "status_bar.background": chrome, "title_bar.background": chrome,
+        "title_bar.inactive_background": chrome, "toolbar.background": bg,
+        "tab_bar.background": panel, "tab.inactive_background": panel, "tab.active_background": bg,
+        "search.match_background": a(c["yellow"], .25),
+        "scrollbar.thumb.background": a(c["overlay0"], .35), "scrollbar.thumb.hover_background": a(c["overlay1"], .5),
+        "scrollbar.thumb.border": "#00000000", "scrollbar.track.background": "#00000000",
+        "scrollbar.track.border": "#00000000",
+        "editor.foreground": c["text"], "editor.background": bg, "editor.gutter.background": bg,
+        "editor.subheader.background": panel, "editor.active_line.background": a(c["surface0"], .35),
+        "editor.highlighted_line.background": a(c["surface0"], .5),
+        "editor.line_number": c["surface2"], "editor.active_line_number": acc,
+        "editor.invisible": a(c["overlay0"], .5), "editor.wrap_guide": a(c["surface0"], .5),
+        "editor.active_wrap_guide": a(c["surface1"], .6),
+        "editor.document_highlight.read_background": a(c["surface1"], .35),
+        "editor.document_highlight.write_background": a(c["surface1"], .5),
+        "editor.indent_guide": a(c["surface0"], .6), "editor.indent_guide_active": a(c["surface2"], .7),
+        "link_text.hover": c["sapphire"],
+        "terminal.background": bg, "terminal.foreground": tc["fg"],
+        "terminal.bright_foreground": c["text"], "terminal.dim_foreground": c["overlay1"],
+        "terminal.ansi.background": bg,
+    }
+    names = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"]
+    for i, n in enumerate(names):
+        style[f"terminal.ansi.{n}"] = tc["ansi"][i]
+        style[f"terminal.ansi.bright_{n}"] = tc["ansi"][i + 8]
+        style[f"terminal.ansi.dim_{n}"] = mix(tc["ansi"][i], bg, .35)
+    for key, col in {"conflict": "peach", "created": "green", "deleted": "red", "error": "red",
+                     "hidden": "overlay0", "hint": "overlay1", "ignored": "overlay0", "info": "sky",
+                     "modified": "yellow", "predictive": "overlay1", "renamed": "sapphire",
+                     "success": "green", "unreachable": "overlay1", "warning": "yellow"}.items():
+        style[key] = c[col]
+        style[key + ".background"] = a(c[col], .12)
+        style[key + ".border"] = a(c[col], .35)
+    style["players"] = [{"cursor": acc, "background": acc, "selection": a(acc, .28)}] + [
+        {"cursor": c[r], "background": c[r], "selection": a(c[r], .25)}
+        for r in ("blue", "green", "peach", "pink", "teal", "yellow", "red")]
+    style["accents"] = [c[r] for r in ("blue", "mauve", "peach", "teal", "pink", "yellow")]
+
+    def s(role, italic=False, weight=None):
+        d = {"color": c[role] if role in c else role, "font_style": "italic" if italic else None,
+             "font_weight": weight}
+        return d
+    style["syntax"] = {
+        "attribute": s("yellow"), "boolean": s("peach"), "comment": s("overlay1", True),
+        "comment.doc": s("overlay1", True), "constant": s("peach"), "constructor": s("sapphire"),
+        "embedded": s("text"), "emphasis": s("red", True), "emphasis.strong": s("red", weight=700),
+        "enum": s("teal"), "function": s("blue"), "hint": s("overlay1", True), "keyword": s("mauve"),
+        "label": s("sapphire"), "link_text": s("lavender"), "link_uri": s("pink"), "number": s("peach"),
+        "operator": s("sky"), "predictive": s("overlay0", True), "preproc": s("pink"),
+        "primary": s("text"), "property": s("lavender"), "punctuation": s("overlay1"),
+        "punctuation.bracket": s("overlay1"), "punctuation.delimiter": s("overlay1"),
+        "punctuation.list_marker": s("teal"), "punctuation.special": s("sky"), "string": s("green"),
+        "string.escape": s("pink"), "string.regex": s("peach"), "string.special": s("pink"),
+        "string.special.symbol": s("flamingo" if "flamingo" in c else "pink"), "tag": s("blue"),
+        "text.literal": s("green"), "title": s("red", weight=700), "type": s("yellow"),
+        "variable": s("text"), "variable.special": s("red"), "variant": s("teal"),
+    }
+    # Zed loads theme files only at startup, but reloads settings.json live. So the theme file
+    # holds "Atelier Dark" and "Atelier Light" (both exist from startup), and the current colours
+    # go into settings.json as theme_overrides inside a marked block, which Zed applies at once.
+    name = "Atelier Dark" if dark else "Atelier Light"
+    doc = {"$schema": "https://zed.dev/schema/themes/v0.2.0.json", "name": "Atelier",
+           "author": "atelier-theme",
+           "themes": [{"name": n, "appearance": ap, "style": style}
+                      for n, ap in (("Atelier Dark", "dark"), ("Atelier Light", "light"))]}
+    write(CONF / "zed/themes/atelier.json", json.dumps(doc, indent=2) + "\n")
+    cfg = CONF / "zed/settings.json"
+    if not cfg.exists():
+        return
+    text = cfg.read_text()
+    start, end = "  // >>> atelier-theme", "  // <<< atelier-theme"
+    block = (f"{start} (generated on every theme change: do not edit)\n"
+             f'  "theme": "{name}",\n'
+             f'  "theme_overrides": {{ "{name}": {json.dumps(style, separators=(",", ":"))} }},\n'
+             f"{end}\n")
+    if start in text and end in text:
+        i = text.index(start)
+        j = text.index("\n", text.index(end)) + 1
+        text = text[:i] + block + text[j:]
+    else:
+        # first run: drop the hand-written theme setting (and its comment), add the block at the end
+        text = re.sub(r'(?m)^[ \t]*//[^\n]*atelier-theme[^\n]*\n(?:[ \t]*//[^\n]*\n)*', "", text)
+        text = re.sub(r'(?ms)^[ \t]*"theme"\s*:\s*(\{.*?\}|"[^"]*")\s*,?[ \t]*\n', "", text)
+        k = text.rstrip().rfind("}")
+        body = text[:k].rstrip()
+        if body and not body.endswith((",", "{")):
+            body += ","
+        text = body + "\n" + block + "}\n"
+    # in place (not a rename): Zed's settings watcher reloads on modify
+    with open(cfg, "r+") as f:
+        f.seek(0)
+        f.write(text)
+        f.truncate()
+
+
 TARGETS = [t_quickshell, t_hyprland, t_kitty, t_ghostty, t_vscode, t_gtk, t_qt, t_starship, t_zsh, t_btop,
-           t_spotify, t_discord, t_nvim]
+           t_spotify, t_discord, t_nvim, t_zed]
 
 
 # ── commands ─────────────────────────────────────────────────────────────────
