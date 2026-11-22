@@ -516,6 +516,9 @@ Scope {
                     }
                     PreviewBtn { icon: "󰏫"; tint: Atelier.yellow; onClicked: { Quickshell.execDetached(["swappy", "-f", root.lastPath, "-o", root.lastPath]); preview.shown = false; } }
                     PreviewBtn { icon: "󰉖"; tint: Atelier.blue; onClicked: { Quickshell.execDetached(["xdg-open", root.lastPath.substring(0, root.lastPath.lastIndexOf("/"))]); preview.shown = false; } }
+                    // AirDrop to a nearby iPhone: the AirDrop card takes over (pick the device, progress)
+                    PreviewBtn { icon: "\u{F0003}"; tint: Atelier.sky; visible: AirDrop.available
+                        onClicked: { AirDrop.send([root.lastPath]); preview.shown = false; } }
                     PreviewBtn { icon: "󰆴"; tint: Atelier.red; onClicked: { Quickshell.execDetached(["rm", "-f", root.lastPath]); Quickshell.execDetached(["wl-copy", "--clear"]); preview.shown = false; root.toastRequested("Screenshot deleted", "󰆴", Atelier.red); } }
                 }
             }
