@@ -1,10 +1,10 @@
 [Default Applications]
 x-scheme-handler/antigravity=antigravity.desktop
-text/html=google-chrome.desktop
-x-scheme-handler/http=google-chrome.desktop
-x-scheme-handler/https=google-chrome.desktop
-x-scheme-handler/about=google-chrome.desktop
-x-scheme-handler/unknown=google-chrome.desktop
+text/html=firefox.desktop;
+x-scheme-handler/http=firefox.desktop;
+x-scheme-handler/https=firefox.desktop;
+x-scheme-handler/about=firefox.desktop;
+x-scheme-handler/unknown=firefox.desktop;
 x-scheme-handler/lastwave=lastwave.desktop
 x-scheme-handler/discord=vesktop.desktop
 inode/directory=org.kde.dolphin.desktop;
@@ -57,6 +57,8 @@ audio/ogg=org.kde.haruna.desktop;
 audio/mp4=org.kde.haruna.desktop;
 audio/aac=org.kde.haruna.desktop;
 audio/webm=org.kde.haruna.desktop;
+x-scheme-handler/claude-cli=claude-code-url-handler.desktop
+application/xhtml+xml=firefox.desktop;
 
 [Added Associations]
 x-scheme-handler/antigravity=antigravity.desktop;
