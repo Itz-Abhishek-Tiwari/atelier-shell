@@ -290,6 +290,7 @@ Singleton {
                 // "atelier" = the shell's own lock screen (LockContent.qml); anything else is a
                 // qylock theme id (scripts/qylock.py), run as its own lock process
                 property string theme: "atelier"
+                property string clock: "system"             // system (General → 24-hour clock) | 12 | 24, for every built-in style
                 // "depth": Samsung-style lock (modules/lock/DepthLock.qml), clock behind the subject
                 property string depthLayout: "horizontal"   // horizontal (12:45) | stacked (12 over 45)
                 property real depthClockSize: 0.22          // digit height, share of the screen height

@@ -52,7 +52,8 @@ Item {
     }
 
     // ── Data ────────────────────────────────────────────────────────────────
-    readonly property string hh: Atelier.clock24 ? Qt.formatTime(now, "HH") : Atelier.hour12(now)
+    readonly property string hh: Atelier.lockHour(now)                 // 12 or 24 h (Settings → Lock screen → Clock)
+    readonly property string ampm: Atelier.lockAmpm(now)               // "" in 24-hour mode
     readonly property string h1: hh.replace(/^0(?=\d)/, "")          // no leading zero
     readonly property string mm: Qt.formatTime(now, "mm")
     readonly property var battery: UPower.displayDevice
@@ -211,7 +212,7 @@ Item {
                 spacing: 0
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: Qt.formatDate(p.now, "dddd, d MMMM")
+                    text: Qt.formatDate(p.now, "dddd, d MMMM") + (p.ampm ? "  ·  " + p.ampm : "")
                     font.family: p.display; font.pixelSize: 32 * p.u; font.weight: Font.DemiBold
                     color: Qt.rgba(1, 1, 1, 0.88)
                 }
@@ -312,7 +313,7 @@ Item {
                 anchors.left: hClock.left; anchors.leftMargin: 16 * p.u
                 anchors.top: hClock.bottom; anchors.topMargin: 6 * p.u
                 spacing: 4 * p.u
-                Text { text: Qt.formatDate(p.now, "dddd"); font.family: p.display; font.pixelSize: 38 * p.u; font.weight: Font.DemiBold; color: "white" }
+                Text { text: Qt.formatDate(p.now, "dddd") + (p.ampm ? "  ·  " + p.ampm : ""); font.family: p.display; font.pixelSize: 38 * p.u; font.weight: Font.DemiBold; color: "white" }
                 Text { text: Qt.formatDate(p.now, "d MMMM yyyy"); font.family: p.display; font.pixelSize: 26 * p.u; color: Qt.rgba(1, 1, 1, 0.8) }
             }
             // cards on the right
@@ -413,7 +414,7 @@ Item {
                     Row {
                         spacing: 10 * p.u
                         Text { text: p.h1 + ":" + p.mm; font.family: p.display; font.pixelSize: 72 * p.u; font.weight: Font.Light; color: "white" }
-                        Text { visible: !Atelier.clock24; anchors.baseline: parent.children[0].baseline; text: Atelier.ampm(p.now)
+                        Text { visible: p.ampm !== ""; anchors.baseline: parent.children[0].baseline; text: p.ampm
                             font.family: p.display; font.pixelSize: 26 * p.u; font.weight: Font.Medium; color: Qt.rgba(1, 1, 1, 0.8) }
                     }
                     Text { visible: p.temp !== ""; text: "󰖐  " + p.temp + (p.condition ? "  " + p.condition : "")
@@ -485,6 +486,8 @@ Item {
                         Text { text: ":" + p.mm; font.family: p.display; font.pixelSize: 140 * p.u; font.weight: Font.Bold; color: "white" }
                         Text { visible: shelf.parent.o.oxygenSeconds; anchors.baseline: parent.children[0].baseline
                             text: " " + Qt.formatTime(p.now, "ss"); font.family: p.display; font.pixelSize: 48 * p.u; font.weight: Font.Medium; color: Qt.rgba(1, 1, 1, 0.6) }
+                        Text { visible: p.ampm !== ""; anchors.baseline: parent.children[0].baseline
+                            text: " " + p.ampm; font.family: p.display; font.pixelSize: 36 * p.u; font.weight: Font.DemiBold; color: Qt.rgba(1, 1, 1, 0.75) }
                     }
                     Rectangle { anchors.verticalCenter: parent.verticalCenter; width: 2 * p.u; height: 120 * p.u; color: Qt.rgba(1, 1, 1, 0.2) }
                     Column {
@@ -565,6 +568,7 @@ Item {
                 Flow {
                     width: parent.width
                     spacing: 10 * p.u
+                    M3Chip { visible: p.ampm !== ""; icon: "󰥔"; label: p.ampm }
                     M3Chip { visible: p.temp !== ""; icon: "󰖐"; label: p.temp + (p.condition ? " · " + p.condition : "") }
                     M3Chip { visible: p.hasBattery; icon: p.charging ? "󰂄" : "󰁹"; label: p.batPct + "%" + (p.charging ? " · Charging" : "") }
                 }
@@ -615,7 +619,7 @@ Item {
                 spacing: 40 * p.u
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: Qt.formatDate(p.now, "dddd  d MMM").toUpperCase()
+                    text: (Qt.formatDate(p.now, "dddd  d MMM") + (p.ampm ? "  " + p.ampm : "")).toUpperCase()
                     font.family: parent.parent.mono; font.pixelSize: 30 * p.u; font.letterSpacing: 12 * p.u
                     color: "white"
                 }

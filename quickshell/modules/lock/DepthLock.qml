@@ -358,8 +358,8 @@ Item {
                 readonly property bool stacked: c.useStacked
                 readonly property int px: Math.round(c.basePx * c.fit)
                 readonly property string hh: {
-                    const h = Atelier.clock24 ? c.now.getHours() : (c.now.getHours() % 12 || 12);
-                    return (stacked || Atelier.clock24) && h < 10 ? "0" + h : "" + h;
+                    const h = Atelier.lockClock24 ? c.now.getHours() : (c.now.getHours() % 12 || 12);
+                    return (stacked || Atelier.lockClock24) && h < 10 ? "0" + h : "" + h;
                 }
                 text: stacked ? hh + "\n" + Qt.formatTime(c.now, "mm") : hh + ":" + Qt.formatTime(c.now, "mm")
                 horizontalAlignment: Text.AlignHCenter
@@ -558,7 +558,7 @@ Item {
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: (Atelier.clock24 ? Atelier.hour12(c.now) : Atelier.hour12(c.now).replace(/^0/, "")) + ":" + Qt.formatTime(c.now, "mm")
+                text: (Atelier.lockClock24 ? Atelier.lockHour(c.now) : Atelier.lockHour(c.now).replace(/^0/, "")) + ":" + Qt.formatTime(c.now, "mm")
                 font.family: "Inter Display"; font.pixelSize: 68; font.weight: Font.DemiBold
                 font.features: { "tnum": 1 }
                 font.letterSpacing: -1.5

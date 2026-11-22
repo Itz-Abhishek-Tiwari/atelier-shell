@@ -271,15 +271,15 @@ Item {
                         spacing: 10
                         Row {
                             readonly property int px: c.wide ? 104 : 84
-                            Text { text: Atelier.hour12(c.now); font.family: Atelier.font; font.pixelSize: parent.px; font.bold: true; color: Atelier.text }
+                            Text { text: Atelier.lockHour(c.now); font.family: Atelier.font; font.pixelSize: parent.px; font.bold: true; color: Atelier.text }
                             Text { text: ":"; font.family: Atelier.font; font.pixelSize: parent.px; font.bold: true; color: Atelier.accent }
                             Text { text: Qt.formatTime(c.now, "mm"); font.family: Atelier.font; font.pixelSize: parent.px; font.bold: true; color: Atelier.text }
                         }
                         Chip {
-                            visible: !Atelier.clock24
+                            visible: !Atelier.lockClock24
                             Layout.alignment: Qt.AlignVCenter
                             Layout.topMargin: 14
-                            text: Atelier.ampm(c.now)
+                            text: Atelier.lockAmpm(c.now)
                             mono: true
                             tint: Atelier.blue
                             implicitHeight: 30

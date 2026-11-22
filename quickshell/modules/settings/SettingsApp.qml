@@ -1453,6 +1453,9 @@ Item {
                                 }
                                 SettingSwitch { label: "Show notifications"; description: "App name and title only, never the message text"
                                     checked: Settings.notifications.lockShowCount; onToggled: (v) => Settings.notifications.lockShowCount = v }
+                                SettingChoice { label: "Clock"; description: Settings.lock.clock === "system" ? "Follows General → 24-hour clock (now " + (Atelier.clock24 ? "24" : "12") + "-hour)" : "For every built-in style"
+                                    options: [{ id: "system", label: "System" }, { id: "12", label: "12-hour" }, { id: "24", label: "24-hour" }]
+                                    value: Settings.lock.clock; onPicked: (id) => Settings.lock.clock = id }
                             }
 
                             SettingCard {
@@ -2448,7 +2451,7 @@ Item {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     y: parent.height * 0.1
-                    text: Atelier.hour12(new Date()).replace(/^0/, "") + ":" + Qt.formatTime(new Date(), "mm")
+                    text: Atelier.lockHour(new Date()).replace(/^0(?=\d)/, Atelier.lockClock24 ? "0" : "") + ":" + Qt.formatTime(new Date(), "mm")
                     font.family: "Inter Display"; font.pixelSize: parent.height * 0.3; font.weight: Font.Bold
                     color: Atelier.text
                 }
@@ -2497,7 +2500,7 @@ Item {
                             topPadding: height * 0.14; spacing: 4
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                text: Atelier.hour12(new Date()) + ":" + Qt.formatTime(new Date(), "mm")
+                                text: Atelier.lockHour(new Date()) + ":" + Qt.formatTime(new Date(), "mm")
                                 font.family: Atelier.font; font.pixelSize: 15; font.bold: true; color: Atelier.text
                             }
                             Rectangle {
