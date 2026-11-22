@@ -50,12 +50,12 @@ Item {
         : Qt.rgba(18/255, 16/255, 22/255, 0.94)
     readonly property color colBorder: isLight
         ? Qt.rgba(0, 0, 0, 0.08)
-        : Qt.rgba(255, 255, 255, 0.08)
+        : Qt.rgba(1, 1, 1, 0.08)
     readonly property color colPrimary: isLight ? Atelier.accent : Atelier.sky
     readonly property color colOnPrimary: isLight ? "#ffffff" : Atelier.crust
     readonly property color colText: isLight ? Atelier.text : Atelier.text
     readonly property color colSubtext: isLight ? Atelier.subtext : Atelier.subtext
-    readonly property color colContainer: isLight ? Qt.rgba(0, 0, 0, 0.05) : Qt.rgba(255, 255, 255, 0.06)
+    readonly property color colContainer: isLight ? Qt.rgba(0, 0, 0, 0.05) : Qt.rgba(1, 1, 1, 0.06)
 
     signal toastRequested(string msg, string icon, color clr)
     signal closedSignal()
@@ -446,7 +446,7 @@ Item {
                             Layout.fillWidth: true
                             height: 34
                             radius: 12
-                            color: cancelMa.containsMouse ? Qt.rgba(255, 255, 255, 0.08) : "transparent"
+                            color: cancelMa.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
 
                             Text {
                                 anchors.centerIn: parent
@@ -523,7 +523,7 @@ Item {
                             id: switchPill
                             width: 40; height: 22
                             radius: 11
-                            color: wifiOverlayRoot.wifiEnabled ? wifiOverlayRoot.colPrimary : Qt.rgba(255, 255, 255, 0.12)
+                            color: wifiOverlayRoot.wifiEnabled ? wifiOverlayRoot.colPrimary : Qt.rgba(1, 1, 1, 0.12)
                             Behavior on color { ColorAnimation { duration: 140 } }
 
                             Rectangle {
@@ -627,8 +627,8 @@ Item {
                                     radius: 14
                                     color: modelData.inUse
                                         ? wifiOverlayRoot.colPrimary
-                                        : (actionMa.containsMouse ? Qt.rgba(255, 255, 255, 0.12) : "transparent")
-                                    border.color: modelData.inUse ? "transparent" : Qt.rgba(255, 255, 255, 0.12)
+                                        : (actionMa.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : "transparent")
+                                    border.color: modelData.inUse ? "transparent" : Qt.rgba(1, 1, 1, 0.12)
                                     border.width: 1
 
                                     Text {

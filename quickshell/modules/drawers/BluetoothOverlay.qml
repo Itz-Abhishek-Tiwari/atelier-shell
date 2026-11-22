@@ -42,12 +42,12 @@ Item {
         : Qt.rgba(18/255, 16/255, 22/255, 0.94)
     readonly property color colBorder: isLight
         ? Qt.rgba(0, 0, 0, 0.08)
-        : Qt.rgba(255, 255, 255, 0.08)
+        : Qt.rgba(1, 1, 1, 0.08)
     readonly property color colPrimary: isLight ? Atelier.accent : Atelier.accent
     readonly property color colOnPrimary: isLight ? "#ffffff" : Atelier.crust
     readonly property color colText: isLight ? Atelier.text : Atelier.text
     readonly property color colSubtext: isLight ? Atelier.subtext : Atelier.subtext
-    readonly property color colContainer: isLight ? Qt.rgba(0, 0, 0, 0.05) : Qt.rgba(255, 255, 255, 0.06)
+    readonly property color colContainer: isLight ? Qt.rgba(0, 0, 0, 0.05) : Qt.rgba(1, 1, 1, 0.06)
 
     signal toastRequested(string msg, string icon, color clr)
     signal closedSignal()
@@ -262,7 +262,7 @@ get_devices()
                             id: powerSwitch
                             width: 40; height: 22
                             radius: 11
-                            color: btOverlayRoot.btPowered ? btOverlayRoot.colPrimary : Qt.rgba(255, 255, 255, 0.12)
+                            color: btOverlayRoot.btPowered ? btOverlayRoot.colPrimary : Qt.rgba(1, 1, 1, 0.12)
                             Behavior on color { ColorAnimation { duration: 140 } }
 
                             Rectangle {
@@ -299,7 +299,7 @@ get_devices()
                             id: scanSwitch
                             width: 40; height: 22
                             radius: 11
-                            color: btOverlayRoot.isScanning ? btOverlayRoot.colPrimary : Qt.rgba(255, 255, 255, 0.12)
+                            color: btOverlayRoot.isScanning ? btOverlayRoot.colPrimary : Qt.rgba(1, 1, 1, 0.12)
                             Behavior on color { ColorAnimation { duration: 140 } }
 
                             Rectangle {
@@ -400,8 +400,8 @@ get_devices()
                                     radius: 14
                                     color: modelData.connected
                                         ? btOverlayRoot.colPrimary
-                                        : (actionBtnMa.containsMouse ? Qt.rgba(255, 255, 255, 0.12) : "transparent")
-                                    border.color: modelData.connected ? "transparent" : Qt.rgba(255, 255, 255, 0.12)
+                                        : (actionBtnMa.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : "transparent")
+                                    border.color: modelData.connected ? "transparent" : Qt.rgba(1, 1, 1, 0.12)
                                     border.width: 1
 
                                     Text {
