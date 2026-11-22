@@ -27,6 +27,41 @@ Scope {
     property string frozenUrl: ""
     property var windows: []
     property string lastPath: ""
+    // what the preview card shows: the last screenshot, or a recording that just finished
+    property string previewPath: ""
+    property bool previewVideo: false
+    property int previewSeconds: 0
+    property string previewSize: ""
+    property string previewThumb: ""
+    readonly property string thumbFile: Quickshell.cachePath("recording-thumb.jpg")
+
+    // after a recording (shell.qml, Recorder.finished): a frame for the thumbnail + the size, then the card
+    function showRecording(path, seconds) {
+        previewPath = path;
+        previewVideo = true;
+        previewSeconds = seconds;
+        previewSize = "";
+        previewThumb = "";
+        thumbProc.command = ["sh", "-c",
+            'ffmpeg -y -loglevel error -ss "$3" -i "$1" -frames:v 1 -vf scale=640:-2 "$2" </dev/null >/dev/null 2>&1; stat -c %s "$1"',
+            "sh", path, thumbFile, seconds >= 2 ? "1" : "0"];
+        thumbProc.running = true;
+    }
+    function _human(b) {
+        return b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : b >= 1e6 ? Math.round(b / 1e6) + " MB" : Math.max(1, Math.round(b / 1e3)) + " KB";
+    }
+    Process {
+        id: thumbProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const b = Number(text.trim());
+                root.previewSize = b > 0 ? root._human(b) : "";
+                // the same cache path every time: a query string makes the Image reload it
+                root.previewThumb = "file://" + root.thumbFile + "?" + Date.now();
+                preview.show();
+            }
+        }
+    }
     property bool instant: false             // full screen, no UI
     property bool recordMode: false          // pick an area to record instead of a screenshot
 
@@ -146,6 +181,8 @@ Scope {
                 try {
                     const r = JSON.parse(text.trim());
                     root.lastPath = r.path;
+                    root.previewPath = r.path;
+                    root.previewVideo = false;
                     if (root.editAfter) Quickshell.execDetached(["swappy", "-f", r.path, "-o", r.path]);
                     else preview.show();
                 } catch (e) {
@@ -492,14 +529,23 @@ Scope {
                     radius: 14
                     color: Atelier.container
                     Image {
+                        id: thumb
                         anchors.fill: parent
-                        source: root.lastPath ? "file://" + root.lastPath : ""
+                        source: root.previewVideo ? root.previewThumb : (root.previewPath ? "file://" + root.previewPath : "")
                         fillMode: Image.PreserveAspectFit
                         asynchronous: true
                         cache: false
                         sourceSize.width: 600
                     }
-                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Quickshell.execDetached(["xdg-open", root.lastPath]) }
+                    // a recording: play mark over the frame (or alone, if no frame could be read)
+                    Rectangle {
+                        visible: root.previewVideo
+                        anchors.centerIn: parent
+                        width: 44; height: 44; radius: 22
+                        color: Qt.rgba(0, 0, 0, 0.45)
+                        Text { anchors.centerIn: parent; anchors.horizontalCenterOffset: 2; text: "󰐊"; font.family: Atelier.font; font.pixelSize: 22; color: "white" }
+                    }
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { Quickshell.execDetached(["xdg-open", root.previewPath]); preview.shown = false; } }
                 }
 
                 RowLayout {
@@ -508,18 +554,28 @@ Scope {
                     Text { text: "󰄬"; font.family: Atelier.font; font.pixelSize: 13; color: Atelier.green }
                     Text {
                         Layout.fillWidth: true
-                        text: "Copied & saved"
+                        text: root.previewVideo
+                              ? "Saved · " + Math.floor(root.previewSeconds / 60) + ":" + String(root.previewSeconds % 60).padStart(2, "0")
+                                + (root.previewSize ? " · " + root.previewSize : "")
+                              : "Copied & saved"
+                        elide: Text.ElideRight
                         font.family: Atelier.font
                         font.pixelSize: 12
                         font.bold: true
                         color: Atelier.text
                     }
-                    PreviewBtn { icon: "󰏫"; tint: Atelier.yellow; onClicked: { Quickshell.execDetached(["swappy", "-f", root.lastPath, "-o", root.lastPath]); preview.shown = false; } }
-                    PreviewBtn { icon: "󰉖"; tint: Atelier.blue; onClicked: { Quickshell.execDetached(["xdg-open", root.lastPath.substring(0, root.lastPath.lastIndexOf("/"))]); preview.shown = false; } }
+                    PreviewBtn { icon: "󰏫"; tint: Atelier.yellow; visible: !root.previewVideo   // swappy edits images only
+                        onClicked: { Quickshell.execDetached(["swappy", "-f", root.previewPath, "-o", root.previewPath]); preview.shown = false; } }
+                    PreviewBtn { icon: "󰉖"; tint: Atelier.blue; onClicked: { Quickshell.execDetached(["xdg-open", root.previewPath.substring(0, root.previewPath.lastIndexOf("/"))]); preview.shown = false; } }
                     // AirDrop to a nearby iPhone: the AirDrop card takes over (pick the device, progress)
                     PreviewBtn { icon: "\u{F0003}"; tint: Atelier.sky; visible: AirDrop.available
-                        onClicked: { AirDrop.send([root.lastPath]); preview.shown = false; } }
-                    PreviewBtn { icon: "󰆴"; tint: Atelier.red; onClicked: { Quickshell.execDetached(["rm", "-f", root.lastPath]); Quickshell.execDetached(["wl-copy", "--clear"]); preview.shown = false; root.toastRequested("Screenshot deleted", "󰆴", Atelier.red); } }
+                        onClicked: { AirDrop.send([root.previewPath]); preview.shown = false; } }
+                    PreviewBtn { icon: "󰆴"; tint: Atelier.red; onClicked: {
+                            Quickshell.execDetached(["rm", "-f", root.previewPath]);
+                            if (!root.previewVideo) Quickshell.execDetached(["wl-copy", "--clear"]);   // screenshots were also copied
+                            preview.shown = false;
+                            root.toastRequested(root.previewVideo ? "Recording deleted" : "Screenshot deleted", "󰆴", Atelier.red);
+                        } }
                 }
             }
         }

@@ -610,9 +610,8 @@ ShellRoot {
         }
         Connections {
             target: Recorder
-            function onFinished(path, seconds) {
-                toastPopup.showToast("Recording saved · " + Recorder.elapsedText + " · Videos/Recordings", "󰕧", Atelier.green);
-            }
+            // the same preview card as a screenshot: thumbnail, open, folder, AirDrop, delete
+            function onFinished(path, seconds) { screenshotTool.showRecording(path, seconds); }
             function onFailed(reason) { toastPopup.showToast(reason, "󰀦", Atelier.red); }
         }
 
