@@ -50,7 +50,7 @@ SettingRow {
                     width: drag.pressed ? 18 : 16
                     height: width
                     radius: width / 2
-                    color: Atelier.text
+                    color: Atelier.onFill            // light ink, like every control on a fill (was text: a dark dot in light themes)
                     border.width: 3
                     border.color: root.hue
                     Behavior on width { NumberAnimation { duration: Atelier.durFast } }

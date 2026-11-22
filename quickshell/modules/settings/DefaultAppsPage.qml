@@ -219,12 +219,12 @@ ColumnLayout {
                         Text {
                             text: opt.modelData.name
                             font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.Medium
-                            color: opt.on ? Atelier.onAccent : Atelier.text
+                            color: opt.on ? Atelier.onFill : Atelier.text
                         }
                         Text {
                             visible: opt.on
                             text: "󰄬"
-                            font.family: Atelier.font; font.pixelSize: 12; color: Atelier.onAccent
+                            font.family: Atelier.font; font.pixelSize: 12; color: Atelier.onFill
                         }
                     }
                     MouseArea {

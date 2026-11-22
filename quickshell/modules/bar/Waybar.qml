@@ -231,7 +231,7 @@ Item {
                             font.family: Atelier.font
                             font.pixelSize: 11
                             font.bold: true
-                            color: wsCell.isActive ? Atelier.onAccent : Atelier.text
+                            color: wsCell.isActive ? Atelier.onFill : Atelier.text
                         }
 
                         Rectangle {   // empty workspace

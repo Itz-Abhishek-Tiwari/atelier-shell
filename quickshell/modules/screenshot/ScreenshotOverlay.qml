@@ -360,8 +360,8 @@ Scope {
                             id: modeRow
                             anchors.centerIn: parent
                             spacing: 6
-                            Text { text: modelData.icon; font.family: Atelier.font; font.pixelSize: 15; color: parent.parent.on ? Atelier.onAccent : Atelier.text }
-                            Text { text: modelData.label; font.family: Atelier.font; font.pixelSize: 11; font.bold: true; color: parent.parent.on ? Atelier.onAccent : Atelier.text }
+                            Text { text: modelData.icon; font.family: Atelier.font; font.pixelSize: 15; color: parent.parent.on ? Atelier.onFill : Atelier.text }
+                            Text { text: modelData.label; font.family: Atelier.font; font.pixelSize: 11; font.bold: true; color: parent.parent.on ? Atelier.onFill : Atelier.text }
                         }
                         MouseArea { id: modeMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.mode = modelData.id }
                     }
