@@ -176,9 +176,10 @@ Item {
                             clip: true
                             selectByMouse: true
                             onTextChanged: flick.contentY = 0
-                            // the opening key (Super+?) is still held for a moment: don't type it
+                            // the opening key (Super+?) is still held for a moment: don't type its
+                            // repeats (fresh presses go through, so fast typing keeps its first letter)
                             Keys.onPressed: (e) => {
-                                if (e.isAutoRepeat || Date.now() - root.openedAt < 350) e.accepted = true;
+                                if (e.isAutoRepeat && Date.now() - root.openedAt < 350) e.accepted = true;
                             }
                             Keys.onEscapePressed: { if (text) text = ""; else root.close(); }
                             Text {
