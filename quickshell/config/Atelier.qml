@@ -140,7 +140,7 @@ Singleton {
     readonly property real _glass: Settings.appearance.glass
     on_GlassChanged: remapTimer.restart()
 
-    readonly property color surface: Qt.alpha(isLight ? c.base : c.crust, Perf.game ? 1 : Math.min(1, Settings.appearance.glass + (isLight ? 0.02 : 0)))
+    readonly property color surface: Qt.alpha(isLight ? c.base : c.crust, Perf.lean ? 1 : Math.min(1, Settings.appearance.glass + (isLight ? 0.02 : 0)))
     readonly property color shadow: isLight ? Qt.rgba(0, 0, 0, 0.22) : Qt.rgba(0, 0, 0, 0.42)
     readonly property color scrim: Qt.alpha(c.crust, 0.45)
 

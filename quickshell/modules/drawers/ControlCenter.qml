@@ -14,8 +14,13 @@ import qs.services
 
 // Control center: drawer out of the right border, sized to its content.
 // Quiet, monochrome, typographic (the website's language): tiny uppercase labels, ink-filled
-// 5px bars, list rows with pill switches, transparent round controls, numbers in mono,
-// one accent only for "on". No coloured tiles.
+// 5px bars, transparent round controls, numbers in mono, one accent only for "on".
+//
+// The switches are ONE list (`toggles`, below) drawn in the layout the user picks
+// (Settings.controlCenter.layout, or the layout button in the header):
+//   list   grouped rows with pill switches (default)     icons  round buttons, labels on hover
+//   tiles  wide Wi-Fi/Bluetooth tiles + a 4-across grid  cards  a connections card + a chip column
+// Header (full / compact), shortcuts (which ones) and the notification count are settings too.
 Item {
     id: root
     visible: false
@@ -32,7 +37,6 @@ Item {
         visible = true;
         animActive = true;
         SysState.refreshWifi();
-        SysState.refreshBrightness();
         if (!adguardSet.running) adguardGet.running = true;
         focusTimer.restart();
     }
@@ -84,6 +88,80 @@ Item {
     }
     Timer { interval: 1000; running: root.visible; repeat: true; triggeredOnStart: true; onTriggered: root.now = new Date() }
 
+    // ── The switches, once: every layout draws these ──────────────────────
+    // id · group · icon · label · short (one word) · sub (status) · on · warn (on but broken) · details
+    readonly property bool micMuted: !root.source || !root.source.audio || root.source.audio.muted
+    readonly property var toggles: [
+        { id: "wifi", group: "Connections", icon: SysState.wifiIcon, label: "Wi-Fi", short: "Wi-Fi",
+          sub: !SysState.wifiEnabled ? "Off" : (SysState.ssid || "Not connected"), on: SysState.wifiEnabled, warn: false, details: "wifi" },
+        { id: "bluetooth", group: "Connections", icon: root.adapter && root.adapter.enabled ? "󰂯" : "󰂲", label: "Bluetooth", short: "Bluetooth",
+          sub: !(root.adapter && root.adapter.enabled) ? "Off" : root.btConnected.length === 1 ? root.btConnected[0].name
+             : root.btConnected.length > 1 ? root.btConnected.length + " devices" : "On",
+          on: !!(root.adapter && root.adapter.enabled), warn: false, details: "bluetooth" },
+        { id: "adguard", group: "Connections", icon: root.adguard !== "off" ? "󰕥" : "󰒙", label: "AdGuard DNS", short: "AdGuard",
+          sub: root.adguard === "family" ? "Blocking ads · family filter" : root.adguard === "on" ? "Blocking ads and trackers" : "Off",
+          on: root.adguard !== "off", warn: false, details: "" },
+        { id: "dnd", group: "Focus & display", icon: Notifs.dnd ? "󰂛" : "󰂚", label: "Do Not Disturb", short: "Focus",
+          sub: Notifs.dnd ? "Notifications are silenced" : "Off", on: Notifs.dnd, warn: false, details: "" },
+        { id: "night", group: "Focus & display", icon: NightLight.active ? "󰖔" : "󰖙", label: "Night light", short: "Night",
+          sub: NightLight.status, on: NightLight.active, warn: false, details: "settings:appearance" },
+        { id: "awake", group: "Focus & display", icon: "󰅶", label: "Keep awake", short: "Awake",
+          sub: Atelier.caffeine ? "The screen stays on" : "Off", on: Atelier.caffeine, warn: false, details: "" },
+        { id: "record", group: "Focus & display", icon: "󰑋", label: "Screen recording", short: Recorder.recording ? Recorder.elapsedText : "Record",
+          sub: Recorder.recording ? "Recording · " + Recorder.elapsedText + " · click to stop" : !Recorder.available ? "Install wf-recorder" : "Pick an area",
+          on: Recorder.recording, warn: false, details: "", red: true },
+        { id: "airdrop", group: "Phone", icon: "\u{F0003}", label: "AirDrop", short: "AirDrop",
+          sub: AirDrop.summary, on: AirDrop.enabled, warn: AirDrop.enabled && AirDrop.radioState === "error", details: "" },
+        { id: "phonecam", group: "Phone", icon: "󰄜", label: "iPhone camera", short: "Camera",
+          sub: PhoneCam.summary, on: PhoneCam.running, warn: PhoneCam.state === "error", details: "camera" },
+        { id: "mic", group: "Phone", icon: root.micMuted ? "󰍭" : "󰍬", label: "Microphone", short: "Mic",
+          sub: root.micMuted ? "Muted" : "On", on: !root.micMuted, warn: false, details: "sound" }
+    ]
+    readonly property var groups: ["Connections", "Focus & display", "Phone"]
+    // static ids per group, so the list's rows aren't rebuilt each time a status changes
+    readonly property var groupIds: ({ "Connections": ["wifi", "bluetooth", "adguard"],
+        "Focus & display": ["dnd", "night", "awake", "record"], "Phone": ["airdrop", "phonecam", "mic"] })
+    readonly property var _none: ({ icon: "", label: "", short: "", sub: "", on: false, warn: false, details: "" })
+    function t(id) { return toggles.find(x => x.id === id) || _none; }
+    function act(id) {
+        switch (id) {
+        case "wifi": SysState.setWifi(!SysState.wifiEnabled); break;
+        case "bluetooth": if (root.adapter) root.adapter.enabled = !root.adapter.enabled; break;
+        case "adguard": root.setAdguard(root.adguard !== "off" ? "off" : "on"); break;
+        case "dnd": Notifs.dnd = !Notifs.dnd; break;
+        case "night": NightLight.toggle(); break;
+        case "awake": Atelier.caffeine = !Atelier.caffeine; break;
+        case "record": root.requestOverlay("record"); break;
+        case "airdrop": AirDrop.toggle(); break;
+        case "phonecam": PhoneCam.toggle(); break;
+        case "mic": if (root.source && root.source.audio) root.source.audio.muted = !root.source.audio.muted; break;
+        }
+    }
+    function details(id) {
+        const d = t(id) ? t(id).details : "";
+        if (d === "sound") root.requestOverlay("settings:sound");
+        else if (d) root.requestOverlay(d);
+    }
+    readonly property string layoutName: ["list", "tiles", "icons", "cards"].indexOf(Settings.controlCenter.layout) >= 0
+        ? Settings.controlCenter.layout : "list"
+    function cycleLayout() {
+        const all = ["list", "tiles", "icons", "cards"];
+        Settings.controlCenter.layout = all[(all.indexOf(layoutName) + 1) % all.length];
+    }
+    property string hint: ""                 // the hovered switch's status (icons / tiles)
+
+    // every shortcut the user can pick (Settings → Appearance → Control center)
+    readonly property var allShortcuts: [
+        { id: "screenshot", icon: "󰄀", label: "Screenshot" }, { id: "record",    icon: "󰑋", label: "Record" },
+        { id: "wallpaper",  icon: "󰸉", label: "Wallpaper" },  { id: "theme",     icon: "󰏘", label: "Theme" },
+        { id: "emoji",      icon: "󰞅", label: "Emoji" },      { id: "clipboard", icon: "󰅌", label: "Clipboard" },
+        { id: "camera",     icon: "󰄀", label: "Camera" },     { id: "keyboard",  icon: "󰌌", label: "Keyboard" },
+        { id: "keybinds",   icon: "󰧺", label: "Shortcuts" },  { id: "settings",  icon: "󰒓", label: "Settings" }
+    ]
+    readonly property var shortcuts: (Settings.controlCenter.shortcuts || []).map(id => allShortcuts.find(x => x.id === id)).filter(x => x).slice(0, 5)
+    property bool showAllNotifs: false
+    onVisibleChanged: if (!visible) showAllNotifs = false
+
     // ── Dismiss ──────────────────────────────────────────────────────────────
     Item {
         id: keys
@@ -120,15 +198,19 @@ Item {
             width: scroller.width - 44
             spacing: 20
 
-            // ── Header: greeting + buttons · big clock + AM/PM chip · date + battery chip ──
+            // ── Header ──────────────────────────────────────────────────────
+            // full: greeting + buttons · big clock beside date and a slim battery bar
+            // compact: one line, time · date · battery · buttons
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 2
+                spacing: 6
+                readonly property bool compact: Settings.controlCenter.header === "compact"
 
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 2
                     Text {
+                        visible: !parent.parent.compact
                         Layout.fillWidth: true
                         Layout.minimumWidth: 0
                         text: root.greeting + (Atelier.userName ? ", " + Atelier.userName : "")
@@ -138,265 +220,189 @@ Item {
                         color: Atelier.mauve
                         elide: Text.ElideRight
                     }
-                    RoundBtn { icon: "󰒓"; size: 30; glyphSize: 14; onClicked: root.requestOverlay("settings") }
-                    RoundBtn { icon: "󰐥"; size: 30; glyphSize: 14; hoverTint: Atelier.red; onClicked: root.requestOverlay("power") }
+                    // compact: everything on this one line
+                    Row {
+                        visible: parent.parent.compact
+                        Layout.fillWidth: true
+                        spacing: 8
+                        Text { anchors.baseline: dateC.baseline; text: Atelier.hour12(root.now) + ":" + Qt.formatTime(root.now, "mm")
+                            font.family: Atelier.font; font.pixelSize: 22; font.weight: Font.Bold; color: Atelier.text }
+                        Text { anchors.baseline: dateC.baseline; visible: !Atelier.clock24; text: Atelier.ampm(root.now)
+                            font.family: Atelier.font; font.pixelSize: 11; color: Atelier.blue }
+                        Text { id: dateC; anchors.verticalCenter: parent.verticalCenter; text: Qt.formatDate(root.now, "ddd d MMM")
+                            font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext }
+                        Text { anchors.baseline: dateC.baseline; visible: root.hasBattery
+                            text: (root.charging ? "󰂄 " : "") + Math.round(root.batPct * 100) + "%"
+                            font.family: root.mono; font.pixelSize: 11
+                            color: root.batPct <= 0.15 && !root.charging ? Atelier.red : Atelier.subtext }
+                    }
+                    RoundBtn { icon: "󰕰"; size: 30; glyphSize: 14; tip: "Layout: " + root.layoutName; onClicked: root.cycleLayout() }
+                    RoundBtn { icon: "󰒓"; size: 30; glyphSize: 14; tip: "Settings"; onClicked: root.requestOverlay("settings") }
+                    RoundBtn { icon: "󰐥"; size: 30; glyphSize: 14; tip: "Power"; hoverTint: Atelier.red; onClicked: root.requestOverlay("power") }
                 }
 
+                // full: big clock | date + battery
                 RowLayout {
-                    spacing: 10
+                    visible: !parent.compact
+                    Layout.fillWidth: true
+                    spacing: 14
                     Row {
                         Layout.alignment: Qt.AlignVCenter
-                        Text {
-                            text: Atelier.hour12(root.now)
-                            font.family: Atelier.font
-                            font.pixelSize: 46
-                            font.weight: Font.Bold
-                            color: Atelier.text
-                        }
+                        Text { text: Atelier.hour12(root.now); font.family: Atelier.font; font.pixelSize: 46; font.weight: Font.Bold; color: Atelier.text }
                         Text {   // the colon breathes once a second, in the accent colour
                             text: ":"
-                            font.family: Atelier.font
-                            font.pixelSize: 46
-                            font.weight: Font.Bold
+                            font.family: Atelier.font; font.pixelSize: 46; font.weight: Font.Bold
                             color: Atelier.accent
                             opacity: root.now.getSeconds() % 2 ? 0.45 : 1
                             Behavior on opacity { NumberAnimation { duration: 400 } }
                         }
+                        Text { text: Qt.formatTime(root.now, "mm"); font.family: Atelier.font; font.pixelSize: 46; font.weight: Font.Bold; color: Atelier.text }
                         Text {
-                            text: Qt.formatTime(root.now, "mm")
-                            font.family: Atelier.font
-                            font.pixelSize: 46
-                            font.weight: Font.Bold
-                            color: Atelier.text
+                            visible: !Atelier.clock24
+                            anchors.top: parent.top; anchors.topMargin: 10
+                            leftPadding: 6
+                            text: Atelier.ampm(root.now)
+                            font.family: Atelier.font; font.pixelSize: 12; font.weight: Font.Bold
+                            color: Atelier.blue
                         }
                     }
-                    Chip {
-                        visible: !Atelier.clock24
-                        Layout.alignment: Qt.AlignVCenter
-                        Layout.topMargin: 6
-                        text: Atelier.ampm(root.now)
-                        tint: Atelier.blue
-                    }
-                    Item { Layout.fillWidth: true }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 8
-                    Text {
-                        text: "󰃭"
-                        font.family: Atelier.font
-                        font.pixelSize: 13
-                        color: Atelier.peach
-                    }
-                    Text {
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        Layout.minimumWidth: 0
-                        text: Qt.formatDate(root.now, "dddd, d MMMM")
-                        font.family: Atelier.fontUi
-                        font.pixelSize: 13
-                        color: Atelier.subtext
-                        elide: Text.ElideRight
-                    }
-                    Chip {
-                        visible: root.hasBattery
-                        readonly property bool low: root.batPct <= 0.15 && !root.charging
-                        icon: root.charging ? "󰂄" : root.batPct > 0.9 ? "󰁹" : root.batPct > 0.7 ? "󰂁"
-                            : root.batPct > 0.5 ? "󰁿" : root.batPct > 0.3 ? "󰁽" : root.batPct > 0.15 ? "󰁻" : "󰂃"
-                        text: Math.round(root.batPct * 100) + "%"
-                        tint: low ? Atelier.red : root.charging ? Atelier.green : root.batPct <= 0.3 ? Atelier.yellow : Atelier.green
+                        Layout.alignment: Qt.AlignVCenter
+                        spacing: 3
+                        Text { Layout.fillWidth: true; text: Qt.formatDate(root.now, "dddd"); elide: Text.ElideRight
+                            font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium; color: Atelier.text }
+                        Text { Layout.fillWidth: true; text: Qt.formatDate(root.now, "d MMMM yyyy"); elide: Text.ElideRight
+                            font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext }
+                        // battery: a slim bar + number
+                        RowLayout {
+                            id: battRow
+                            visible: root.hasBattery
+                            Layout.fillWidth: true
+                            Layout.topMargin: 3
+                            spacing: 6
+                            readonly property color hue: root.batPct <= 0.15 && !root.charging ? Atelier.red
+                                : root.charging ? Atelier.green : root.batPct <= 0.3 ? Atelier.yellow : Atelier.green
+                            Rectangle {
+                                Layout.fillWidth: true
+                                implicitHeight: 5; radius: 2.5
+                                color: Atelier.containerHigh
+                                Rectangle {
+                                    width: parent.width * Math.max(0.04, root.batPct); height: parent.height; radius: 2.5
+                                    gradient: Gradient {
+                                        orientation: Gradient.Horizontal
+                                        GradientStop { position: 0; color: Qt.alpha(battRow.hue, 0.55) }
+                                        GradientStop { position: 1; color: battRow.hue }
+                                    }
+                                }
+                            }
+                            Text { text: (root.charging ? "󰂄" : "") + Math.round(root.batPct * 100) + "%"
+                                font.family: root.mono; font.pixelSize: 11; color: Atelier.subtext }
+                        }
                     }
                 }
             }
 
-            // ── Sound + light: slim ink bars ────────────────────────────────
+            // ── Switches, in the chosen layout ────────────────────────────────
+            Loader {
+                Layout.fillWidth: true
+                sourceComponent: root.layoutName === "tiles" ? tilesLayout
+                               : root.layoutName === "icons" ? iconsLayout
+                               : root.layoutName === "cards" ? cardsLayout : listLayout
+            }
+            // status of the hovered switch (tiles / icons: their labels are one word)
+            Text {
+                visible: root.layoutName === "tiles" || root.layoutName === "icons"
+                Layout.fillWidth: true
+                Layout.topMargin: -12
+                Layout.leftMargin: 4
+                text: root.hint
+                opacity: root.hint !== "" ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                elide: Text.ElideRight
+                font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+            }
+
+            // ── Mode: a segmented control with a sliding highlight ──────────────
             ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 6
-                SlimSlider {
+                spacing: 8
+                RowLayout {
                     Layout.fillWidth: true
-                    readonly property bool muted: root.sink && root.sink.audio ? root.sink.audio.muted : false
-                    value: root.sink && root.sink.audio ? root.sink.audio.volume : 0
-                    dimmed: muted
-                    icon: muted ? "󰝟" : value > 0.6 ? "󰕾" : value > 0.25 ? "󰖀" : "󰕿"
-                    onMoved: (v) => { if (root.sink && root.sink.audio) { root.sink.audio.volume = v; root.sink.audio.muted = false; } }
-                    onIconClicked: if (root.sink && root.sink.audio) root.sink.audio.muted = !root.sink.audio.muted
-                }
-                SlimSlider {
-                    Layout.fillWidth: true
-                    value: SysState.brightness
-                    icon: value > 0.6 ? "󰃠" : value > 0.3 ? "󰃟" : "󰃞"
-                    onMoved: (v) => SysState.setBrightness(v)
-                }
-            }
-
-            // ── Switches: one grouped list ──────────────────────────────────
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: switches.implicitHeight + 8
-                radius: 18
-                color: Atelier.container
-                border.width: 1
-                border.color: Atelier.outline
-
-                ColumnLayout {
-                    id: switches
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.top: parent.top
-                    anchors.topMargin: 4
-                    spacing: 0
-
-                    ToggleRow {
-                        icon: SysState.wifiIcon
-                        label: "Wi-Fi"
-                        sub: !SysState.wifiEnabled ? "Off" : (SysState.ssid || "Not connected")
-                        on: SysState.wifiEnabled
-                        hasDetails: true
-                        onToggled: SysState.setWifi(!SysState.wifiEnabled)
-                        onDetails: root.requestOverlay("wifi")
-                    }
-                    Hairline {}
-                    ToggleRow {
-                        icon: root.adapter && root.adapter.enabled ? "󰂯" : "󰂲"
-                        label: "Bluetooth"
-                        sub: !(root.adapter && root.adapter.enabled) ? "Off"
-                            : root.btConnected.length === 1 ? root.btConnected[0].name
-                            : root.btConnected.length > 1 ? root.btConnected.length + " devices" : "On"
-                        on: !!(root.adapter && root.adapter.enabled)
-                        hasDetails: true
-                        onToggled: if (root.adapter) root.adapter.enabled = !root.adapter.enabled
-                        onDetails: root.requestOverlay("bluetooth")
-                    }
-                    Hairline {}
-                    ToggleRow {
-                        icon: root.adguard !== "off" ? "󰕥" : "󰒙"
-                        label: "AdGuard DNS"
-                        sub: root.adguard === "family" ? "Blocking ads · family filter"
-                           : root.adguard === "on" ? "Blocking ads and trackers" : "Off"
-                        on: root.adguard !== "off"
-                        onToggled: root.setAdguard(root.adguard !== "off" ? "off" : "on")
-                    }
-                    Hairline {}
-                    ToggleRow {
-                        icon: Notifs.dnd ? "󰂛" : "󰂚"
-                        label: "Do Not Disturb"
-                        sub: Notifs.dnd ? "Notifications are silenced" : "Off"
-                        on: Notifs.dnd
-                        onToggled: Notifs.dnd = !Notifs.dnd
-                    }
-                    Hairline {}
-                    ToggleRow {
-                        icon: NightLight.active ? "󰖔" : "󰖙"
-                        label: "Night light"
-                        sub: NightLight.status
-                        on: NightLight.active
-                        hasDetails: true
-                        onToggled: NightLight.toggle()
-                        onDetails: root.requestOverlay("settings:appearance")
-                    }
-                    Hairline {}
-                    ToggleRow {
-                        icon: "󰑋"
-                        label: "Screen recording"
-                        sub: Recorder.recording ? "Recording · " + Recorder.elapsedText + " · click to stop"
-                           : !Recorder.available ? "Install wf-recorder" : "Pick an area to record"
-                        on: Recorder.recording
-                        onToggled: root.requestOverlay("record")
-                    }
-                    Hairline {}
-                    ToggleRow {
-                        icon: "󰅶"
-                        label: "Keep awake"
-                        sub: Atelier.caffeine ? "Screen stays on" : "Off"
-                        on: Atelier.caffeine
-                        onToggled: Atelier.caffeine = !Atelier.caffeine
-                    }
-                    Hairline {}
-                    ToggleRow {
-                        icon: "󰄜"
-                        label: "iPhone camera"
-                        sub: PhoneCam.summary
-                        on: PhoneCam.running
-                        onToggled: PhoneCam.toggle()
-                    }
-                    Hairline {}
-                    ToggleRow {
-                        readonly property bool muted: !root.source || !root.source.audio || root.source.audio.muted
-                        icon: muted ? "󰍭" : "󰍬"
-                        label: "Microphone"
-                        sub: muted ? "Muted" : "On"
-                        on: !muted
-                        onToggled: if (root.source && root.source.audio) root.source.audio.muted = !root.source.audio.muted
-                    }
-                }
-            }
-
-            // ── Mode ────────────────────────────────────────────────────────
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 10
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 1
-                    Text { text: "Mode"; font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium; color: Atelier.text }
+                    SectionLabel { text: "Mode" }
                     Text {
-                        text: Perf.game ? "Max performance" : Perf.dev ? "Opaque windows, faster" : "Your usual look"
+                        Layout.fillWidth: true
+                        text: Perf.game ? "· max performance" : Perf.dev ? "· opaque windows, faster" : "· your usual look"
                         font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+                        elide: Text.ElideRight
+                    }
+                    Text {
+                        text: "Customise"
+                        font.family: Atelier.fontUi; font.pixelSize: 11; font.weight: Font.Medium
+                        color: cuMa.containsMouse ? Atelier.text : Atelier.subtext
+                        MouseArea { id: cuMa; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                            onClicked: root.requestOverlay("settings:modes") }
                     }
                 }
-                Row {
-                    spacing: 4
-                    Repeater {
-                        model: [{ id: "normal", label: "Normal" }, { id: "dev", label: "Coding" }, { id: "game", label: "Game" }]
-                        Rectangle {
-                            required property var modelData
-                            readonly property bool sel: Perf.mode === modelData.id
-                            width: segText.implicitWidth + 24
-                            height: 30
-                            radius: 12
-                            color: sel ? Atelier.accentFill : (segMa.containsMouse ? Atelier.containerHigh : Atelier.container)
-                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                            Text {
-                                id: segText
-                                anchors.centerIn: parent
-                                text: modelData.label
-                                font.family: Atelier.fontUi
-                                font.pixelSize: 12
-                                font.weight: parent.sel ? Font.DemiBold : Font.Normal
-                                color: parent.sel ? Atelier.onAccent : Atelier.text
+                Rectangle {
+                    id: seg
+                    Layout.fillWidth: true
+                    implicitHeight: 38
+                    radius: 14
+                    color: Atelier.container
+                    border.width: 1; border.color: Atelier.outline
+                    readonly property var opts: [{ id: "normal", label: "Normal", icon: "󰖲" }, { id: "dev", label: "Coding", icon: "󰅩" }, { id: "game", label: "Game", icon: "󰊴" }]
+                    readonly property int sel: Math.max(0, opts.findIndex(o => o.id === Perf.mode))
+                    readonly property real cell: (width - 8) / 3
+                    Rectangle {      // the sliding highlight
+                        x: 4 + seg.sel * seg.cell; y: 4
+                        width: seg.cell; height: seg.height - 8
+                        radius: 10
+                        color: Atelier.accentFill
+                        Behavior on x { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
+                    }
+                    Row {
+                        x: 4; y: 4
+                        Repeater {
+                            model: seg.opts
+                            Item {
+                                required property var modelData
+                                required property int index
+                                readonly property bool on: seg.sel === index
+                                width: seg.cell; height: seg.height - 8
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 6
+                                    Text { anchors.verticalCenter: parent.verticalCenter; text: modelData.icon; font.family: Atelier.font; font.pixelSize: 13
+                                        color: parent.parent.on ? Atelier.onFill : Atelier.subtext }
+                                    Text { anchors.verticalCenter: parent.verticalCenter; text: modelData.label; font.family: Atelier.fontUi; font.pixelSize: 12
+                                        font.weight: parent.parent.on ? Font.DemiBold : Font.Medium
+                                        color: parent.parent.on ? Atelier.onFill : Atelier.text }
+                                }
+                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Perf.set(modelData.id) }
                             }
-                            MouseArea { id: segMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Perf.set(modelData.id) }
                         }
                     }
                 }
             }
 
-            // ── Shortcuts: four quiet round buttons ─────────────────────────
+            // ── Shortcuts: the ones picked in Settings (up to five) ───────────────
             Row {
-                id: shortcuts
+                id: shortcutRow
+                visible: root.shortcuts.length > 0
                 Layout.fillWidth: true
                 Repeater {
-                    model: [
-                        { icon: "󰄀", label: "Screenshot", act: "screenshot" },
-                        { icon: "󰸉", label: "Wallpaper", act: "wallpaper" },
-                        { icon: "󰏘", label: "Theme", act: "theme" },
-                        { icon: "󰌌", label: "Keyboard", act: "keyboard" },
-                        { icon: "󰧺", label: "Shortcuts", act: "keybinds" }
-                    ]
-                    ColumnLayout {
+                    model: root.shortcuts
+                    Item {
                         required property var modelData
-                        width: shortcuts.width / 5
-                        spacing: 6
+                        width: shortcutRow.width / Math.max(4, root.shortcuts.length)
+                        height: 62
                         Rectangle {
-                            Layout.alignment: Qt.AlignHCenter
-                            implicitWidth: 46
-                            implicitHeight: 46
-                            radius: 23
+                            id: scBtn
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: 42; height: 42; radius: 14
                             color: scMa.containsMouse ? Atelier.containerHigh : Atelier.container
-                            border.width: 1
-                            border.color: Atelier.outline
-                            scale: scMa.pressed ? 0.94 : 1
+                            scale: scMa.pressed ? 0.92 : 1
                             Behavior on scale { NumberAnimation { duration: 120 } }
                             Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                             Text {
@@ -406,15 +412,17 @@ Item {
                                 font.pixelSize: 17
                                 color: scMa.containsMouse ? Atelier.text : Atelier.subtext
                             }
-                            MouseArea { id: scMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.requestOverlay(modelData.act) }
                         }
                         Text {
-                            Layout.alignment: Qt.AlignHCenter
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.top: scBtn.bottom; anchors.topMargin: 5
                             text: modelData.label
                             font.family: Atelier.fontUi
-                            font.pixelSize: 11
+                            font.pixelSize: 10
                             color: Atelier.subtext
                         }
+                        MouseArea { id: scMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                            onClicked: root.requestOverlay(modelData.id) }
                     }
                 }
             }
@@ -425,8 +433,15 @@ Item {
                 Layout.topMargin: 2
                 spacing: 8
                 SectionLabel { text: "Notifications" }
-                Text { visible: Notifs.count > 0; text: Notifs.count; font.family: root.mono; font.pixelSize: 11; color: Atelier.subtext }
+                Rectangle {
+                    visible: Notifs.count > 0
+                    implicitWidth: ncText.implicitWidth + 12; implicitHeight: 18; radius: 9
+                    color: Qt.alpha(Atelier.accent, 0.14)
+                    Text { id: ncText; anchors.centerIn: parent; text: Notifs.count; font.family: root.mono; font.pixelSize: 10; color: Atelier.accent }
+                }
                 Item { Layout.fillWidth: true }
+                RoundBtn { icon: Notifs.dnd ? "󰂛" : "󰂚"; size: 26; glyphSize: 13; tip: Notifs.dnd ? "Do Not Disturb is on" : "Do Not Disturb"
+                    active: Notifs.dnd; onClicked: Notifs.dnd = !Notifs.dnd }
                 Text {
                     visible: Notifs.count > 0
                     text: "Clear all"
@@ -438,15 +453,20 @@ Item {
                 }
             }
 
-            Text {
+            // empty: a quiet line with a glyph
+            RowLayout {
                 Layout.fillWidth: true
                 Layout.topMargin: -8
-                Layout.bottomMargin: 2
                 visible: Notifs.count === 0
-                text: Notifs.dnd ? "Do Not Disturb is on." : "You're all caught up."
-                font.family: Atelier.fontUi
-                font.pixelSize: 12
-                color: Atelier.subtext
+                spacing: 8
+                Text { text: Notifs.dnd ? "󰂛" : "󰄬"; font.family: Atelier.font; font.pixelSize: 13; color: Notifs.dnd ? Atelier.peach : Atelier.green }
+                Text {
+                    Layout.fillWidth: true
+                    text: Notifs.dnd ? "Do Not Disturb is on. Pop-ups are silenced." : "You're all caught up."
+                    font.family: Atelier.fontUi
+                    font.pixelSize: 12
+                    color: Atelier.subtext
+                }
             }
 
             ListView {
@@ -456,8 +476,10 @@ Item {
                 visible: Notifs.count > 0
                 implicitHeight: contentHeight
                 interactive: false
-                spacing: 8
-                model: Notifs.list
+                spacing: 14            // room for a stack's peeking layers
+                // the first few; "Show N more" reveals the rest
+                // stacks (same app + title) are one card; the first few, "Show N more" for the rest
+                model: root.showAllNotifs ? Notifs.groups : Notifs.groups.slice(0, Math.max(1, Settings.controlCenter.notifLimit))
                 boundsBehavior: Flickable.StopAtBounds
 
                 delegate: NotificationCard {
@@ -477,6 +499,18 @@ Item {
                     NumberAnimation { properties: "y"; duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard }
                 }
             }
+
+            Text {
+                readonly property int hidden: Notifs.groups.length - Math.max(1, Settings.controlCenter.notifLimit)
+                visible: !root.showAllNotifs && hidden > 0
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: -8
+                text: "Show " + hidden + " more"
+                font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.Medium
+                color: moreMa.containsMouse ? Atelier.text : Atelier.subtext
+                MouseArea { id: moreMa; anchors.fill: parent; anchors.margins: -8; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                    onClicked: root.showAllNotifs = true }
+            }
         }
         }
     }
@@ -494,208 +528,459 @@ Item {
         color: Atelier.subtext
     }
 
-    component Hairline: Rectangle {
-        Layout.fillWidth: true
-        Layout.leftMargin: 50
-        Layout.rightMargin: 14
-        implicitHeight: 1
-        color: Atelier.outline
-    }
-
-    // transparent round button; tints on hover
     component RoundBtn: Rectangle {
         id: rb
         property string icon
         property int size: 34
         property int glyphSize: 15
         property color hoverTint: Atelier.text
+        property string tip: ""
+        property bool active: false          // lit (e.g. Do Not Disturb on)
         signal clicked()
         implicitWidth: size
         implicitHeight: size
         radius: size / 2
         opacity: enabled ? 1 : 0.35
-        color: rbMa.containsMouse ? Atelier.containerHigh : "transparent"
+        color: active ? Qt.alpha(Atelier.accent, 0.16) : rbMa.containsMouse ? Atelier.containerHigh : "transparent"
         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
         Text {
             anchors.centerIn: parent
             text: rb.icon
             font.family: Atelier.font
             font.pixelSize: rb.glyphSize
-            color: rbMa.containsMouse ? rb.hoverTint : Atelier.subtext
+            color: rb.active ? Atelier.accent : rbMa.containsMouse ? rb.hoverTint : Atelier.subtext
         }
+        Tip { text: rb.tip; shown: rbMa.containsMouse }
         MouseArea { id: rbMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: if (rb.enabled) rb.clicked() }
+    }
+
+    // a small tooltip under its parent, after a short hover
+    component Tip: Rectangle {
+        id: tip
+        property string text
+        property bool shown: false
+        visible: text !== "" && tipDelay.done
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.bottom; anchors.topMargin: 6
+        z: 100
+        width: tipText.implicitWidth + 14; height: 22; radius: 8
+        color: Atelier.containerHigh
+        border.width: 1; border.color: Atelier.outline
+        Text { id: tipText; anchors.centerIn: parent; text: tip.text; font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.text }
+        Timer { id: tipDelay; property bool done: false; interval: 550; running: tip.shown && !done; onTriggered: done = true }
+        onShownChanged: if (!shown) tipDelay.done = false
     }
 
     // pill switch (the site's .tg)
     component PillSwitch: Rectangle {
-        id: sw
+        id: ps
         property bool on: false
+        property bool warn: false
         signal toggled()
-        implicitWidth: 38
-        implicitHeight: 22
-        radius: 11
-        color: on ? Atelier.accentFill : Qt.alpha(Atelier.text, 0.18)
+        implicitWidth: 36
+        implicitHeight: 20
+        radius: 10
+        color: on ? (warn ? Atelier.fill(Atelier.peach) : Atelier.accentFill) : Atelier.containerHigh
+        border.width: on ? 0 : 1
+        border.color: Atelier.outline
         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
         Rectangle {
+            width: 14; height: 14; radius: 7
             y: 3
-            x: sw.on ? sw.width - width - 3 : 3
-            width: 16; height: 16; radius: 8
-            color: sw.on ? Atelier.onFill : (Atelier.isLight ? Atelier.base : Atelier.text)
-            Behavior on x { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard } }
+            x: ps.on ? parent.width - width - 3 : 3
+            color: ps.on ? Atelier.onFill : Atelier.subtext
+            Behavior on x { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
         }
-        MouseArea { anchors.fill: parent; anchors.margins: -6; cursorShape: Qt.PointingHandCursor; onClicked: sw.toggled() }
+        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: ps.toggled() }
     }
 
-    // one row of the switches list: glyph · label / sub-label · (chevron) · switch
-    component ToggleRow: Item {
-        id: tr
-        property string icon
-        property string label
-        property string sub
-        property bool on: false
-        property bool hasDetails: false
-        signal toggled()
-        signal details()
-        Layout.fillWidth: true
-        implicitHeight: 54
+    // ═══ Layout: TILES — wide Wi-Fi/Bluetooth tiles + a 4-across grid of the rest ═══
+    Component {
+        id: tilesLayout
+        ColumnLayout {
+            spacing: 8
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+                WideTile { tid: "wifi" }
+                WideTile { tid: "bluetooth" }
+            }
+            GridLayout {
+                Layout.fillWidth: true
+                columns: 4
+                rowSpacing: 8
+                columnSpacing: 8
+                Repeater {
+                    model: ["adguard", "dnd", "night", "awake", "record", "airdrop", "phonecam", "mic"]
+                    QuickTile { required property var modelData; tid: modelData }
+                }
+            }
+        }
+    }
 
-        Rectangle {   // hover wash
-            anchors.fill: parent
-            anchors.margins: 4
-            radius: 14
-            color: Atelier.containerHigh
-            opacity: rowMa.containsMouse ? 0.6 : 0
-            Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
-        }
-        MouseArea {
-            id: rowMa
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: tr.toggled()
-        }
+    component WideTile: Rectangle {
+        id: wt
+        property string tid
+        readonly property var d: root.t(tid)
+        readonly property bool on: d.on
+        Layout.fillWidth: true
+        Layout.preferredWidth: 1          // equal halves
+        implicitHeight: 60
+        radius: 18
+        color: on ? (wtMa.containsMouse ? Qt.lighter(Atelier.accentFill, 1.08) : Atelier.accentFill)
+                  : (wtMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+        border.width: on ? 0 : 1
+        border.color: Atelier.outline
+        scale: wtMa.pressed ? 0.97 : 1
+        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+        Behavior on scale { NumberAnimation { duration: 110 } }
+
+        MouseArea { id: wtMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.act(wt.tid) }
         RowLayout {
             anchors.fill: parent
-            anchors.leftMargin: 16
-            anchors.rightMargin: 14
-            spacing: 14
-            Text {
-                Layout.preferredWidth: 20
-                horizontalAlignment: Text.AlignHCenter
-                text: tr.icon
-                font.family: Atelier.font
-                font.pixelSize: 16
-                color: tr.on ? Atelier.text : Atelier.subtext
-                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+            anchors.leftMargin: 12
+            anchors.rightMargin: 6
+            spacing: 10
+            Rectangle {
+                implicitWidth: 32; implicitHeight: 32; radius: 16
+                color: wt.on ? Qt.rgba(1, 1, 1, 0.18) : Atelier.containerHigh
+                Text { anchors.centerIn: parent; text: wt.d.icon; font.family: Atelier.font; font.pixelSize: 15
+                    color: wt.on ? Atelier.onFill : Atelier.text }
             }
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
-                spacing: 1
-                Text {
-                    Layout.fillWidth: true
-                    text: tr.label
-                    font.family: Atelier.fontUi
-                    font.pixelSize: 13
-                    font.weight: Font.Medium
-                    color: Atelier.text
-                    elide: Text.ElideRight
-                }
-                Text {
-                    Layout.fillWidth: true
-                    text: tr.sub
-                    font.family: Atelier.fontUi
-                    font.pixelSize: 11
-                    color: Atelier.subtext
-                    elide: Text.ElideRight
-                }
+                spacing: 0
+                Text { Layout.fillWidth: true; text: wt.d.label; elide: Text.ElideRight
+                    font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold
+                    color: wt.on ? Atelier.onFill : Atelier.text }
+                Text { Layout.fillWidth: true; text: wt.d.sub; elide: Text.ElideRight
+                    font.family: Atelier.fontUi; font.pixelSize: 11
+                    color: wt.on ? Qt.alpha(Atelier.onFill, 0.8) : Atelier.subtext }
             }
-            Rectangle {   // the arrow is its own button: opens the full menu (networks, devices)
-                visible: tr.hasDetails
-                implicitWidth: 28
-                implicitHeight: 28
-                radius: 14
-                color: detMa.containsMouse ? Atelier.containerHigh : "transparent"
+            Rectangle {
+                implicitWidth: 26; implicitHeight: 26; radius: 13
+                color: detMa.containsMouse ? (wt.on ? Qt.rgba(1, 1, 1, 0.18) : Atelier.containerHigh) : "transparent"
                 Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                Text {
-                    anchors.centerIn: parent
-                    text: "󰅂"
-                    font.family: Atelier.font
-                    font.pixelSize: 13
-                    color: detMa.containsMouse ? Atelier.text : Atelier.subtext
-                }
-                MouseArea { id: detMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: tr.details() }
+                Text { anchors.centerIn: parent; text: "󰅂"; font.family: Atelier.font; font.pixelSize: 13
+                    color: wt.on ? Atelier.onFill : Atelier.subtext }
+                MouseArea { id: detMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.details(wt.tid) }
             }
-            PillSwitch { on: tr.on; onToggled: tr.toggled() }
         }
     }
 
-    // slim 5px ink bar: glyph (click = mute) · bar · value
-    component SlimSlider: Item {
-        id: ss
-        property real value: 0
-        property string icon
-        property bool dimmed: false
-        signal moved(real v)
-        signal iconClicked()
-        implicitHeight: 36
-        function set(v) { ss.moved(Math.max(0, Math.min(1, v))); }
+    // a square toggle: icon + one word, filled when on. Right-click = details. Hover = status line.
+    component QuickTile: Rectangle {
+        id: qt
+        property string tid
+        readonly property var d: root.t(tid)
+        readonly property bool on: d.on
+        readonly property color fillC: d.red ? Atelier.fill(Atelier.red) : Atelier.accentFill
+        Layout.fillWidth: true
+        Layout.preferredWidth: 1
+        implicitHeight: 68
+        radius: 16
+        color: on ? (qtMa.containsMouse ? Qt.lighter(fillC, 1.08) : fillC)
+                  : (qtMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+        border.width: d.warn ? 1.5 : (on ? 0 : 1)
+        border.color: d.warn ? Atelier.peach : Atelier.outline
+        scale: qtMa.pressed ? 0.94 : 1
+        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+        Behavior on scale { NumberAnimation { duration: 110 } }
+        Column {
+            anchors.centerIn: parent
+            width: parent.width - 8
+            spacing: 5
+            Text { anchors.horizontalCenter: parent.horizontalCenter; text: qt.d.icon; font.family: Atelier.font; font.pixelSize: 18
+                color: qt.on ? Atelier.onFill : (qt.d.warn ? Atelier.peach : Atelier.text) }
+            Text { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: qt.d.short; elide: Text.ElideRight
+                font.family: Atelier.fontUi; font.pixelSize: 11; font.weight: Font.Medium
+                color: qt.on ? Atelier.onFill : Atelier.subtext }
+        }
+        WarnDot { visible: qt.d.warn }
+        MouseArea {
+            id: qtMa
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            cursorShape: Qt.PointingHandCursor
+            onClicked: (m) => { if (m.button === Qt.RightButton) root.details(qt.tid); else root.act(qt.tid); }
+            onContainsMouseChanged: root.hint = containsMouse ? qt.d.label + " · " + qt.d.sub : (root.hint.startsWith(qt.d.label + " ·") ? "" : root.hint)
+        }
+    }
 
+    component WarnDot: Rectangle {
+        width: 7; height: 7; radius: 4
+        color: Atelier.peach
+        anchors.top: parent.top; anchors.right: parent.right; anchors.margins: 7
+    }
+
+    // ═══ Layout: LIST — grouped rows with pill switches (the quiet default) ═══
+    Component {
+        id: listLayout
+        ColumnLayout {
+            spacing: 14
+            Repeater {
+                model: root.groups
+                ColumnLayout {
+                    required property var modelData
+                    readonly property string grp: modelData
+                    Layout.fillWidth: true
+                    spacing: 6
+                    SectionLabel { Layout.leftMargin: 4; text: parent.grp }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        implicitHeight: rows.implicitHeight + 6
+                        radius: 16
+                        color: Atelier.container
+                        border.width: 1; border.color: Atelier.outline
+                        Column {
+                            id: rows
+                            x: 0; y: 3
+                            width: parent.width
+                            Repeater {
+                                model: root.groupIds[parent.parent.parent.grp] || []
+                                ListRow { required property var modelData; required property int index; tid: modelData; first: index === 0; width: rows.width }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    component ListRow: Item {
+        id: lr
+        property string tid
+        property bool first: false
+        readonly property var d: root.t(tid)
+        implicitHeight: 42
+        // the status only where it says something (a name, a problem), not "On"/"Off"
+        readonly property string status: d.warn ? d.sub
+            : (tid === "wifi" || tid === "bluetooth") && d.on && d.sub !== "On" ? d.sub
+            : tid === "record" && d.on ? d.sub : ""
+        Rectangle {   // hairline between rows
+            visible: !lr.first
+            anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right
+            anchors.leftMargin: 44; anchors.rightMargin: 12
+            height: 1; color: Atelier.outline
+        }
+        Rectangle {   // hover wash
+            anchors.fill: parent; anchors.margins: 3
+            radius: 12
+            color: Atelier.containerHigh
+            opacity: lrMa.containsMouse ? 0.6 : 0
+            Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+        }
+        MouseArea { id: lrMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.act(lr.tid) }
         RowLayout {
             anchors.fill: parent
-            spacing: 10
-            RoundBtn {
-                icon: ss.icon
-                size: 32
-                glyphSize: 15
-                hoverTint: ss.dimmed ? Atelier.red : Atelier.text
-                onClicked: ss.iconClicked()
-            }
-            Item {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                Rectangle {
-                    id: track
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width
-                    height: 5
-                    radius: 2.5
-                    color: Atelier.containerHigh
-                    Rectangle {
-                        width: parent.width * Math.max(0, Math.min(1, ss.value))
-                        height: parent.height
-                        radius: 2.5
-                        color: ss.dimmed ? Atelier.subtext : Atelier.text
-                        opacity: ss.dimmed ? 0.5 : 1
-                        Behavior on width { enabled: !dragMa.pressed; NumberAnimation { duration: 140; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard } }
-                    }
-                    Rectangle {   // knob: only while hovering / dragging
-                        x: Math.max(0, Math.min(parent.width - width, parent.width * ss.value - width / 2))
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 13; height: 13; radius: 6.5
-                        color: Atelier.text
-                        opacity: dragMa.containsMouse || dragMa.pressed ? 1 : 0
-                        Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
-                    }
-                }
-                MouseArea {
-                    id: dragMa
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    preventStealing: true
-                    onPressed: (m) => ss.set(m.x / width)
-                    onPositionChanged: (m) => { if (pressed) ss.set(m.x / width); }
-                    onWheel: (w) => ss.set(ss.value + (w.angleDelta.y > 0 ? 0.05 : -0.05))
-                }
+            anchors.leftMargin: 14
+            anchors.rightMargin: 12
+            spacing: 12
+            Text {
+                Layout.preferredWidth: 18
+                horizontalAlignment: Text.AlignHCenter
+                text: lr.d.icon
+                font.family: Atelier.font; font.pixelSize: 15
+                color: lr.d.warn ? Atelier.peach : lr.d.on ? (lr.d.red ? Atelier.red : Atelier.text) : Atelier.subtext
+                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
             }
             Text {
-                Layout.preferredWidth: 38
+                text: lr.d.label
+                font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium
+                color: Atelier.text
+            }
+            Text {
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
                 horizontalAlignment: Text.AlignRight
-                text: ss.dimmed ? "off" : Math.round(ss.value * 100) + "%"
-                font.family: root.mono
-                font.pixelSize: 12
-                color: Atelier.subtext
+                text: lr.status
+                elide: Text.ElideRight
+                font.family: Atelier.fontUi; font.pixelSize: 11
+                color: lr.d.warn ? Atelier.peach : Atelier.subtext
+            }
+            Text {    // a chevron where there's more (Wi-Fi networks, Bluetooth devices, night light…)
+                visible: lr.d.details !== ""
+                text: "󰅂"
+                font.family: Atelier.font; font.pixelSize: 12
+                color: chMa.containsMouse ? Atelier.text : Atelier.subtext
+                MouseArea { id: chMa; anchors.fill: parent; anchors.margins: -8; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.details(lr.tid) }
+            }
+            PillSwitch { on: lr.d.on; warn: lr.d.warn; onToggled: root.act(lr.tid) }
+        }
+    }
+
+    // ═══ Layout: ICONS — slim Wi-Fi/Bluetooth chips + round buttons, labels on hover ═══
+    Component {
+        id: iconsLayout
+        ColumnLayout {
+            spacing: 10
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+                Repeater {
+                    model: ["wifi", "bluetooth"]
+                    Rectangle {
+                        required property var modelData
+                        readonly property var d: root.t(modelData)
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: 1
+                        implicitHeight: 40
+                        radius: 20
+                        color: chipMa.containsMouse ? Atelier.containerHigh : Atelier.container
+                        border.width: 1; border.color: d.on ? Qt.alpha(Atelier.accent, 0.45) : Atelier.outline
+                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        MouseArea { id: chipMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            onClicked: (m) => { if (m.button === Qt.RightButton) root.act(parent.modelData); else root.details(parent.modelData); } }
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 6; anchors.rightMargin: 12
+                            spacing: 8
+                            Rectangle {     // the round part toggles; the rest opens the menu
+                                implicitWidth: 28; implicitHeight: 28; radius: 14
+                                color: parent.parent.d.on ? Atelier.accentFill : Atelier.containerHigh
+                                Text { anchors.centerIn: parent; text: parent.parent.parent.d.icon; font.family: Atelier.font; font.pixelSize: 13
+                                    color: parent.parent.parent.d.on ? Atelier.onFill : Atelier.subtext }
+                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.act(parent.parent.parent.modelData) }
+                            }
+                            Text {
+                                Layout.fillWidth: true
+                                text: parent.parent.d.on && parent.parent.d.sub !== "On" ? parent.parent.d.sub : parent.parent.d.label
+                                elide: Text.ElideRight
+                                font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.Medium
+                                color: parent.parent.d.on ? Atelier.text : Atelier.subtext
+                            }
+                        }
+                    }
+                }
+            }
+            Flow {
+                Layout.fillWidth: true
+                spacing: (width - 8 * 40) / 7
+                Repeater {
+                    model: ["adguard", "dnd", "night", "awake", "record", "airdrop", "phonecam", "mic"]
+                    Rectangle {
+                        required property var modelData
+                        readonly property var d: root.t(modelData)
+                        width: 40; height: 40; radius: 20
+                        color: d.on ? (d.red ? Atelier.fill(Atelier.red) : Atelier.accentFill) : (icMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+                        border.width: d.warn ? 1.5 : (d.on ? 0 : 1)
+                        border.color: d.warn ? Atelier.peach : Atelier.outline
+                        scale: icMa.pressed ? 0.9 : (icMa.containsMouse ? 1.06 : 1)
+                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutBack } }
+                        Text { anchors.centerIn: parent; text: parent.d.icon; font.family: Atelier.font; font.pixelSize: 16
+                            color: parent.d.on ? Atelier.onFill : parent.d.warn ? Atelier.peach : Atelier.subtext }
+                        MouseArea {
+                            id: icMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: (m) => { if (m.button === Qt.RightButton) root.details(parent.modelData); else root.act(parent.modelData); }
+                            onContainsMouseChanged: {
+                                const l = parent.d.label + " · " + parent.d.sub;
+                                root.hint = containsMouse ? l : (root.hint === l ? "" : root.hint);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ═══ Layout: CARDS — a connections card on the left, a column of chips on the right ═══
+    Component {
+        id: cardsLayout
+        RowLayout {
+            spacing: 8
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredWidth: 3
+                Layout.fillHeight: true
+                implicitHeight: connCol.implicitHeight + 16
+                radius: 18
+                color: Atelier.container
+                border.width: 1; border.color: Atelier.outline
+                Column {
+                    id: connCol
+                    x: 8; y: 8
+                    width: parent.width - 16
+                    spacing: 2
+                    Repeater {
+                        model: ["wifi", "bluetooth", "adguard", "airdrop"]
+                        Rectangle {
+                            required property var modelData
+                            readonly property var d: root.t(modelData)
+                            width: connCol.width
+                            height: 52
+                            radius: 12
+                            color: ccMa.containsMouse ? Atelier.containerHigh : "transparent"
+                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                            MouseArea { id: ccMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                                onClicked: (m) => { if (m.button === Qt.RightButton || parent.d.details === "") root.act(parent.modelData); else root.details(parent.modelData); } }
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 6; anchors.rightMargin: 6
+                                spacing: 10
+                                Rectangle {   // the round icon toggles
+                                    implicitWidth: 32; implicitHeight: 32; radius: 16
+                                    color: parent.parent.d.on ? (parent.parent.d.warn ? Atelier.fill(Atelier.peach) : Atelier.accentFill) : Atelier.containerHigh
+                                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                                    Text { anchors.centerIn: parent; text: parent.parent.parent.d.icon; font.family: Atelier.font; font.pixelSize: 14
+                                        color: parent.parent.parent.d.on ? Atelier.onFill : Atelier.subtext }
+                                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.act(parent.parent.parent.modelData) }
+                                }
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    Layout.minimumWidth: 0
+                                    spacing: 0
+                                    Text { Layout.fillWidth: true; text: parent.parent.parent.d.label; elide: Text.ElideRight
+                                        font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold; color: Atelier.text }
+                                    Text { Layout.fillWidth: true; text: parent.parent.parent.d.sub; elide: Text.ElideRight
+                                        font.family: Atelier.fontUi; font.pixelSize: 11
+                                        color: parent.parent.parent.d.warn ? Atelier.peach : Atelier.subtext }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.preferredWidth: 2
+                spacing: 6
+                Repeater {
+                    model: ["dnd", "night", "awake", "record", "phonecam", "mic"]
+                    Rectangle {
+                        required property var modelData
+                        readonly property var d: root.t(modelData)
+                        Layout.fillWidth: true
+                        implicitHeight: 34
+                        radius: 12
+                        color: d.on ? (d.red ? Atelier.fill(Atelier.red) : Atelier.accentFill) : (chMa2.containsMouse ? Atelier.containerHigh : Atelier.container)
+                        border.width: d.warn ? 1.5 : (d.on ? 0 : 1)
+                        border.color: d.warn ? Atelier.peach : Atelier.outline
+                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        scale: chMa2.pressed ? 0.96 : 1
+                        Behavior on scale { NumberAnimation { duration: 110 } }
+                        Row {
+                            anchors.verticalCenter: parent.verticalCenter
+                            x: 12
+                            spacing: 8
+                            Text { anchors.verticalCenter: parent.verticalCenter; text: parent.parent.d.icon; font.family: Atelier.font; font.pixelSize: 13
+                                color: parent.parent.d.on ? Atelier.onFill : parent.parent.d.warn ? Atelier.peach : Atelier.subtext }
+                            Text { anchors.verticalCenter: parent.verticalCenter; text: parent.parent.d.short; font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.Medium
+                                color: parent.parent.d.on ? Atelier.onFill : Atelier.text }
+                        }
+                        MouseArea { id: chMa2; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                            acceptedButtons: Qt.LeftButton | Qt.RightButton
+                            onClicked: (m) => { if (m.button === Qt.RightButton) root.details(parent.modelData); else root.act(parent.modelData); } }
+                    }
+                }
             }
         }
     }

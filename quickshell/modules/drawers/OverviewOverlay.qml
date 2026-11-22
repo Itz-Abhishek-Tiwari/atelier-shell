@@ -130,7 +130,7 @@ Item {
                 blur: 40
                 offset.y: 8
                 color: Qt.alpha(Atelier.crust, 0.5)
-                visible: !Perf.game
+                visible: !Perf.lean
             }
             Rectangle {
                 id: panel

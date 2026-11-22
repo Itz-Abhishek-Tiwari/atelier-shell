@@ -13,7 +13,24 @@ Singleton {
 
     readonly property var list: server.trackedNotifications.values.slice().reverse()   // newest first
     readonly property int count: server.trackedNotifications.values.length
+    // macOS-style stacks: notifications from the same app with the same title (one chat, one
+    // sender) are one card showing the newest, with a count. `groups` = the newest of each.
+    readonly property var groups: {
+        const seen = {}, out = [];
+        for (const n of list) { const k = groupKey(n); if (!seen[k]) { seen[k] = true; out.push(n); } }
+        return out;
+    }
+    function groupKey(n): string {
+        if (!n) return "";
+        const h = n.hints || {};
+        return (h["x-kde-display-appname"] || n.appName || "") + "\u0001" + (n.summary || "");
+    }
+    // every notification in n's stack, newest first
+    function groupOf(n): var { const k = groupKey(n); return list.filter(x => groupKey(x) === k); }
+    function dismissGroup(n): void { for (const x of groupOf(n)) { hidePopup(x); x.dismiss(); } }
     property var popups: []
+    // a card's reply field is open: DrawerHost then takes keyboard focus on demand
+    property bool replying: false
     property var times: ({})          // notification id -> arrival time (ms)
 
     function receivedAt(n): real {
@@ -37,6 +54,7 @@ Singleton {
         actionsSupported: true
         actionIconsSupported: true
         imageSupported: true
+        inlineReplySupported: true          // e.g. Tether: answer an iPhone message from the card
 
         extraHints: ["x-canonical-private-synchronous", "x-dunst-stack-tag", "synchronous", "value"]
 
@@ -66,8 +84,11 @@ Singleton {
             const t = Object.assign({}, root.times);
             t[n.id] = Date.now();
             root.times = t;
-            if (!root.dnd || n.urgency === NotificationUrgency.Critical)
-                root.popups = [n].concat(root.popups).slice(0, Math.max(1, Settings.notifications.maxPopups));
+            if (!root.dnd || n.urgency === NotificationUrgency.Critical) {
+                const k = root.groupKey(n);
+                root.popups = [n].concat(root.popups.filter(p => root.groupKey(p) !== k))
+                    .slice(0, Math.max(1, Settings.notifications.maxPopups));
+            }
         }
     }
 

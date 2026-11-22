@@ -21,7 +21,7 @@ import qs.services
 // A soft shadow keeps it readable on any wallpaper. Not drawn in Game mode.
 PanelWindow {
     id: root
-    visible: Settings.widgets.enabled && !Perf.game   // not drawn (or refreshed) in Game mode
+    visible: Settings.widgets.enabled && !Perf.hideWidgets   // not drawn (or refreshed) in Game mode (Settings → Modes)
 
     property bool isLight: Atelier.isLight
     signal requestOverlay(string name)

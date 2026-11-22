@@ -36,6 +36,14 @@ hl.window_rule({
     }) },
     float = true,
 })
+-- Image viewers: a floating, centred window instead of half the screen (opening a photo
+-- shouldn't re-tile everything else)
+hl.window_rule({
+    name   = "float-image-viewers",
+    match  = { class = any_of({ "org.gnome.Loupe", "imv", "feh", "eog", "org.kde.gwenview", "swayimg" }) },
+    float  = true,
+    center = true,
+})
 hl.window_rule({
     name  = "float-dolphin-progress",
     match = { class = "^(org.kde.dolphin)$", title = "^(Progress Dialog|Copying) — Dolphin$" },

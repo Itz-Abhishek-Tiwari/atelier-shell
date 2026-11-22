@@ -39,6 +39,11 @@ M.defaults = {
         },
     },
     mouse_curve = true,          -- macOS-style acceleration curve on the 2.4 GHz mouse
+    -- Settings → Modes: what Programming and Game mode change (missing keys: these)
+    modes = {
+        dev  = { opaque = true, dim = false, blur = "light", shadows = true, animations = true, anim_speed = 0.6 },
+        game = { opaque = true, blur = "off", shadows = false, animations = false, tearing = true },
+    },
     -- Settings → Displays (conf/monitors.lua): one hl.monitor spec per output
     monitors = {
         { output = "HDMI-A-1", mode = "1366x768@59.79Hz", position = "auto", scale = "auto", transform = 3 },
@@ -101,27 +106,33 @@ function M.animations(k)
     hl.animation({ leaf = "borderangle", enabled = false })   -- no looping gradient
 end
 
+-- one mode's settings from Settings → Modes, filled in from the defaults
+local function mode_opts(t, name)
+    local o, d = (t.modes or {})[name] or {}, M.defaults.modes[name]
+    local r = {}
+    for k, v in pairs(d) do r[k] = v end
+    for k, v in pairs(o) do r[k] = v end
+    return r
+end
+
 function M.apply(mode)
     local t = M.settings()
-    if mode == "game" then
+    atelier_mode = mode      -- global: Settings' live apply re-applies the current mode after it
+    if mode == "game" or mode == "dev" then
+        local o = mode_opts(t, mode)
+        local blur = { enabled = o.blur ~= "off" and t.blur }
+        if o.blur == "light" then blur.passes = 1 elseif o.blur == "normal" then blur.passes = t.blur_passes end
         hl.config({
-            general    = { allow_tearing = true },
+            general    = { allow_tearing = mode == "game" and o.tearing == true },
             decoration = {
-                active_opacity = 1.0, inactive_opacity = 1.0, dim_inactive = false,
-                blur = { enabled = false }, shadow = { enabled = false },
+                active_opacity   = o.opaque and 1.0 or t.active_opacity,
+                inactive_opacity = o.opaque and 1.0 or t.inactive_opacity,
+                dim_inactive     = o.dim == true,
+                blur = blur, shadow = { enabled = o.shadows and t.shadow },
             },
-            animations = { enabled = false },
+            animations = { enabled = o.animations and t.animations },
         })
-    elseif mode == "dev" then
-        hl.config({
-            general    = { allow_tearing = false },
-            decoration = {
-                active_opacity = 1.0, inactive_opacity = 1.0, dim_inactive = false,
-                blur = { enabled = t.blur, passes = 1 }, shadow = { enabled = t.shadow },
-            },
-            animations = { enabled = t.animations },
-        })
-        M.animations(0.6)
+        if o.animations and t.animations then M.animations(mode == "dev" and (o.anim_speed or 0.6) or 1) end
     else
         hl.config({
             general    = { allow_tearing = false },

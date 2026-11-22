@@ -166,3 +166,4 @@ lib32-mangohud
 ufw
 zram-generator
 sof-firmware
+hostapd

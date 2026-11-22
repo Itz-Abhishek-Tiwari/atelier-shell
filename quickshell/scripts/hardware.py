@@ -92,11 +92,14 @@ def pci_devices():
 
 
 def serial_number():
-    """The DMI serial is root-only in /sys; systemd-hostnamed hands it to the active session."""
+    """The DMI serial is root-only in /sys; systemd-hostnamed hands it to the active session.
+    Never interactively: where polkit wants a password for it, the prompt window made the
+    Settings drawer close (it closes on any new window), and reopening About asked again in a loop."""
     s = read(SYS / "class/dmi/id/product_serial")
     if not s:
         try:
-            r = subprocess.run(["busctl", "call", "org.freedesktop.hostname1", "/org/freedesktop/hostname1",
+            r = subprocess.run(["busctl", "--allow-interactive-authorization=no", "call",
+                                "org.freedesktop.hostname1", "/org/freedesktop/hostname1",
                                 "org.freedesktop.hostname1", "GetHardwareSerial"],
                                capture_output=True, text=True, timeout=10)
             m = re.match(r's "(.*)"', r.stdout.strip())

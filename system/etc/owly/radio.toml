@@ -1,0 +1,6 @@
+# owly (AirDrop, AUR `owly`): run the radio on the USB stick, not the built-in Wi-Fi.
+# The built-in Qualcomm QCA6174 (ath10k) drops the iPhone's AWDL action frames, so AirDrop never
+# works on it; the RTL8188FTV stick works in exclusive mode (needs hostapd).
+# "airdrop0" is the stick's fixed name (/etc/systemd/network/10-atelier-airdrop.link).
+station = "airdrop0"
+allow_untested = true

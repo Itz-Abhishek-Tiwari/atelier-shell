@@ -86,6 +86,7 @@ LINKS=(
     "config-scripts/adguard-dns.sh:$BIN/adguard-dns"
     "bin/prime-run:$BIN/prime-run"
     "bin/audiotube:$BIN/audiotube"
+    "kio/servicemenus/atelier-airdrop.desktop:$HOME/.local/share/kio/servicemenus/atelier-airdrop.desktop"   # Dolphin: Send with AirDrop
 )
 
 print_banner() {
@@ -208,7 +209,7 @@ install_packages() {
 
 # ---- system files (/etc) -------------------------------------------------------
 # install_system_tree <dir>: <dir>/etc/<path> -> /etc/<path>
-#   system/        always (camera v4l2loopback, ntsync, zram)
+#   system/        always (camera v4l2loopback, ntsync, zram, AirDrop stick + owly, bluetoothd --experimental)
 #   system/nvidia/ only with an NVIDIA GPU (DRM modeset, early KMS)
 # Real copies (root-owned), not links. A different existing file is backed up first.
 install_system_tree() {
@@ -268,6 +269,21 @@ enable_services() {
         run sudo ufw default allow outgoing
         run sudo ufw --force enable
         log_success "Firewall on (deny incoming)"
+    fi
+    # AirDrop (owly): the receiver listens on 8771 on awdl0, link-local only. ufw skips a rule it already has.
+    if command -v ufw >/dev/null 2>&1 && command -v owly >/dev/null 2>&1; then
+        run sudo ufw allow in on awdl0 proto tcp from fe80::/10 to any port 8771 comment "AirDrop (owly)" >/dev/null \
+            && log_success "Firewall: AirDrop receiver allowed on awdl0"
+    fi
+    # iPhone messages/contacts/notifications (tether-bin): the adapter must present itself as
+    # A/V Hands-Free, re-applied after every bluetoothd start. The bluetoothd --experimental
+    # drop-in comes from system/etc/systemd/system/bluetooth.service.d/.
+    if systemctl list-unit-files 'tether-btclass@.service' >/dev/null 2>&1; then
+        if systemctl is-enabled -q tether-btclass@hci0.service 2>/dev/null; then
+            log_success "tether-btclass@hci0 already enabled"
+        else
+            run sudo systemctl enable --now tether-btclass@hci0.service && log_success "Enabled tether-btclass@hci0"
+        fi
     fi
 }
 

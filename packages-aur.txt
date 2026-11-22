@@ -21,3 +21,5 @@ spicetify-cli
 droidcam
 python-imageio-ffmpeg
 python-screeninfo
+owly
+tether-bin
