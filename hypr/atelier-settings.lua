@@ -17,7 +17,7 @@ return {
         game = { opaque = true, blur = "off", shadows = false, animations = false, tearing = true },
     },
     -- Settings → Keyboard & mouse (conf/input.lua)
-    input = { ["kb_layout"] = "us", ["kb_variant"] = "", ["kb_options"] = "", ["repeat_rate"] = 25, ["repeat_delay"] = 600, ["numlock_by_default"] = false, ["sensitivity"] = 0, ["accel_profile"] = "adaptive", ["natural_scroll"] = true, ["scroll_factor"] = 1.35, ["left_handed"] = false, ["follow_mouse"] = 1, ["touchpad"] = { ["natural_scroll"] = true, ["scroll_factor"] = 0.45, ["tap_to_click"] = true, ["clickfinger_behavior"] = true, ["disable_while_typing"] = true, ["drag_lock"] = 0 } },
+    input = { ["kb_layout"] = "us", ["kb_variant"] = "", ["kb_options"] = "", ["repeat_rate"] = 25, ["repeat_delay"] = 600, ["numlock_by_default"] = false, ["sensitivity"] = 0, ["accel_profile"] = "adaptive", ["natural_scroll"] = false, ["scroll_factor"] = 1.35, ["left_handed"] = false, ["follow_mouse"] = 1, ["touchpad"] = { ["natural_scroll"] = true, ["scroll_factor"] = 0.45, ["tap_to_click"] = true, ["clickfinger_behavior"] = true, ["disable_while_typing"] = true, ["drag_lock"] = 0 } },
     mouse_curve = true,
     -- Settings → Displays (conf/monitors.lua)
     monitors = { { ["output"] = "HDMI-A-1", ["mode"] = "1366x768@59.79Hz", ["position"] = "auto", ["scale"] = "auto", ["transform"] = 3 }, { ["output"] = "eDP-1", ["mode"] = "1920x1080@120.21Hz", ["position"] = "auto", ["scale"] = 1, ["transform"] = 0 } },
