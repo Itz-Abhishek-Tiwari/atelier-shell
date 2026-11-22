@@ -181,6 +181,11 @@ Singleton {
             property JsonObject notifications: JsonObject {
                 property int popupSeconds: 5
                 property int maxPopups: 5
+                property string position: "top-right"   // top-right | top-left | top-center | bottom-right | bottom-left
+                property int popupWidth: 360
+                property bool stack: true               // same app + title → one card with +N
+                property bool showBody: true            // off: titles only (screen sharing, privacy)
+                property bool showSource: true          // the "WhatsApp · iPhone" line
                 property bool lockShowCount: true       // show notifications on the lock screen
             }
 
