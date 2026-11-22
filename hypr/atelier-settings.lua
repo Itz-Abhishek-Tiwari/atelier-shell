@@ -11,6 +11,11 @@ return {
     scroll_column_width = 0.50,
     shell_glass = 0.92,   -- shell surface opacity: blur threshold in conf/rules.lua
     reserved = { top = 9, right = 9, bottom = 9, left = 42 },   -- shell frame: conf/monitors.lua
+    -- Settings → Modes (atelier-mode.lua)
+    modes = {
+        dev = { opaque = true, blur = "light", shadows = true, animations = true, dim = false, anim_speed = 0.60 },
+        game = { opaque = true, blur = "off", shadows = false, animations = false, tearing = true },
+    },
     -- Settings → Keyboard & mouse (conf/input.lua)
     input = { ["kb_layout"] = "us", ["kb_variant"] = "", ["kb_options"] = "", ["repeat_rate"] = 25, ["repeat_delay"] = 600, ["numlock_by_default"] = false, ["sensitivity"] = 0, ["accel_profile"] = "adaptive", ["natural_scroll"] = true, ["scroll_factor"] = 1.35, ["left_handed"] = false, ["follow_mouse"] = 1, ["touchpad"] = { ["natural_scroll"] = true, ["scroll_factor"] = 0.45, ["tap_to_click"] = true, ["clickfinger_behavior"] = true, ["disable_while_typing"] = true, ["drag_lock"] = 0 } },
     mouse_curve = true,
