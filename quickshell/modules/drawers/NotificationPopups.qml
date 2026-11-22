@@ -19,8 +19,12 @@ Item {
     readonly property bool hasPopups: Notifs.popups.length > 0
     // keep the last size while closing so the drawer doesn't collapse before it retracts
     property real heldHeight: 120
-    readonly property real wantHeight: list.contentHeight + 24
-    onWantHeightChanged: if (hasPopups && wantHeight > 30) heldHeight = wantHeight
+    // measured from the cards themselves: ListView.contentHeight is an estimate that lagged behind a
+    // card finishing its text layout, so the drawer opened half-height until a hover re-measured it
+    readonly property real wantHeight: list.contentItem.childrenRect.height + 32   // + room for the last stack's strips
+    function syncHeight() { if (hasPopups && wantHeight > 30) heldHeight = wantHeight; }
+    onWantHeightChanged: syncHeight()
+    onHasPopupsChanged: syncHeight()          // a new pop-up of the same size changes nothing above
 
     EdgeDrawer {
         id: drawer
@@ -41,7 +45,7 @@ Item {
             anchors.fill: parent
             anchors.margins: 12
             interactive: false
-            spacing: 8
+            spacing: 14            // room for a stack's peeking layers
             model: Notifs.popups
 
             delegate: NotificationCard {
@@ -51,16 +55,21 @@ Item {
                 popup: true
             }
 
+            // arrive: fade in and settle down a few px (the same way the drawer grows), no sideways slide
             add: Transition {
                 ParallelAnimation {
-                    NumberAnimation { property: "x"; from: 60; to: 0; duration: 380; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen }
-                    NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 220 }
+                    NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 260; easing.type: Easing.OutCubic }
+                    NumberAnimation { property: "y"; from: ViewTransition.destination.y - 14; to: ViewTransition.destination.y
+                        duration: 420; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveSmooth }
+                    NumberAnimation { property: "scale"; from: 0.97; to: 1; duration: 420
+                        easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveSmooth }
                 }
             }
+            // leave (or replaced by a newer message of its stack): a short fade with a slight shrink
             remove: Transition {
                 ParallelAnimation {
-                    NumberAnimation { property: "x"; to: 80; duration: 200; easing.type: Easing.InCubic }
-                    NumberAnimation { property: "opacity"; to: 0; duration: 180 }
+                    NumberAnimation { property: "opacity"; to: 0; duration: 140; easing.type: Easing.InCubic }
+                    NumberAnimation { property: "scale"; to: 0.97; duration: 140; easing.type: Easing.InCubic }
                 }
             }
             displaced: Transition {

@@ -29,7 +29,7 @@ Item {
     property real fillet: Atelier.fillet
     property real cornerRadius: Atelier.rounding
     property color color: Atelier.surface
-    property bool shadowEnabled: !Perf.game       // no drop shadows in Game mode
+    property bool shadowEnabled: !Perf.lean       // no drop shadows in Game mode (Settings → Modes)
 
     default property alias content: contentHolder.data
     readonly property alias contentItem: contentHolder

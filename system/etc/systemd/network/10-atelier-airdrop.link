@@ -1,0 +1,8 @@
+# The AirDrop USB Wi-Fi stick (Realtek RTL8188FTV, 0bda:f179) gets a fixed name, whatever USB
+# port it is in: /etc/owly/radio.toml points owly at "airdrop0". Matched by the stick's MAC.
+# Another stick: change MACAddress (ip -br link), then replug it.
+[Match]
+MACAddress=00:e0:36:2d:19:e3
+
+[Link]
+Name=airdrop0

@@ -32,7 +32,7 @@ Item {
         { id: "profile",       group: "Personalise", icon: "󰀄", label: "Profile",         sub: "Your picture, name and greetings",
           keys: "profile picture photo avatar face image name display greeting account user login full name computer hostname" },
         { id: "appearance",    group: "Personalise", icon: "󰏘", label: "Appearance",      sub: "Theme, wallpaper and the shell's shape",
-          keys: "theme colour color wallpaper transition fade wipe slide roundness corners frame border glass opacity" },
+          keys: "theme colour color wallpaper transition fade wipe slide roundness corners frame border glass opacity control center layout tiles icons cards list header shortcuts" },
         { id: "bar",           group: "Personalise", icon: "󰍜", label: "Bar",             sub: "Position, sections and pinned apps",
           keys: "bar panel position workspaces tray clock pinned apps hover logo power title" },
         { id: "widgets",       group: "Personalise", icon: "󰕮", label: "Desktop",         sub: "The clock and text on your desktop",
@@ -47,6 +47,8 @@ Item {
           keys: "notifications pop-ups popups do not disturb dnd" },
         { id: "display",       group: "System",      icon: "󰍹", label: "Display & power", sub: "Night light, performance modes, keep awake",
           keys: "night light warmth display volume brightness osd caffeine awake sleep performance game mode programming power" },
+        { id: "modes",         group: "System",      icon: "󰊗", label: "Modes",           sub: "What Programming and Game mode change",
+          keys: "modes performance game programming dev developer blur opacity opaque shadows animations tearing power profile do not disturb dnd caffeine awake widgets auto detect steam games" },
         { id: "displays",      group: "Hardware",    icon: "󰍺", label: "Displays",        sub: "Resolution, scale, rotation, arrangement",
           keys: "monitor monitors screen resolution refresh rate hz scale rotation rotate portrait mirror hdmi external vrr freesync position arrangement" },
         { id: "input",         group: "Hardware",    icon: "󰌌", label: "Keyboard & mouse", sub: "Layouts, key repeat, pointer and touchpad",
@@ -576,6 +578,42 @@ Item {
                                     value: Settings.appearance.frame; onMoved: (v) => Settings.appearance.frame = v }
                                 SettingSlider { label: "Glass opacity"; description: "How solid the bar and drawers are"; from: 0.6; to: 1; step: 0.02; decimals: 2; tint: Atelier.blue
                                     value: Settings.appearance.glass; onMoved: (v) => Settings.appearance.glass = v }
+                            }
+
+                            SettingCard {
+                                id: ccCard
+                                title: "Control center"; icon: "󰒓"; tint: Atelier.lavender
+                                readonly property var all: [
+                                    { id: "screenshot", label: "Screenshot" }, { id: "record", label: "Record" },
+                                    { id: "wallpaper", label: "Wallpaper" }, { id: "theme", label: "Theme" },
+                                    { id: "emoji", label: "Emoji" }, { id: "clipboard", label: "Clipboard" },
+                                    { id: "camera", label: "Camera" }, { id: "keyboard", label: "On-screen keyboard" },
+                                    { id: "keybinds", label: "Shortcuts list" }, { id: "settings", label: "Settings" }]
+                                readonly property var picked: Settings.controlCenter.shortcuts || []
+                                function setShortcut(id, on) {
+                                    // keep the order of `all`; at most five
+                                    const next = all.map(x => x.id).filter(x => x === id ? on : picked.indexOf(x) >= 0);
+                                    Settings.controlCenter.shortcuts = next.slice(0, 5);
+                                }
+                                SettingChoice { label: "Layout"; description: "How the switches are drawn (also the grid button in its header)"; tint: Atelier.lavender
+                                    options: [{ id: "list", label: "List" }, { id: "tiles", label: "Tiles" }, { id: "icons", label: "Icons" }, { id: "cards", label: "Cards" }]
+                                    value: Settings.controlCenter.layout; onPicked: (id) => Settings.controlCenter.layout = id }
+                                SettingChoice { label: "Header"; description: "Big clock with the date, or one compact line"; tint: Atelier.lavender
+                                    options: [{ id: "full", label: "Big clock" }, { id: "compact", label: "Compact" }]
+                                    value: Settings.controlCenter.header; onPicked: (id) => Settings.controlCenter.header = id }
+                                SettingSlider { label: "Notifications shown"; description: "The rest behind \"Show more\""; from: 1; to: 10; step: 1; tint: Atelier.lavender
+                                    value: Settings.controlCenter.notifLimit; onMoved: (v) => Settings.controlCenter.notifLimit = Math.round(v) }
+                                Repeater {
+                                    model: ccCard.all
+                                    SettingSwitch {
+                                        required property var modelData
+                                        label: "Shortcut: " + modelData.label
+                                        description: !checked && ccCard.picked.length >= 5 ? "Up to five; turn one off first" : ""
+                                        tint: Atelier.lavender
+                                        checked: ccCard.picked.indexOf(modelData.id) >= 0
+                                        onToggled: (v) => { if (!v || ccCard.picked.length < 5) ccCard.setShortcut(modelData.id, v); }
+                                    }
+                                }
                             }
                         }
 
@@ -1225,8 +1263,108 @@ Item {
                                 SettingChoice { label: "Mode"; tint: Atelier.sapphire
                                     options: [{ id: "normal", label: "Normal" }, { id: "dev", label: "Programming" }, { id: "game", label: "Game" }]
                                     value: Perf.mode; onPicked: (id) => Perf.set(id) }
-                                SettingSwitch { label: "Game mode automatically"; description: "Switch on when a game (Steam, gamescope, Lutris, Heroic) is focused, back off when it closes"; tint: Atelier.sapphire
+                                SettingRow {
+                                    label: "Customise modes"
+                                    description: "Choose what Programming and Game mode change"
+                                    Chip { icon: "󰒓"; text: "Modes"; tint: Atelier.sapphire; interactive: true; implicitHeight: 30
+                                        onClicked: win.page = "modes" }
+                                }
+                            }
+                        }
+
+                        // ═════════ Modes ═════════
+                        ColumnLayout {
+                            id: modesPage
+                            visible: win.page === "modes"
+                            Layout.fillWidth: true
+                            spacing: 20
+
+                            readonly property var blurOpts: [{ id: "off", label: "Off" }, { id: "light", label: "Light" }, { id: "normal", label: "Your usual" }]
+                            readonly property var powerOpts: [{ id: "performance", label: "Performance" }, { id: "balanced", label: "Balanced" },
+                                                              { id: "power-saver", label: "Power saver" }, { id: "unchanged", label: "Don't change" }]
+                            // must match the defaults in config/Settings.qml (modes)
+                            readonly property var defaults: ({
+                                dev:  { Opaque: true, Dim: false, Blur: "light", Shadows: true, Animations: true, AnimSpeed: 0.6,
+                                        Power: "performance", Caffeine: true, Dnd: false },
+                                game: { Opaque: true, Blur: "off", Shadows: false, Animations: false, Tearing: true,
+                                        Power: "performance", Caffeine: true, Dnd: true, HideWidgets: true, LeanShell: true }
+                            })
+                            function reset(m) { const d = defaults[m]; for (const k in d) Settings.modes[m + k] = d[k]; }
+                            function isDefault(m) { const d = defaults[m]; for (const k in d) if (Settings.modes[m + k] !== d[k]) return false; return true; }
+
+                            SettingCard {
+                                title: "Mode now"; icon: "󰊗"; tint: Atelier.sapphire
+                                SettingChoice { label: "Mode"; tint: Atelier.sapphire
+                                    description: "Normal is your own look from the Windows page"
+                                    options: [{ id: "normal", label: "Normal" }, { id: "dev", label: "Programming" }, { id: "game", label: "Game" }]
+                                    value: Perf.mode; onPicked: (id) => Perf.set(id) }
+                            }
+
+                            SettingCard {
+                                title: "Programming mode"; icon: "󰅩"; tint: Atelier.teal
+                                SettingSwitch { label: "Opaque windows"; description: "Crisp text, nothing blurred behind windows"; tint: Atelier.teal
+                                    checked: Settings.modes.devOpaque; onToggled: (v) => Settings.modes.devOpaque = v }
+                                SettingSwitch { label: "Dim unfocused windows"; tint: Atelier.teal
+                                    checked: Settings.modes.devDim; onToggled: (v) => Settings.modes.devDim = v }
+                                SettingChoice { label: "Blur"; description: "Light = one pass, cheaper"; tint: Atelier.teal
+                                    options: modesPage.blurOpts; value: Settings.modes.devBlur; onPicked: (id) => Settings.modes.devBlur = id }
+                                SettingSwitch { label: "Window shadows"; tint: Atelier.teal
+                                    checked: Settings.modes.devShadows; onToggled: (v) => Settings.modes.devShadows = v }
+                                SettingSwitch { label: "Animations"; tint: Atelier.teal
+                                    checked: Settings.modes.devAnimations; onToggled: (v) => Settings.modes.devAnimations = v }
+                                SettingSlider { visible: Settings.modes.devAnimations; label: "Animation length"; description: "100% = like Normal mode; smaller is snappier"
+                                    from: 30; to: 100; step: 5; decimals: 0; suffix: "%"; tint: Atelier.teal
+                                    value: Settings.modes.devAnimSpeed * 100; onMoved: (v) => Settings.modes.devAnimSpeed = v / 100 }
+                                SettingChoice { label: "Power profile"; description: "Performance drops to Balanced on battery"; tint: Atelier.teal
+                                    options: modesPage.powerOpts; value: Settings.modes.devPower; onPicked: (id) => Settings.modes.devPower = id }
+                                SettingSwitch { label: "Keep the screen awake"; tint: Atelier.teal
+                                    checked: Settings.modes.devCaffeine; onToggled: (v) => Settings.modes.devCaffeine = v }
+                                SettingSwitch { label: "Do Not Disturb"; description: "Silence notification pop-ups"; tint: Atelier.teal
+                                    checked: Settings.modes.devDnd; onToggled: (v) => Settings.modes.devDnd = v }
+                                SettingRow {
+                                    visible: !modesPage.isDefault("dev")
+                                    label: "Back to the defaults"
+                                    Chip { icon: "󰑓"; text: "Reset"; tint: Atelier.teal; interactive: true; implicitHeight: 30; onClicked: modesPage.reset("dev") }
+                                }
+                            }
+
+                            SettingCard {
+                                title: "Game mode"; icon: "󰊴"; tint: Atelier.red
+                                SettingSwitch { label: "Opaque windows"; tint: Atelier.red
+                                    checked: Settings.modes.gameOpaque; onToggled: (v) => Settings.modes.gameOpaque = v }
+                                SettingChoice { label: "Blur"; tint: Atelier.red
+                                    options: modesPage.blurOpts; value: Settings.modes.gameBlur; onPicked: (id) => Settings.modes.gameBlur = id }
+                                SettingSwitch { label: "Window shadows"; tint: Atelier.red
+                                    checked: Settings.modes.gameShadows; onToggled: (v) => Settings.modes.gameShadows = v }
+                                SettingSwitch { label: "Animations"; tint: Atelier.red
+                                    checked: Settings.modes.gameAnimations; onToggled: (v) => Settings.modes.gameAnimations = v }
+                                SettingSwitch { label: "Allow tearing"; description: "Lowest latency for fullscreen games"; tint: Atelier.red
+                                    checked: Settings.modes.gameTearing; onToggled: (v) => Settings.modes.gameTearing = v }
+                                SettingChoice { label: "Power profile"; tint: Atelier.red
+                                    options: modesPage.powerOpts; value: Settings.modes.gamePower; onPicked: (id) => Settings.modes.gamePower = id }
+                                SettingSwitch { label: "Keep the screen awake"; tint: Atelier.red
+                                    checked: Settings.modes.gameCaffeine; onToggled: (v) => Settings.modes.gameCaffeine = v }
+                                SettingSwitch { label: "Do Not Disturb"; tint: Atelier.red
+                                    checked: Settings.modes.gameDnd; onToggled: (v) => Settings.modes.gameDnd = v }
+                                SettingSwitch { label: "Hide the desktop widget"; tint: Atelier.red
+                                    checked: Settings.modes.gameHideWidgets; onToggled: (v) => Settings.modes.gameHideWidgets = v }
+                                SettingSwitch { label: "Lighter shell"; description: "No shadows on the bar and drawers, solid instead of glass"; tint: Atelier.red
+                                    checked: Settings.modes.gameLeanShell; onToggled: (v) => Settings.modes.gameLeanShell = v }
+                                SettingRow {
+                                    visible: !modesPage.isDefault("game")
+                                    label: "Back to the defaults"
+                                    Chip { icon: "󰑓"; text: "Reset"; tint: Atelier.red; interactive: true; implicitHeight: 30; onClicked: modesPage.reset("game") }
+                                }
+                            }
+
+                            SettingCard {
+                                title: "Game mode automatically"; icon: "󰐊"; tint: Atelier.peach
+                                SettingSwitch { label: "Switch on for games"; description: "On when a game (Steam, gamescope, Lutris, Heroic…) is focused, back off when it closes"; tint: Atelier.peach
                                     checked: Settings.behavior.autoGameMode; onToggled: (v) => Settings.behavior.autoGameMode = v }
+                                SettingField { visible: Settings.behavior.autoGameMode; label: "Also counts as a game"
+                                    description: "Window classes, comma-separated (hyprctl activewindow shows a window's class)"
+                                    placeholder: "e.g. osu!, retroarch"; fieldWidth: 220
+                                    text: Settings.modes.gameApps; onCommitted: (t) => Settings.modes.gameApps = t.trim() }
                             }
                         }
 

@@ -213,9 +213,10 @@ ShellRoot {
                        || clipboardOverlay.visible || cameraOverlay.visible || controlCenter.visible || themeOverlay.visible
                        || overviewOverlay.visible || gamesOverlay.visible || mediaOverlay.visible
                        || keybindsOverlay.visible || appsOverlay.visible || settingsApp.visible || emojiOverlay.visible
-        popupVisible: notificationPopups.visible || osd.visible || toastPopup.visible
+        popupVisible: notificationPopups.visible || osd.visible || toastPopup.visible || airDropPopup.visible
         osdItem: osd.visible ? osd.inputItem : null
         notifItem: notificationPopups.visible ? notificationPopups.inputItem : null
+        airdropItem: airDropPopup.visible ? airDropPopup.inputItem : null
         hoverMode: shellRoot.hoverMode
         barHover: shellRoot.barHover
         hoverBody: shellRoot.activeOverlay === "wifi" ? wifiOverlay.bodyItem
@@ -366,6 +367,8 @@ ShellRoot {
         }
         // Notification pop-ups (the shell is the notification daemon — see Notifs.qml)
         NotificationPopups { id: notificationPopups }
+        // AirDrop requests / transfers (services/AirDrop.qml, owly)
+        AirDropPopup { id: airDropPopup }
 
         // Volume / brightness OSD (one slider that updates in place)
         Osd {
@@ -540,6 +543,22 @@ ShellRoot {
             function toggle(): void { shellRoot.toggleOverlay("camera"); }
             function open(): void  { if (shellRoot.activeOverlay !== "camera") shellRoot.toggleOverlay("camera"); }
             function close(): void { if (shellRoot.activeOverlay === "camera") shellRoot.closeAllOverlays(); }
+            function gallery(): void { open(); cameraOverlay.showGallery(); }
+        }
+
+        IpcHandler {
+            target: "airdrop"
+            function on(): void { AirDrop.setEnabled(true); }
+            function off(): void { AirDrop.setEnabled(false); }
+            function toggle(): void { AirDrop.toggle(); }
+            function status(): string { return AirDrop.summary + (AirDrop.phase !== "idle" ? " · " + AirDrop.phase : ""); }
+            function send(path: string): void { AirDrop.send([path]); }
+            // several files, one path per line (scripts/airdrop-send.sh, the Dolphin service menu)
+            function sendFiles(paths: string): void { AirDrop.send(paths.split("\n").filter(p => p !== "")); }
+            function accept(): void { AirDrop.accept(false); }
+            function decline(): void { AirDrop.decline(); }
+            function cancel(): void { AirDrop.cancelSend(); }
+            function sendTo(name: string): void { AirDrop.sendTo(name); }   // pick from the card's list
         }
 
         IpcHandler {

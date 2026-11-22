@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import qs.config
+import qs.services
 
 // One always-mapped, full-screen window that holds every drawer and pop-up (Caelestia's
 // "ContentWindow" design). Before, each drawer was its own PanelWindow that was created on
@@ -21,6 +22,7 @@ PanelWindow {
     property bool popupVisible: false        // OSD / notifications / toast visible
     property Item osdItem: null              // input areas while no drawer is open
     property Item notifItem: null
+    property Item airdropItem: null          // the AirDrop card (AirDropPopup)
 
     // Open on hover (Caelestia-style). A hover-opened drawer: takes no keyboard unless clicked,
     // lets clicks elsewhere through (only its body is in the mask), and closes shortly after
@@ -62,7 +64,7 @@ PanelWindow {
     // layer like the frame, so fullscreen games/video keep direct scanout.
     WlrLayershell.layer: (drawerVisible || popupVisible) ? WlrLayer.Overlay : WlrLayer.Top
     // Keyboard only while a drawer is open; the control center types only on demand.
-    WlrLayershell.keyboardFocus: activeOverlay === "" ? WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: activeOverlay === "" ? (Notifs.replying ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None)
         : (hoverMode || activeOverlay === "controlcenter") ? WlrKeyboardFocus.OnDemand
         : WlrKeyboardFocus.Exclusive
 
@@ -118,6 +120,7 @@ PanelWindow {
         Region { x: host.zoneRect.x; y: host.zoneRect.y; width: host.zoneRect.width; height: host.zoneRect.height }
         Region { item: host.fullMask ? null : host.osdItem }
         Region { item: host.fullMask ? null : host.notifItem }
+        Region { item: host.fullMask ? null : host.airdropItem }
     }
 
     Item {

@@ -30,6 +30,11 @@ Singleton {
     readonly property bool dev: mode === "dev"
     readonly property string label: mode === "game" ? "Game mode" : mode === "dev" ? "Programming mode" : "Normal"
     readonly property var modes: ["normal", "dev", "game"]
+    // Game mode's shell side (Settings → Modes): the desktop widget, shell shadows / glass
+    readonly property bool hideWidgets: game && Settings.modes.gameHideWidgets
+    readonly property bool lean: game && Settings.modes.gameLeanShell
+    // a mode's option from Settings → Modes, e.g. opt("dev", "Power")
+    function opt(m, key) { return Settings.modes[m + key]; }
 
     signal switched(string mode, bool automatic)
 
@@ -45,6 +50,9 @@ Singleton {
     property bool autoActive: false
     property string beforeAuto: "normal"
     readonly property var gameClass: /^(steam_app_.+|gamescope|lutris|heroic.*|bottles|prismlauncher|minecraft.*|cs2|dota2|portal2|factorio|terraria|stardew.*|hollow_knight.*)$/i
+    // plus your own (Settings → Modes → "Also counts as a game"), compared case-insensitively
+    readonly property var extraGames: (Settings.modes.gameApps || "").split(",").map(x => x.trim().toLowerCase()).filter(x => x !== "")
+    function isGameClass(cls) { return gameClass.test(cls) || extraGames.indexOf(cls.toLowerCase()) >= 0; }
 
     function set(m, automatic) {
         if (root.modes.indexOf(m) < 0) return;
@@ -83,13 +91,24 @@ Singleton {
             root._setProfile(root._savedProfile);
             root._hasSaved = false;
         } else {
-            Atelier.caffeine = true;
-            Notifs.dnd = (m === "game") ? true : root._savedDnd;
-            root._setProfile(m === "dev" && UPower.onBattery ? "balanced" : "performance");
+            root._applyShell(m);
         }
         root._persist();
         root.switched(m, auto);
     }
+
+    // the shell / system half of Programming and Game mode, from Settings → Modes
+    function _applyShell(m) {
+        Atelier.caffeine = opt(m, "Caffeine") ? true : root._savedCaffeine;
+        Notifs.dnd = opt(m, "Dnd") ? true : root._savedDnd;
+        const p = opt(m, "Power");
+        if (p === "unchanged") root._setProfile(root._savedProfile);
+        else root._setProfile(m === "dev" && p === "performance" && UPower.onBattery ? "balanced" : p);
+    }
+    // change a setting while in that mode: apply it now (the compositor half is re-applied by
+    // Settings' own live apply, see atelier_mode in atelier-mode.lua)
+    readonly property string _modeKey: mode === "normal" ? "" : mode + ":" + opt(mode, "Caffeine") + opt(mode, "Dnd") + opt(mode, "Power")
+    on_ModeKeyChanged: if (mode !== "normal" && _hasSaved) _applyShell(mode)
 
     function _applyHypr(m) {
         hypr.command = ["hyprctl", "eval", 'dofile(os.getenv("HOME") .. "/.config/hypr/atelier-mode.lua")("' + m + '")'];
@@ -122,8 +141,8 @@ Singleton {
         if (m === "dev" || (m === "game" && o.session === root.session)) {
             root.mode = m;
             reapply.restart();   // deferred: right at startup the process can't run yet
-            Atelier.caffeine = true;               // caffeine doesn't survive a restart; the mode wants it
-            if (m === "game") Notifs.dnd = true;
+            if (root.opt(m, "Caffeine")) Atelier.caffeine = true;   // caffeine doesn't survive a restart
+            if (root.opt(m, "Dnd")) Notifs.dnd = true;
             console.info("Perf: restored", m, "after shell start");
         } else {
             if (root._hasSaved) {
@@ -154,8 +173,8 @@ Singleton {
     // ── power profile follows the charger ───────────────────────────────────
     property string _acProfile: ""    // what to restore when AC returns
     function _powerPolicy() {
-        if (root.mode === "game") return;                       // Game mode keeps performance
-        if (root.mode === "dev") { root._setProfile("performance"); return; }   // → balanced on battery
+        if (root.mode === "game") return;                       // Game mode keeps its profile
+        if (root.mode === "dev") { if (opt("dev", "Power") === "performance") root._setProfile("performance"); return; }   // → balanced on battery
         if (UPower.onBattery) powerCheck.running = true;       // demote a manual/stale "performance"
         else if (root._acProfile) { const p = root._acProfile; root._acProfile = ""; root._setProfile(p); }
     }
@@ -210,7 +229,7 @@ Singleton {
             if (event.name !== "activewindow") return;
             if (!Settings.behavior.autoGameMode) return;
             const cls = (event.data || "").split(",")[0];
-            const isGame = root.gameClass.test(cls);
+            const isGame = root.isGameClass(cls);
             if (isGame && root.mode !== "game") {
                 console.info("Perf: game window detected:", cls);
                 root.beforeAuto = root.mode;
