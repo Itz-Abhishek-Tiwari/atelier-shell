@@ -58,7 +58,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: toastRoot.iconText
-                    font.family: "SpaceMono Nerd Font Propo"
+                    font.family: Atelier.font
                     font.pixelSize: 12
                     font.bold: true
                     color: toastRoot.iconColor
@@ -67,7 +67,7 @@ Item {
 
             Text {
                 text: toastRoot.message
-                font.family: "SpaceMono Nerd Font Propo"
+                font.family: Atelier.font
                 font.pixelSize: 12
                 font.bold: true
                 color: Atelier.isLight ? Atelier.text : Atelier.text

@@ -161,14 +161,14 @@ Item {
                 spacing: 12
                 Text {
                     text: "Applications"
-                    font.family: "Inter"
+                    font.family: Atelier.fontUi
                     font.pixelSize: 17
                     font.weight: Font.DemiBold
                     color: Atelier.text
                 }
                 Text {
                     text: root.shown.length
-                    font.family: "SpaceMono Nerd Font Propo"
+                    font.family: Atelier.font
                     font.pixelSize: 11
                     color: Atelier.subtext
                     opacity: 0.7
@@ -184,7 +184,7 @@ Item {
                         anchors.leftMargin: 13
                         anchors.verticalCenter: parent.verticalCenter
                         text: "󰍉"
-                        font.family: "SpaceMono Nerd Font Propo"
+                        font.family: Atelier.font
                         font.pixelSize: 14
                         color: Atelier.subtext
                     }
@@ -197,7 +197,7 @@ Item {
                         placeholderText: "Filter"
                         placeholderTextColor: Qt.alpha(Atelier.subtext, 0.6)
                         color: Atelier.text
-                        font.family: "Inter"
+                        font.family: Atelier.fontUi
                         font.pixelSize: 13
                         verticalAlignment: TextInput.AlignVCenter
 
@@ -240,7 +240,7 @@ Item {
                             id: tabLabel
                             anchors.centerIn: parent
                             text: parent.modelData.label
-                            font.family: "Inter"
+                            font.family: Atelier.fontUi
                             font.pixelSize: 12
                             font.weight: parent.on ? Font.DemiBold : Font.Normal
                             color: parent.on ? parent.modelData.tint : Atelier.subtext
@@ -274,7 +274,7 @@ Item {
                     Text {
                         y: 0
                         text: "FREQUENT"
-                        font.family: "Inter"
+                        font.family: Atelier.fontUi
                         font.pixelSize: 10
                         font.letterSpacing: 1.6
                         color: Atelier.subtext
@@ -301,7 +301,7 @@ Item {
                     anchors.centerIn: parent
                     visible: root.shown.length === 0
                     text: "Nothing matches “" + filter.text + "”"
-                    font.family: "Inter"
+                    font.family: Atelier.fontUi
                     font.pixelSize: 13
                     color: Atelier.subtext
                 }
@@ -342,7 +342,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: cell.app ? cell.app.name.charAt(0).toUpperCase() : ""
-                    font.family: "Inter"
+                    font.family: Atelier.fontUi
                     font.pixelSize: 19
                     font.weight: Font.DemiBold
                     color: Atelier.lavender
@@ -357,7 +357,7 @@ Item {
             width: root.cellW - 12
             horizontalAlignment: Text.AlignHCenter
             text: cell.app ? cell.app.name : ""
-            font.family: "Inter"
+            font.family: Atelier.fontUi
             font.pixelSize: 11
             color: cell.current ? Atelier.text : Atelier.subtext
             wrapMode: Text.Wrap

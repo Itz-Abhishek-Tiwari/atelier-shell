@@ -18,6 +18,8 @@ Item {
     property bool animActive: false
     property real centerY: 0
     property date viewDate: new Date()
+    // refreshed on every open, so "today" and the footer date are right after midnight
+    property date today: new Date()
     property int viewYear: viewDate.getFullYear()
     property int viewMonth: viewDate.getMonth()
 
@@ -36,7 +38,7 @@ Item {
         : Qt.rgba(22/255, 18/255, 24/255, 0.95)
     readonly property color colBorder: isLight
         ? Qt.rgba(0, 0, 0, 0.08)
-        : Qt.rgba(255, 255, 255, 0.08)
+        : Qt.rgba(1, 1, 1, 0.08)
 
     signal closedSignal()
 
@@ -57,6 +59,7 @@ Item {
             calOverlayRoot.centerY = height / 2;
         }
         viewDate = new Date();
+        today = viewDate;
         viewYear = viewDate.getFullYear();
         viewMonth = viewDate.getMonth();
     }
@@ -158,7 +161,7 @@ Item {
                     width: 28
                     height: 28
                     radius: 14
-                    color: prevMa.containsMouse ? (calOverlayRoot.isLight ? Qt.rgba(0,0,0,0.06) : Qt.rgba(255,255,255,0.08)) : "transparent"
+                    color: prevMa.containsMouse ? (calOverlayRoot.isLight ? Qt.rgba(0,0,0,0.06) : Qt.rgba(1, 1, 1, 0.08)) : "transparent"
 
                     Text {
                         anchors.centerIn: parent
@@ -182,7 +185,7 @@ Item {
                     Layout.fillWidth: true
                     height: 28
                     radius: 14
-                    color: calOverlayRoot.isLight ? Qt.rgba(0,0,0,0.04) : Qt.rgba(255,255,255,0.05)
+                    color: calOverlayRoot.isLight ? Qt.rgba(0,0,0,0.04) : Qt.rgba(1, 1, 1, 0.05)
 
                     Text {
                         anchors.centerIn: parent
@@ -205,7 +208,7 @@ Item {
                     width: 28
                     height: 28
                     radius: 14
-                    color: nextMa.containsMouse ? (calOverlayRoot.isLight ? Qt.rgba(0,0,0,0.06) : Qt.rgba(255,255,255,0.08)) : "transparent"
+                    color: nextMa.containsMouse ? (calOverlayRoot.isLight ? Qt.rgba(0,0,0,0.06) : Qt.rgba(1, 1, 1, 0.08)) : "transparent"
 
                     Text {
                         anchors.centerIn: parent
@@ -259,7 +262,7 @@ Item {
 
                 readonly property int daysInMonth: calOverlayRoot.getDaysInMonth(calOverlayRoot.viewYear, calOverlayRoot.viewMonth)
                 readonly property int firstDay: calOverlayRoot.getFirstDayOfWeek(calOverlayRoot.viewYear, calOverlayRoot.viewMonth)
-                readonly property date today: new Date()
+                readonly property date today: calOverlayRoot.today
                 readonly property bool isCurrentMonth: today.getFullYear() === calOverlayRoot.viewYear && today.getMonth() === calOverlayRoot.viewMonth
 
                 Repeater {
@@ -278,7 +281,7 @@ Item {
 
                         color: isToday 
                             ? (calOverlayRoot.isLight ? Atelier.peach : Atelier.peach)
-                            : (isHovered ? (calOverlayRoot.isLight ? Qt.rgba(0,0,0,0.06) : Qt.rgba(255,255,255,0.08)) : "transparent")
+                            : (isHovered ? (calOverlayRoot.isLight ? Qt.rgba(0,0,0,0.06) : Qt.rgba(1, 1, 1, 0.08)) : "transparent")
 
                         Text {
                             anchors.centerIn: parent
@@ -309,7 +312,7 @@ Item {
                 Layout.fillWidth: true
                 height: 28
                 radius: 14
-                color: calOverlayRoot.isLight ? Qt.rgba(0,0,0,0.03) : Qt.rgba(255,255,255,0.04)
+                color: calOverlayRoot.isLight ? Qt.rgba(0,0,0,0.03) : Qt.rgba(1, 1, 1, 0.04)
 
                 RowLayout {
                     anchors.centerIn: parent
@@ -323,7 +326,7 @@ Item {
                     }
 
                     Text {
-                        text: Qt.formatDateTime(new Date(), "dddd, MMMM d, yyyy")
+                        text: Qt.formatDateTime(calOverlayRoot.today, "dddd, MMMM d, yyyy")
                         font.family: calOverlayRoot.fontMono
                         font.pixelSize: 10
                         font.bold: true

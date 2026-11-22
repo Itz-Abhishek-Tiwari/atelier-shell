@@ -26,7 +26,7 @@ Item {
         : Qt.rgba(24/255, 22/255, 28/255, 0.94)
     readonly property color colBorder: isLight
         ? Qt.rgba(0, 0, 0, 0.08)
-        : Qt.rgba(255, 255, 255, 0.08)
+        : Qt.rgba(1, 1, 1, 0.08)
     readonly property color colMauve:   Atelier.accent
     readonly property color colLavend:  Atelier.lavender
     readonly property color colBlue:    Atelier.blue
@@ -35,8 +35,8 @@ Item {
     readonly property color colRed:     Atelier.red
     readonly property color colText:    isLight ? Atelier.text : Atelier.text
     readonly property color colSubtext: isLight ? Atelier.subtext : Atelier.subtext
-    readonly property color colSurface: isLight ? Qt.rgba(0, 0, 0, 0.05) : Qt.rgba(255, 255, 255, 0.06)
-    readonly property color colSurf0:   isLight ? Qt.rgba(0, 0, 0, 0.03) : Qt.rgba(255, 255, 255, 0.04)
+    readonly property color colSurface: isLight ? Qt.rgba(0, 0, 0, 0.05) : Qt.rgba(1, 1, 1, 0.06)
+    readonly property color colSurf0:   isLight ? Qt.rgba(0, 0, 0, 0.03) : Qt.rgba(1, 1, 1, 0.04)
 
     signal closedSignal()
 
