@@ -386,6 +386,99 @@ Item {
                 }
             }
 
+            // ── Updates: shown while there are any; Update opens them in the terminal ──
+            Rectangle {
+                visible: Settings.updates.check && Updates.count > 0
+                Layout.fillWidth: true
+                implicitHeight: 54
+                radius: 16
+                color: upMa.containsMouse ? Atelier.containerHigh : Atelier.container
+                border.width: 1
+                border.color: Atelier.outline
+                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                MouseArea { id: upMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                    onClicked: { Updates.run(); root.close(); } }
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 10
+                    anchors.rightMargin: 10
+                    spacing: 10
+                    Rectangle {
+                        implicitWidth: 34; implicitHeight: 34; radius: 17
+                        color: Qt.alpha(Atelier.teal, 0.14)
+                        Text { anchors.centerIn: parent; text: "󰚰"; font.family: Atelier.font; font.pixelSize: 16; color: Atelier.teal }
+                    }
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        spacing: 1
+                        Text { Layout.fillWidth: true; elide: Text.ElideRight
+                            text: Updates.count + (Updates.count === 1 ? " update" : " updates") + " available"
+                            font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium; color: Atelier.text }
+                        Text { Layout.fillWidth: true; elide: Text.ElideRight
+                            text: (Updates.aur.length > 0 ? Updates.repo.length + " system · " + Updates.aur.length + " AUR" : "System packages")
+                                  + (Updates.checkedAt > 0 ? " · " + Notifs.ago(Updates.checkedAt) : "")
+                            font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
+                    }
+                    Rectangle {
+                        implicitWidth: upTxt.implicitWidth + 20; implicitHeight: 28; radius: 14
+                        color: root.tone(false, upMa.containsMouse)
+                        border.width: 1; border.color: root.toneEdge(false)
+                        Text { id: upTxt; anchors.centerIn: parent; text: "Update"
+                            font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold; color: Atelier.accent }
+                    }
+                }
+            }
+
+            // ── Plugged-in drives: open in the file manager, eject ──────────────
+            Repeater {
+                model: Drives.drives
+                Rectangle {
+                    id: drv
+                    required property var modelData
+                    Layout.fillWidth: true
+                    implicitHeight: 54
+                    radius: 16
+                    color: drvMa.containsMouse ? Atelier.containerHigh : Atelier.container
+                    border.width: 1
+                    border.color: Atelier.outline
+                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                    MouseArea { id: drvMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: { Drives.open(drv.modelData); root.close(); } }
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.leftMargin: 10
+                        anchors.rightMargin: 10
+                        spacing: 10
+                        Rectangle {
+                            implicitWidth: 34; implicitHeight: 34; radius: 17
+                            color: Qt.alpha(Atelier.sapphire, 0.14)
+                            Text { anchors.centerIn: parent; text: "󱊞"; font.family: Atelier.font; font.pixelSize: 16; color: Atelier.sapphire }
+                        }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            Layout.minimumWidth: 0
+                            spacing: 1
+                            Text { Layout.fillWidth: true; elide: Text.ElideRight; text: drv.modelData.label
+                                font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium; color: Atelier.text }
+                            Text { Layout.fillWidth: true; elide: Text.ElideRight
+                                text: drv.modelData.size + " · " + (drv.modelData.mount ? drv.modelData.mount : "Not opened yet")
+                                font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
+                        }
+                        // eject
+                        Rectangle {
+                            implicitWidth: 30; implicitHeight: 30; radius: 15
+                            color: ejMa.containsMouse ? Qt.alpha(Atelier.sapphire, 0.18) : "transparent"
+                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                            Text { anchors.centerIn: parent; text: "󰇪"; font.family: Atelier.font; font.pixelSize: 15
+                                color: ejMa.containsMouse ? Atelier.sapphire : Atelier.subtext }
+                            MouseArea { id: ejMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                onClicked: Drives.eject(drv.modelData) }
+                        }
+                    }
+                }
+            }
+
             // ── Switches, in the chosen layout ────────────────────────────────
             Loader {
                 Layout.fillWidth: true
