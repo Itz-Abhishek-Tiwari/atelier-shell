@@ -39,7 +39,7 @@ SettingRow {
                         font.family: Atelier.fontUi
                         font.pixelSize: 11
                         font.weight: Font.DemiBold
-                        color: parent.on ? Atelier.onAccent : Atelier.text
+                        color: parent.on ? Atelier.onFill : Atelier.text
                     }
                     MouseArea { id: ma; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.picked(modelData.id) }
                 }

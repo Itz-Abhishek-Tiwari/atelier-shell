@@ -110,7 +110,8 @@ Singleton {
     // colour (wallpaper themes did) or washed-out light text (light themes did). Use
     //   color: Atelier.fill(tint)   with   text color: Atelier.onFill
     readonly property color onFill: isLight ? c.base : c.text
-    readonly property color onAccent: onFill
+    // (no "onAccent" alias: QML reads on+Capital names as signal handlers, so a property called
+    // onAccent came out black and every chip/switch/OSD using it had black text on its fill)
     readonly property color accentFill: fill(accent)
     function luminance(col) {
         const f = u => u <= 0.04045 ? u / 12.92 : Math.pow((u + 0.055) / 1.055, 2.4);

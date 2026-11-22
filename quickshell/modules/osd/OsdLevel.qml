@@ -55,7 +55,7 @@ Item {
         font.family: Atelier.font
         font.pixelSize: 11
         font.bold: true
-        color: lvl.shown > 0.92 ? Atelier.onAccent : Atelier.text
+        color: lvl.shown > 0.92 ? Atelier.onFill : Atelier.text
     }
 
     // icon (bottom) — sits inside the fill once there is any
@@ -67,7 +67,7 @@ Item {
         text: lvl.icon
         font.family: Atelier.font
         font.pixelSize: 18
-        color: lvl.dimmed ? Atelier.red : (lvl.shown > 0.1 ? Atelier.onAccent : Atelier.text)
+        color: lvl.dimmed ? Atelier.red : (lvl.shown > 0.1 ? Atelier.onFill : Atelier.text)
     }
 
     // Input lives on top of everything (outside the clipping effect)

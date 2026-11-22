@@ -25,7 +25,7 @@ SettingRow {
             radius: 10
             y: 3
             x: root.checked ? parent.width - width - 3 : 3
-            color: root.checked ? Atelier.onAccent : Atelier.text
+            color: root.checked ? Atelier.onFill : Atelier.text
             Behavior on x { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
         }
         MouseArea {

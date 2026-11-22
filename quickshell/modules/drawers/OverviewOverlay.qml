@@ -359,7 +359,7 @@ Item {
                 font.family: Atelier.font
                 font.pixelSize: 11
                 font.bold: true
-                color: card.current ? Atelier.onAccent : Atelier.text
+                color: card.current ? Atelier.onFill : Atelier.text
             }
         }
 
