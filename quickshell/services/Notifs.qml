@@ -22,6 +22,7 @@ Singleton {
     }
     function groupKey(n): string {
         if (!n) return "";
+        if (!Settings.notifications.stack) return "id:" + n.id;
         const h = n.hints || {};
         return (h["x-kde-display-appname"] || n.appName || "") + "\u0001" + (n.summary || "");
     }
@@ -32,6 +33,16 @@ Singleton {
     // a card's reply field is open: DrawerHost then takes keyboard focus on demand
     property bool replying: false
     property var times: ({})          // notification id -> arrival time (ms)
+    // a clock for "2m ago" labels: Date.now() alone isn't a binding dependency, so they froze
+    // at "now". Ticks only while something is listed.
+    property real now: Date.now()
+    Timer {
+        running: root.count > 0
+        interval: 30000
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: root.now = Date.now()
+    }
 
     function receivedAt(n): real {
         return times[n.id] || Date.now();
@@ -115,6 +126,11 @@ Singleton {
         n.dismiss();
     }
 
+    // take every pop-up off the screen (they stay in the control center's list)
+    function hideAllPopups(): void { popups = []; }
+    // dismiss everything currently popped up (each one's whole stack)
+    function dismissPopups(): void { for (const n of popups.slice()) dismissGroup(n); popups = []; }
+
     function clearAll(): void {
         popups = [];
         const all = server.trackedNotifications.values.slice();
@@ -139,7 +155,7 @@ Singleton {
     }
 
     function timeAgo(ms): string {
-        const s = Math.max(0, Math.floor((Date.now() - ms) / 1000));
+        const s = Math.max(0, Math.floor((root.now - ms) / 1000));
         if (s < 60) return "now";
         if (s < 3600) return Math.floor(s / 60) + "m";
         if (s < 86400) return Math.floor(s / 3600) + "h";

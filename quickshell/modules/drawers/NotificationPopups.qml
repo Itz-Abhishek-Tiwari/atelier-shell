@@ -1,75 +1,148 @@
 import QtQuick
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import qs.components
 import qs.config
 import qs.services
 
-// Notification pop-ups: a drawer that drops out of the top border at the top-right
-// corner (Caelestia's notification position). Cards slide in/out individually.
+// Notification pop-ups: free-floating cards in the top-right corner, each on its own with a
+// soft shadow (no drawer panel behind them: that looked like a box holding boxes). Cards
+// slide in from the right edge and back out, macOS-style. The host makes only the column
+// of cards clickable (inputItem).
 Item {
     id: root
-
-    // a strip along the top of the shared DrawerHost window
-    anchors { top: parent.top; left: parent.left; right: parent.right }
-    height: Math.min(parent ? parent.height * 0.85 : 900, drawer.bodyHeight + 60 + Atelier.maxInset)
-    visible: drawer.visible || Notifs.popups.length > 0
-    readonly property Item inputItem: drawer      // the host makes only this clickable
+    anchors.fill: parent
 
     readonly property bool hasPopups: Notifs.popups.length > 0
-    // keep the last size while closing so the drawer doesn't collapse before it retracts
-    property real heldHeight: 120
-    // measured from the cards themselves: ListView.contentHeight is an estimate that lagged behind a
-    // card finishing its text layout, so the drawer opened half-height until a hover re-measured it
-    readonly property real wantHeight: list.contentItem.childrenRect.height + 32   // + room for the last stack's strips
-    function syncHeight() { if (hasPopups && wantHeight > 30) heldHeight = wantHeight; }
-    onWantHeightChanged: syncHeight()
-    onHasPopupsChanged: syncHeight()          // a new pop-up of the same size changes nothing above
+    // stay visible a moment after the last card leaves, so its exit animation can play
+    visible: hasPopups || hold.running
+    onHasPopupsChanged: if (!hasPopups) hold.restart()
+    Timer { id: hold; interval: 260 }
 
-    EdgeDrawer {
-        id: drawer
-        edge: "top"
-        open: root.hasPopups
-        bodyWidth: 400
-        bodyHeight: root.heldHeight
-        // sits just left of the desktop-widget column (372px wide + 18px margin) so the
-        // two never overlap; top-centre is kept free for toasts
-        anchorPos: root.width - Atelier.insetRight - 18 - 372 - 20 - total / 2
+    // only the cards are clickable: a box around them, measured from the cards (the list itself has
+    // a fixed height, so measuring it can't feed back into its own layout: a binding loop at the bottom)
+    readonly property Item inputItem: hit
+    readonly property real cardsHeight: list.contentItem.childrenRect.height + 12
+    // "Clear all" pill past the last card when two or more are up
+    readonly property bool showClear: Notifs.popups.length >= 2
+    readonly property real clearSpace: showClear ? 38 : 0
+    Item {
+        id: hit
+        x: column.x
+        width: column.width
+        height: Math.min(column.height, root.cardsHeight + root.clearSpace)
+        y: root.atBottom ? column.y + column.height - height : column.y
+    }
 
-        Behavior on bodyHeight {
-            NumberAnimation { duration: 260; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard }
+    readonly property int cardWidth: Math.max(300, Math.min(480, Settings.notifications.popupWidth || 360))
+    readonly property int gap: 12
+    // Settings → Notifications → Position
+    readonly property string pos: ["top-right", "top-left", "top-center", "bottom-right", "bottom-left"]
+        .indexOf(Settings.notifications.position) >= 0 ? Settings.notifications.position : "top-right"
+    readonly property bool atBottom: pos.startsWith("bottom")
+    readonly property bool atLeft: pos.endsWith("left")
+    readonly property bool atCenter: pos === "top-center"
+    // which way cards slide in: from the nearest side (from above when centred)
+    readonly property real slideX: atCenter ? 0 : atLeft ? -48 : 48
+    readonly property real slideY: atCenter ? -24 : 0
+
+    Item {
+        id: column
+        x: root.atCenter ? (root.width - root.cardWidth) / 2
+         : root.atLeft ? Atelier.insetLeft + root.gap
+         : root.width - Atelier.insetRight - root.gap - root.cardWidth
+        y: root.atBottom ? root.height - Atelier.insetBottom - root.gap - height : Atelier.insetTop + root.gap
+        width: root.cardWidth
+        height: root.height * 0.85 - Atelier.insetTop - Atelier.insetBottom
+        // (only the cards' box takes input, so this is "the pointer is over the pop-ups")
+        HoverHandler { id: columnHover }
+
+        Rectangle {
+            id: clearPill
+            visible: opacity > 0
+            opacity: root.showClear ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: 160 } }
+            z: 5
+            // right-aligned (left on the left side), just past the last card
+            x: root.atLeft ? 0 : root.atCenter ? (parent.width - width) / 2 : parent.width - width
+            y: root.atBottom ? parent.height - root.cardsHeight - height - 4 : root.cardsHeight + 4
+            width: clearRow.implicitWidth + 24
+            height: 30
+            radius: 15
+            color: clearMa.containsMouse ? Qt.alpha(Atelier.red, 0.16) : Atelier.surface
+            border.width: 1
+            border.color: clearMa.containsMouse ? Qt.alpha(Atelier.red, 0.45) : Atelier.outline
+            Behavior on color { ColorAnimation { duration: 120 } }
+            Row {
+                id: clearRow
+                anchors.centerIn: parent
+                spacing: 6
+                Text { anchors.verticalCenter: parent.verticalCenter; text: "󰎟"; font.family: Atelier.font; font.pixelSize: 12
+                    color: clearMa.containsMouse ? Atelier.red : Atelier.subtext }
+                Text { anchors.verticalCenter: parent.verticalCenter; text: "Clear all"; font.family: Atelier.fontUi; font.pixelSize: 11; font.weight: Font.DemiBold
+                    color: clearMa.containsMouse ? Atelier.red : Atelier.text }
+            }
+            MouseArea { id: clearMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Notifs.dismissPopups() }
+        }
+        RectangularShadow {
+            anchors.fill: clearPill
+            visible: clearPill.visible
+            opacity: clearPill.opacity
+            radius: clearPill.radius
+            blur: 12
+            offset.y: 2
+            color: Atelier.shadow
+            z: 4
         }
 
         ListView {
             id: list
             anchors.fill: parent
-            anchors.margins: 12
             interactive: false
-            spacing: 14            // room for a stack's peeking layers
+            spacing: 14                 // room for a stack's peeking strips
             model: Notifs.popups
+            // at the bottom, the newest sits nearest the screen edge too
+            verticalLayoutDirection: root.atBottom ? ListView.BottomToTop : ListView.TopToBottom
 
-            delegate: NotificationCard {
+            delegate: Item {
+                id: slot
                 required property var modelData
                 width: list.width
-                notif: modelData
-                popup: true
+                height: card.implicitHeight
+
+                RectangularShadow {
+                    anchors.fill: card
+                    radius: card.radius
+                    blur: 18
+                    spread: 0
+                    offset.y: 4
+                    color: Atelier.shadow
+                }
+                NotificationCard {
+                    id: card
+                    width: parent.width
+                    notif: slot.modelData
+                    popup: true
+                    paused: columnHover.hovered
+                }
             }
 
-            // arrive: fade in and settle down a few px (the same way the drawer grows), no sideways slide
+            // arrive: slide in from the right edge and fade in
             add: Transition {
                 ParallelAnimation {
-                    NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 260; easing.type: Easing.OutCubic }
-                    NumberAnimation { property: "y"; from: ViewTransition.destination.y - 14; to: ViewTransition.destination.y
-                        duration: 420; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveSmooth }
-                    NumberAnimation { property: "scale"; from: 0.97; to: 1; duration: 420
+                    NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 220; easing.type: Easing.OutCubic }
+                    NumberAnimation { property: "x"; from: root.slideX; to: 0; duration: 420
+                        easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveSmooth }
+                    NumberAnimation { property: "y"; from: ViewTransition.destination.y + root.slideY; to: ViewTransition.destination.y; duration: 420
                         easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveSmooth }
                 }
             }
-            // leave (or replaced by a newer message of its stack): a short fade with a slight shrink
+            // leave (or replaced by a newer message of its stack): slide back out to the right
             remove: Transition {
                 ParallelAnimation {
-                    NumberAnimation { property: "opacity"; to: 0; duration: 140; easing.type: Easing.InCubic }
-                    NumberAnimation { property: "scale"; to: 0.97; duration: 140; easing.type: Easing.InCubic }
+                    NumberAnimation { property: "opacity"; to: 0; duration: 180; easing.type: Easing.InCubic }
+                    NumberAnimation { property: "x"; to: root.slideX * 1.25; duration: 200; easing.type: Easing.InCubic }
                 }
             }
             displaced: Transition {

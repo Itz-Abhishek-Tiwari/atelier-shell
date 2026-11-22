@@ -36,6 +36,7 @@ Item {
     function open() {
         visible = true;
         animActive = true;
+        Notifs.hideAllPopups();               // they're all in the list here
         SysState.refreshWifi();
         if (!adguardSet.running) adguardGet.running = true;
         focusTimer.restart();
@@ -149,6 +150,11 @@ Item {
         Settings.controlCenter.layout = all[(all.indexOf(layoutName) + 1) % all.length];
     }
     property string hint: ""                 // the hovered switch's status (icons / tiles)
+    // "On" for tiles, icon buttons and chips: a soft tonal wash of the accent (or red for
+    // recording) with the glyph in that colour, not a solid saturated fill (too loud)
+    function tone(red, hovered) { return Qt.alpha(red ? Atelier.red : Atelier.accent, (Atelier.isLight ? 0.15 : 0.22) + (hovered ? 0.06 : 0)); }
+    function toneInk(red) { return red ? Atelier.red : Atelier.accent; }
+    function toneEdge(red) { return Qt.alpha(red ? Atelier.red : Atelier.accent, 0.35); }
 
     // every shortcut the user can pick (Settings → Appearance → Control center)
     readonly property var allShortcuts: [
@@ -176,27 +182,17 @@ Item {
         edge: "right"
         open: root.animActive
         bodyWidth: 392
-        bodyHeight: Math.min(root.height - Atelier.insetTop - Atelier.insetBottom - 2 * Atelier.fillet - 24, content.implicitHeight + 44)
+        bodyHeight: Math.min(root.height - Atelier.insetTop - Atelier.insetBottom - 2 * Atelier.fillet - 24, 22 + head.implicitHeight + 8 + content.implicitHeight + 34)
         Behavior on bodyHeight { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard } }
 
-        // The whole panel scrolls as one piece when it is taller than the screen
-        // (before, the bottom was simply cut off).
-        Flickable {
-            id: scroller
-            anchors.fill: parent
-            contentWidth: width
-            contentHeight: content.implicitHeight + 44
-            clip: true
-            boundsBehavior: Flickable.StopAtBounds
-            interactive: contentHeight > height
-            SmoothWheel { flickable: scroller }
-
+        // The header (greeting, clock, date, buttons) stays put; everything below it scrolls
+        // when the panel is taller than the screen (the clock used to scroll away with it).
         ColumnLayout {
-            id: content
+            id: head
             x: 22
             y: 22
-            width: scroller.width - 44
-            spacing: 20
+            width: parent.width - 44
+            spacing: 0
 
             // ── Header ──────────────────────────────────────────────────────
             // full: greeting + buttons · big clock beside date and a slim battery bar
@@ -302,6 +298,38 @@ Item {
                     }
                 }
             }
+        }
+        // a hairline under the header once the list has scrolled under it
+        Rectangle {
+            anchors.left: parent.left; anchors.right: parent.right
+            anchors.leftMargin: 22; anchors.rightMargin: 22
+            y: scroller.y - 1
+            height: 1
+            color: Atelier.outline
+            opacity: scroller.contentY > 2 ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+        }
+
+        Flickable {
+            id: scroller
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.top: head.bottom
+            anchors.topMargin: 8
+            contentWidth: width
+            contentHeight: content.implicitHeight + 34
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            interactive: contentHeight > height
+            SmoothWheel { flickable: scroller }
+
+        ColumnLayout {
+            id: content
+            x: 22
+            y: 12
+            width: scroller.width - 44
+            spacing: 20
 
             // ── iPhone (Tether): name, status, battery; click opens Tether ──────────
             Rectangle {
@@ -413,7 +441,9 @@ Item {
                         x: 4 + seg.sel * seg.cell; y: 4
                         width: seg.cell; height: seg.height - 8
                         radius: 10
-                        color: Atelier.accentFill
+                        color: root.tone(false, false)
+                        border.width: 1
+                        border.color: root.toneEdge(false)
                         Behavior on x { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
                     }
                     Row {
@@ -429,10 +459,10 @@ Item {
                                     anchors.centerIn: parent
                                     spacing: 6
                                     Text { anchors.verticalCenter: parent.verticalCenter; text: modelData.icon; font.family: Atelier.font; font.pixelSize: 13
-                                        color: parent.parent.on ? Atelier.onFill : Atelier.subtext }
+                                        color: parent.parent.on ? Atelier.accent : Atelier.subtext }
                                     Text { anchors.verticalCenter: parent.verticalCenter; text: modelData.label; font.family: Atelier.fontUi; font.pixelSize: 12
                                         font.weight: parent.parent.on ? Font.DemiBold : Font.Medium
-                                        color: parent.parent.on ? Atelier.onFill : Atelier.text }
+                                        color: Atelier.text }
                                 }
                                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Perf.set(modelData.id) }
                             }
@@ -682,10 +712,9 @@ Item {
         Layout.preferredWidth: 1          // equal halves
         implicitHeight: 60
         radius: 18
-        color: on ? (wtMa.containsMouse ? Qt.lighter(Atelier.accentFill, 1.08) : Atelier.accentFill)
-                  : (wtMa.containsMouse ? Atelier.containerHigh : Atelier.container)
-        border.width: on ? 0 : 1
-        border.color: Atelier.outline
+        color: on ? root.tone(false, wtMa.containsMouse) : (wtMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+        border.width: 1
+        border.color: on ? root.toneEdge(false) : Atelier.outline
         scale: wtMa.pressed ? 0.97 : 1
         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
         Behavior on scale { NumberAnimation { duration: 110 } }
@@ -698,9 +727,9 @@ Item {
             spacing: 10
             Rectangle {
                 implicitWidth: 32; implicitHeight: 32; radius: 16
-                color: wt.on ? Qt.rgba(1, 1, 1, 0.18) : Atelier.containerHigh
+                color: wt.on ? root.tone(false, true) : Atelier.containerHigh
                 Text { anchors.centerIn: parent; text: wt.d.icon; font.family: Atelier.font; font.pixelSize: 15
-                    color: wt.on ? Atelier.onFill : Atelier.text }
+                    color: wt.on ? Atelier.accent : Atelier.text }
             }
             ColumnLayout {
                 Layout.fillWidth: true
@@ -708,17 +737,17 @@ Item {
                 spacing: 0
                 Text { Layout.fillWidth: true; text: wt.d.label; elide: Text.ElideRight
                     font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold
-                    color: wt.on ? Atelier.onFill : Atelier.text }
+                    color: Atelier.text }
                 Text { Layout.fillWidth: true; text: wt.d.sub; elide: Text.ElideRight
                     font.family: Atelier.fontUi; font.pixelSize: 11
-                    color: wt.on ? Qt.alpha(Atelier.onFill, 0.8) : Atelier.subtext }
+                    color: Atelier.subtext }
             }
             Rectangle {
                 implicitWidth: 26; implicitHeight: 26; radius: 13
-                color: detMa.containsMouse ? (wt.on ? Qt.rgba(1, 1, 1, 0.18) : Atelier.containerHigh) : "transparent"
+                color: detMa.containsMouse ? Atelier.containerHigh : "transparent"
                 Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                 Text { anchors.centerIn: parent; text: "󰅂"; font.family: Atelier.font; font.pixelSize: 13
-                    color: wt.on ? Atelier.onFill : Atelier.subtext }
+                    color: wt.on ? Atelier.accent : Atelier.subtext }
                 MouseArea { id: detMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.details(wt.tid) }
             }
         }
@@ -730,15 +759,13 @@ Item {
         property string tid
         readonly property var d: root.t(tid)
         readonly property bool on: d.on
-        readonly property color fillC: d.red ? Atelier.fill(Atelier.red) : Atelier.accentFill
         Layout.fillWidth: true
         Layout.preferredWidth: 1
         implicitHeight: 68
         radius: 16
-        color: on ? (qtMa.containsMouse ? Qt.lighter(fillC, 1.08) : fillC)
-                  : (qtMa.containsMouse ? Atelier.containerHigh : Atelier.container)
-        border.width: d.warn ? 1.5 : (on ? 0 : 1)
-        border.color: d.warn ? Atelier.peach : Atelier.outline
+        color: on ? root.tone(d.red, qtMa.containsMouse) : (qtMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+        border.width: d.warn ? 1.5 : 1
+        border.color: d.warn ? Atelier.peach : on ? root.toneEdge(d.red) : Atelier.outline
         scale: qtMa.pressed ? 0.94 : 1
         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
         Behavior on scale { NumberAnimation { duration: 110 } }
@@ -747,10 +774,10 @@ Item {
             width: parent.width - 8
             spacing: 5
             Text { anchors.horizontalCenter: parent.horizontalCenter; text: qt.d.icon; font.family: Atelier.font; font.pixelSize: 18
-                color: qt.on ? Atelier.onFill : (qt.d.warn ? Atelier.peach : Atelier.text) }
+                color: qt.on ? root.toneInk(qt.d.red) : (qt.d.warn ? Atelier.peach : Atelier.text) }
             Text { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: qt.d.short; elide: Text.ElideRight
                 font.family: Atelier.fontUi; font.pixelSize: 11; font.weight: Font.Medium
-                color: qt.on ? Atelier.onFill : Atelier.subtext }
+                color: qt.on ? Atelier.text : Atelier.subtext }
         }
         WarnDot { visible: qt.d.warn }
         MouseArea {
@@ -895,9 +922,9 @@ Item {
                             spacing: 8
                             Rectangle {     // the round part toggles; the rest opens the menu
                                 implicitWidth: 28; implicitHeight: 28; radius: 14
-                                color: parent.parent.d.on ? Atelier.accentFill : Atelier.containerHigh
+                                color: parent.parent.d.on ? root.tone(false, true) : Atelier.containerHigh
                                 Text { anchors.centerIn: parent; text: parent.parent.parent.d.icon; font.family: Atelier.font; font.pixelSize: 13
-                                    color: parent.parent.parent.d.on ? Atelier.onFill : Atelier.subtext }
+                                    color: parent.parent.parent.d.on ? Atelier.accent : Atelier.subtext }
                                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.act(parent.parent.parent.modelData) }
                             }
                             Text {
@@ -920,14 +947,14 @@ Item {
                         required property var modelData
                         readonly property var d: root.t(modelData)
                         width: 40; height: 40; radius: 20
-                        color: d.on ? (d.red ? Atelier.fill(Atelier.red) : Atelier.accentFill) : (icMa.containsMouse ? Atelier.containerHigh : Atelier.container)
-                        border.width: d.warn ? 1.5 : (d.on ? 0 : 1)
-                        border.color: d.warn ? Atelier.peach : Atelier.outline
+                        color: d.on ? root.tone(d.red, icMa.containsMouse) : (icMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+                        border.width: d.warn ? 1.5 : 1
+                        border.color: d.warn ? Atelier.peach : d.on ? root.toneEdge(d.red) : Atelier.outline
                         scale: icMa.pressed ? 0.9 : (icMa.containsMouse ? 1.06 : 1)
                         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                         Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutBack } }
                         Text { anchors.centerIn: parent; text: parent.d.icon; font.family: Atelier.font; font.pixelSize: 16
-                            color: parent.d.on ? Atelier.onFill : parent.d.warn ? Atelier.peach : Atelier.subtext }
+                            color: parent.d.on ? root.toneInk(parent.d.red) : parent.d.warn ? Atelier.peach : Atelier.subtext }
                         MouseArea {
                             id: icMa
                             anchors.fill: parent
@@ -983,10 +1010,10 @@ Item {
                                 spacing: 10
                                 Rectangle {   // the round icon toggles
                                     implicitWidth: 32; implicitHeight: 32; radius: 16
-                                    color: parent.parent.d.on ? (parent.parent.d.warn ? Atelier.fill(Atelier.peach) : Atelier.accentFill) : Atelier.containerHigh
+                                    color: parent.parent.d.on ? (parent.parent.d.warn ? Qt.alpha(Atelier.peach, 0.25) : root.tone(false, true)) : Atelier.containerHigh
                                     Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                                     Text { anchors.centerIn: parent; text: parent.parent.parent.d.icon; font.family: Atelier.font; font.pixelSize: 14
-                                        color: parent.parent.parent.d.on ? Atelier.onFill : Atelier.subtext }
+                                        color: parent.parent.parent.d.on ? (parent.parent.parent.d.warn ? Atelier.peach : Atelier.accent) : Atelier.subtext }
                                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.act(parent.parent.parent.modelData) }
                                 }
                                 ColumnLayout {
@@ -1016,9 +1043,9 @@ Item {
                         Layout.fillWidth: true
                         implicitHeight: 34
                         radius: 12
-                        color: d.on ? (d.red ? Atelier.fill(Atelier.red) : Atelier.accentFill) : (chMa2.containsMouse ? Atelier.containerHigh : Atelier.container)
-                        border.width: d.warn ? 1.5 : (d.on ? 0 : 1)
-                        border.color: d.warn ? Atelier.peach : Atelier.outline
+                        color: d.on ? root.tone(d.red, chMa2.containsMouse) : (chMa2.containsMouse ? Atelier.containerHigh : Atelier.container)
+                        border.width: d.warn ? 1.5 : 1
+                        border.color: d.warn ? Atelier.peach : d.on ? root.toneEdge(d.red) : Atelier.outline
                         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                         scale: chMa2.pressed ? 0.96 : 1
                         Behavior on scale { NumberAnimation { duration: 110 } }
@@ -1027,9 +1054,9 @@ Item {
                             x: 12
                             spacing: 8
                             Text { anchors.verticalCenter: parent.verticalCenter; text: parent.parent.d.icon; font.family: Atelier.font; font.pixelSize: 13
-                                color: parent.parent.d.on ? Atelier.onFill : parent.parent.d.warn ? Atelier.peach : Atelier.subtext }
+                                color: parent.parent.d.on ? root.toneInk(parent.parent.d.red) : parent.parent.d.warn ? Atelier.peach : Atelier.subtext }
                             Text { anchors.verticalCenter: parent.verticalCenter; text: parent.parent.d.short; font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.Medium
-                                color: parent.parent.d.on ? Atelier.onFill : Atelier.text }
+                                color: Atelier.text }
                         }
                         MouseArea { id: chMa2; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                             acceptedButtons: Qt.LeftButton | Qt.RightButton
