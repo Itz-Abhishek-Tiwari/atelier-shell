@@ -12,6 +12,7 @@ SettingRow {
     property real step: 1
     property int decimals: 0
     property string suffix: ""
+    property string zeroText: ""                // shown instead of the number at 0 (e.g. "Never")
     property color tint: Atelier.accent        // accepted for compatibility; controls use the one system accent
     readonly property color hue: Atelier.accent
     signal moved(real value)
@@ -73,7 +74,7 @@ SettingRow {
         Text {
             Layout.preferredWidth: 52
             horizontalAlignment: Text.AlignRight
-            text: root.value.toFixed(root.decimals) + root.suffix
+            text: root.zeroText !== "" && root.value === 0 ? root.zeroText : root.value.toFixed(root.decimals) + root.suffix
             font.family: Atelier.font
             font.pixelSize: 12
             color: Atelier.subtext1

@@ -25,6 +25,8 @@ wireplumber
 playerctl
 upower
 brightnessctl
+# plugged-in drives: mount / eject without a password (quickshell/scripts/drive.sh)
+udisks2
 
 # Qt6 Runtime (Quickshell)
 quickshell

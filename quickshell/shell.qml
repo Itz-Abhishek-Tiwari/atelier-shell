@@ -380,6 +380,18 @@ ShellRoot {
         }
     }
 
+    // Background services that must run from login (singletons only start when first used):
+    // battery alerts, idle & sleep (writes hypridle's config), update checks, plugged-in drives
+    readonly property var _services: [Battery, Idle, Updates, Drives]
+    Connections {
+        target: Battery
+        function onToast(msg, icon, clr) { toastPopup.showToast(msg, icon, clr); }
+    }
+    Connections {
+        target: Drives
+        function onToast(msg, icon, clr) { toastPopup.showToast(msg, icon, clr); }
+    }
+
     // 3. IPC Handlers for External CLI & Keybindings (Routed Through Controller)
     // IPC handlers call toggleOverlay without centerY — defaults to 0 (overlays fall back to screen center)
     Scope {
@@ -427,6 +439,12 @@ ShellRoot {
             function toggle(): void { shellRoot.toggleOverlay("apps"); }
             function open(): void { if (shellRoot.activeOverlay !== "apps") shellRoot.toggleOverlay("apps"); }
             function close(): void { if (shellRoot.activeOverlay === "apps") shellRoot.closeAllOverlays(); }
+        }
+        IpcHandler {
+            target: "updates"
+            function check(): void { Updates.check(); }
+            function run(): void { Updates.run(); }
+            function count(): int { return Updates.count; }
         }
         IpcHandler {
             target: "calendar"

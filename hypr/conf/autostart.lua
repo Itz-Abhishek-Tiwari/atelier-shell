@@ -1,7 +1,8 @@
 -- Autostart (once, at login)
 hl.on("hyprland.start", function()
     hl.exec_cmd("quickshell")                -- bar, wallpaper, OSD, notifications, lock screen
-    hl.exec_cmd("hypridle")                  -- dim / lock / screen off / suspend (hypridle.conf)
+    -- dim / lock / screen off / suspend: the shell's file from Settings → Idle & sleep, else hypridle.conf
+    hl.exec_cmd([[sh -c 'c="$HOME/.config/atelier/hypridle.conf"; if [ -f "$c" ]; then exec hypridle -c "$c"; else exec hypridle; fi']])
     hl.exec_cmd("hyprctl setcursor macOS 24")
     hl.exec_cmd("wl-paste --type text --watch cliphist store")
     hl.exec_cmd("wl-paste --type image --watch cliphist store")

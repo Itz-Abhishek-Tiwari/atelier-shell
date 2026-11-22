@@ -30,6 +30,10 @@ Singleton {
     readonly property var input: adapter.input
     readonly property var displays: adapter.displays
     readonly property var keybinds: adapter.keybinds
+    readonly property var battery: adapter.battery
+    readonly property var idle: adapter.idle
+    readonly property var updates: adapter.updates
+    readonly property var drives: adapter.drives
 
     readonly property string path: Quickshell.env("HOME") + "/.config/atelier/settings.json"
     property bool ready: false                  // true once the file has been read (or created)
@@ -207,6 +211,34 @@ Singleton {
                 property real masterFactor: 0.55
                 property bool masterNewOnTop: false
                 property real scrollColumnWidth: 0.5
+            }
+
+            // Battery alerts (services/Battery.qml)
+            property JsonObject battery: JsonObject {
+                property bool alerts: true              // notify when it runs low
+                property int low: 20                    // %: a normal notification
+                property int critical: 5                // %: a critical one (stays, gets through DND)
+                property bool chargerToast: true        // "Charging · 64%" when plugged / unplugged
+            }
+
+            // Idle & sleep (services/Idle.qml writes ~/.config/atelier/hypridle.conf). Seconds; 0 = never.
+            property JsonObject idle: JsonObject {
+                property int dimAfter: 60
+                property int lockAfter: 120
+                property int screenOffAfter: 300
+                property int suspendAfter: 600
+                property bool suspendOnAC: false        // off: never sleeps by itself while charging
+            }
+
+            // System updates (services/Updates.qml)
+            property JsonObject updates: JsonObject {
+                property bool check: true               // look every few hours, show them in the control center
+                property int hours: 3
+            }
+
+            // Plugged-in drives (services/Drives.qml)
+            property JsonObject drives: JsonObject {
+                property bool notify: true              // a notification with Open / Eject when one is plugged in
             }
 
             property JsonObject behavior: JsonObject {

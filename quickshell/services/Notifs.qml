@@ -33,11 +33,11 @@ Singleton {
     // a card's reply field is open: DrawerHost then takes keyboard focus on demand
     property bool replying: false
     property var times: ({})          // notification id -> arrival time (ms)
-    // a clock for "2m ago" labels: Date.now() alone isn't a binding dependency, so they froze
-    // at "now". Ticks only while something is listed.
+    // a clock for "2m ago" labels (cards, "checked 2h ago"): Date.now() alone isn't a binding
+    // dependency, so they froze at "now". Half-minute ticks cost nothing.
     property real now: Date.now()
     Timer {
-        running: root.count > 0
+        running: true
         interval: 30000
         repeat: true
         triggeredOnStart: true
@@ -154,6 +154,8 @@ Singleton {
         return "";
     }
 
+    // in a sentence: "just now", "5m ago"
+    function ago(ms): string { const t = timeAgo(ms); return t === "now" ? "just now" : t + " ago"; }
     function timeAgo(ms): string {
         const s = Math.max(0, Math.floor((root.now - ms) / 1000));
         if (s < 60) return "now";

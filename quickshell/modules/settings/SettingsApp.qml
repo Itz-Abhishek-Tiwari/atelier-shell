@@ -37,7 +37,7 @@ Item {
           keys: "bar panel position workspaces tray clock pinned apps hover logo power title" },
         { id: "widgets",       group: "Personalise", icon: "󰕮", label: "Desktop",         sub: "The clock and text on your desktop",
           keys: "desktop widget clock date weather greeting tasks media music font shadow" },
-        { id: "general",       group: "System",      icon: "󰒓", label: "General",         sub: "Clock, web search, camera, recording, emoji",
+        { id: "general",       group: "System",      icon: "󰒓", label: "General",         sub: "Clock, web search, camera, recording, emoji, updates",
           keys: "name 24-hour clock time search engine google duckduckgo bing web recording record screen fps sound animation speed motion iphone camera webcam droidcam emoji emoticon gif gifs giphy tenor skin tone" },
         { id: "defaults",      group: "System",      icon: "󰀻", label: "Default apps",    sub: "Browser, files, editor, media and terminal",
           keys: "default apps applications open with browser web email mail file manager folders text editor code images pictures photos viewer video player music audio pdf documents archives zip terminal mime xdg" },
@@ -45,7 +45,7 @@ Item {
           keys: "windows tiling layout dwindle master scrolling monocle gaps blur opacity transparency shadow animations hyprland rounding" },
         { id: "notifications", group: "System",      icon: "󰂚", label: "Notifications",   sub: "Pop-ups and Do Not Disturb",
           keys: "notifications pop-ups popups do not disturb dnd" },
-        { id: "display",       group: "System",      icon: "󰍹", label: "Display & power", sub: "Night light, performance modes, keep awake",
+        { id: "display",       group: "System",      icon: "󰍹", label: "Display & power", sub: "Night light, idle & sleep, battery, performance modes",
           keys: "night light warmth display volume brightness osd caffeine awake sleep performance game mode programming power" },
         { id: "modes",         group: "System",      icon: "󰊗", label: "Modes",           sub: "What Programming and Game mode change",
           keys: "modes performance game programming dev developer blur opacity opaque shadows animations tearing power profile do not disturb dnd caffeine awake widgets auto detect steam games" },
@@ -1096,6 +1096,24 @@ Item {
                                     placeholder: "Paste your key"
                                     text: Settings.emoji.gifKey; onCommitted: (t) => Settings.emoji.gifKey = t.trim() }
                             }
+
+                            SettingCard {
+                                title: "Updates & drives"; icon: "󰚰"; tint: Atelier.teal
+                                SettingSwitch { label: "Check for updates"; tint: Atelier.teal
+                                    description: Updates.count > 0 ? Updates.count + " waiting: they're in the control center" : "Shows them in the control center (system and AUR, no password needed)"
+                                    checked: Settings.updates.check; onToggled: (v) => Settings.updates.check = v }
+                                SettingSlider { visible: Settings.updates.check; label: "Check every"; from: 1; to: 24; step: 1; suffix: " h"; tint: Atelier.teal
+                                    value: Settings.updates.hours; onMoved: (v) => Settings.updates.hours = Math.round(v) }
+                                SettingRow {
+                                    visible: Settings.updates.check
+                                    label: "Check now"
+                                    description: Updates.checking ? "Checking…" : Updates.checkedAt > 0 ? "Last checked " + Notifs.ago(Updates.checkedAt) : "Not checked yet"
+                                    Chip { icon: "󰑐"; text: "Check"; tint: Atelier.teal; interactive: !Updates.checking; implicitHeight: 30
+                                        onClicked: Updates.check() }
+                                }
+                                SettingSwitch { label: "Plugged-in drives"; description: "A notification with Open and Eject when a USB drive or SD card goes in"; tint: Atelier.teal
+                                    checked: Settings.drives.notify; onToggled: (v) => Settings.drives.notify = v }
+                            }
                         }
 
                         // ═════════ Windows (Hyprland) ═════════
@@ -1277,6 +1295,32 @@ Item {
                                 title: "Keep awake"; icon: "󰅶"; tint: Atelier.peach
                                 SettingSwitch { label: "Caffeine"; description: "Keep the screen awake"; tint: Atelier.peach
                                     checked: Atelier.caffeine; onToggled: (v) => Atelier.caffeine = v }
+                            }
+
+                            SettingCard {
+                                title: "Idle & sleep"; icon: "󰒲"; tint: Atelier.lavender
+                                SettingSlider { label: "Dim the screen after"; from: 0; to: 300; step: 15; suffix: " s"; zeroText: "Never"; tint: Atelier.lavender
+                                    value: Settings.idle.dimAfter; onMoved: (v) => Settings.idle.dimAfter = Math.round(v) }
+                                SettingSlider { label: "Lock after"; from: 0; to: 30; step: 1; suffix: " min"; zeroText: "Never"; tint: Atelier.lavender
+                                    value: Settings.idle.lockAfter / 60; onMoved: (v) => Settings.idle.lockAfter = Math.round(v) * 60 }
+                                SettingSlider { label: "Turn the screen off after"; from: 0; to: 60; step: 1; suffix: " min"; zeroText: "Never"; tint: Atelier.lavender
+                                    value: Settings.idle.screenOffAfter / 60; onMoved: (v) => Settings.idle.screenOffAfter = Math.round(v) * 60 }
+                                SettingSlider { label: "Sleep after"; from: 0; to: 120; step: 5; suffix: " min"; zeroText: "Never"; tint: Atelier.lavender
+                                    value: Settings.idle.suspendAfter / 60; onMoved: (v) => Settings.idle.suspendAfter = Math.round(v) * 60 }
+                                SettingSwitch { label: "Sleep while charging too"; description: "Off: plugged in, it only locks and turns the screen off (downloads and builds keep going)"; tint: Atelier.lavender
+                                    checked: Settings.idle.suspendOnAC; onToggled: (v) => Settings.idle.suspendOnAC = v }
+                            }
+
+                            SettingCard {
+                                title: "Battery"; icon: "󰂃"; tint: Atelier.yellow
+                                SettingSwitch { label: "Low battery alerts"; description: "A notification when it runs low; the critical one stays up and gets through Do Not Disturb"; tint: Atelier.yellow
+                                    checked: Settings.battery.alerts; onToggled: (v) => Settings.battery.alerts = v }
+                                SettingSlider { visible: Settings.battery.alerts; label: "Low at"; from: 10; to: 40; step: 5; suffix: "%"; tint: Atelier.yellow
+                                    value: Settings.battery.low; onMoved: (v) => Settings.battery.low = Math.round(v) }
+                                SettingSlider { visible: Settings.battery.alerts; label: "Critical at"; from: 3; to: 15; step: 1; suffix: "%"; tint: Atelier.yellow
+                                    value: Settings.battery.critical; onMoved: (v) => Settings.battery.critical = Math.round(v) }
+                                SettingSwitch { label: "Charger toast"; description: "\"Charging · 64%\" when you plug in or unplug"; tint: Atelier.yellow
+                                    checked: Settings.battery.chargerToast; onToggled: (v) => Settings.battery.chargerToast = v }
                             }
 
                             SettingCard {
