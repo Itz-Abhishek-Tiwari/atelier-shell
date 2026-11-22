@@ -23,6 +23,12 @@ Item {
     property var scannedNetworks: []
     property string selectedSsid: ""
     property bool promptPassword: false
+    property var knownSsids: ({})        // saved NetworkManager profiles, by name
+    property string busySsid: ""         // network being connected to right now
+    property string errorText: ""        // shown on the password view after a failed try
+    property bool showPassword: false
+    property int scanRetries: 0          // empty scans retried while the card rescans    // eye toggle on the password field
+    property string _pendingPw: ""       // handed to wifi-connect.sh on stdin, then cleared
 
     // Animation & positioning
     property bool animActive: false
@@ -30,7 +36,7 @@ Item {
 
     // Geometry matching Caelestia Tokens (320px width)
     readonly property int cardWidth: 320
-    readonly property int cardHeight: promptPassword ? 220 : Math.min(500, 140 + Math.min(scannedNetworks.length, 7) * 44 + 48)
+    readonly property int cardHeight: promptPassword ? (errorText ? 240 : 220) : Math.min(500, 140 + Math.min(scannedNetworks.length, 7) * 44 + 48)
     readonly property int barWidth: 44
     readonly property real cardY: {
         var cy = (centerY > 0) ? centerY : (wifiOverlayRoot.height / 2);
@@ -77,19 +83,21 @@ Item {
                 var seen = {};
                 var foundConn = "";
                 for (var i = 0; i < lines.length; i++) {
-                    var l = lines[i].trim();
-                    if (!l) continue;
-                    var parts = l.split(":");
-                    if (parts.length >= 4) {
-                        var inUse = parts[0] === "*";
-                        var ssid = parts[1];
-                        var signal = parseInt(parts[2]) || 50;
-                        var sec = parts.slice(3, parts.length - 1).join(":");
-                        if (ssid && !seen[ssid]) {
-                            seen[ssid] = true;
-                            list.push({ inUse: inUse, ssid: ssid, signal: signal, security: sec });
-                            if (inUse) foundConn = ssid;
-                        }
+                    var parts = wifiOverlayRoot.splitTerse(lines[i]);
+                    if (parts.length < 4) continue;
+                    var inUse = parts[0].trim() === "*";
+                    var ssid = parts[1];
+                    var signal = parseInt(parts[2]) || 0;
+                    var sec = parts[3].trim();
+                    if (sec === "--") sec = "";
+                    if (ssid && !seen[ssid]) {
+                        seen[ssid] = true;
+                        list.push({ inUse: inUse, ssid: ssid, signal: signal, security: sec });
+                        if (inUse) foundConn = ssid;
+                    } else if (ssid && inUse) {
+                        for (var j = 0; j < list.length; j++)
+                            if (list[j].ssid === ssid) list[j].inUse = true;
+                        foundConn = ssid;
                     }
                 }
                 list.sort(function(a, b) {
@@ -97,10 +105,117 @@ Item {
                     if (b.inUse) return 1;
                     return b.signal - a.signal;
                 });
+                // nmcli returns an empty list while the card is rescanning or
+                // reconnecting: keep the last list and ask again shortly
+                if (list.length === 0 && wifiOverlayRoot.wifiEnabled && wifiOverlayRoot.scanRetries < 8) {
+                    wifiOverlayRoot.scanRetries++;
+                    rescanTimer.restart();
+                    if (wifiOverlayRoot.scanRetries === 1) rescanProc.running = true;
+                    return;
+                }
+                wifiOverlayRoot.scanRetries = 0;
                 wifiOverlayRoot.scannedNetworks = list;
                 wifiOverlayRoot.connectedSsid = foundConn;
             }
         }
+    }
+
+    // ask the card for a fresh scan (nmcli lists nothing until it has one)
+    Process {
+        id: rescanProc
+        command: ["nmcli", "device", "wifi", "rescan"]
+        running: false
+    }
+
+    Timer {
+        id: rescanTimer
+        interval: 1500
+        repeat: false
+        onTriggered: wifiScanProc.running = true
+    }
+
+    Process {
+        id: knownProc
+        command: ["nmcli", "-t", "-f", "NAME,TYPE", "connection", "show"]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var known = {};
+                var lines = text.trim().split("\n");
+                for (var i = 0; i < lines.length; i++) {
+                    var f = wifiOverlayRoot.splitTerse(lines[i]);
+                    if (f.length >= 2 && f[1] === "802-11-wireless") known[f[0]] = true;
+                }
+                wifiOverlayRoot.knownSsids = known;
+            }
+        }
+    }
+
+    // Connects through scripts/wifi-connect.sh; the password goes over stdin.
+    Process {
+        id: connectProc
+        property string ssid: ""
+        property bool withPassword: false
+        running: false
+        stdinEnabled: true
+        onStarted: {
+            write(wifiOverlayRoot._pendingPw + "\n");
+            wifiOverlayRoot._pendingPw = "";
+        }
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var out = text.trim().split("\n").pop() || "";
+                var ssid = connectProc.ssid;
+                wifiOverlayRoot.busySsid = "";
+                if (out === "OK") {
+                    wifiOverlayRoot.errorText = "";
+                    wifiOverlayRoot.toastRequested("Connected to " + ssid, "󰤨", Atelier.green);
+                } else if (out.indexOf("AUTH") === 0) {
+                    // wrong / missing password: ask (again) if the drawer is still up
+                    wifiOverlayRoot.errorText = connectProc.withPassword ? "Wrong password, try again" : "";
+                    wifiOverlayRoot.toastRequested(connectProc.withPassword ? "Wrong password for " + ssid : "Password needed for " + ssid, "󰤬", Atelier.red);
+                    if (wifiOverlayRoot.animActive) wifiOverlayRoot.askPassword(ssid);
+                } else {
+                    var why = out.replace(/^FAIL\s*/, "") || "could not connect";
+                    wifiOverlayRoot.toastRequested("Couldn't connect: " + why, "󰤮", Atelier.red);
+                }
+                wifiScanProc.running = true;
+                knownProc.running = true;
+                wifiStateProc.running = true;
+            }
+        }
+    }
+
+    // nmcli -t output: fields split on ':', with '\:' and '\\' escaped inside a field
+    function splitTerse(line) {
+        var out = [], cur = "";
+        for (var i = 0; i < line.length; i++) {
+            var c = line[i];
+            if (c === "\\" && i + 1 < line.length) { cur += line[++i]; continue; }
+            if (c === ":") { out.push(cur); cur = ""; continue; }
+            cur += c;
+        }
+        out.push(cur);
+        return out;
+    }
+
+    function runConnect(ssid, pwd) {
+        if (connectProc.running) return;      // one attempt at a time
+        busySsid = ssid;
+        _pendingPw = pwd || "";
+        connectProc.ssid = ssid;
+        connectProc.withPassword = !!pwd;
+        connectProc.command = [Quickshell.shellDir + "/scripts/wifi-connect.sh", ssid];
+        connectProc.running = true;
+        toastRequested("Connecting to " + ssid + "…", "󰤨", Atelier.sky);
+    }
+
+    function askPassword(ssid) {
+        selectedSsid = ssid;
+        passInput.text = "";
+        showPassword = false;
+        promptPassword = true;
+        passInput.forceActiveFocus();
     }
 
     Process {
@@ -124,34 +239,25 @@ Item {
     function disconnectCurrent() {
         if (!connectedSsid) return;
         wifiActionProc.running = false;
-        wifiActionProc.command = ["sh", "-c", "nmcli connection down id \"" + connectedSsid + "\""];
+        wifiActionProc.command = ["nmcli", "connection", "down", "id", connectedSsid];
         wifiActionProc.running = true;
         wifiOverlayRoot.toastRequested("Disconnected from " + connectedSsid, "󰤮", Atelier.red);
     }
 
     function connectToNetwork(ssid, sec) {
-        if (sec && sec.length > 0) {
-            selectedSsid = ssid;
-            passInput.text = "";
-            promptPassword = true;
-            passInput.forceActiveFocus();
-        } else {
-            wifiActionProc.running = false;
-            wifiActionProc.command = ["sh", "-c", "nmcli connection up id \"" + ssid + "\" 2>/dev/null || nmcli device wifi connect \"" + ssid + "\""];
-            wifiActionProc.running = true;
-            wifiOverlayRoot.toastRequested("Connecting to " + ssid, "󰤨", Atelier.sky);
-        }
+        errorText = "";
+        // saved or open networks connect straight away; the script reports
+        // back AUTH if the saved password is wrong, and we ask then
+        if (!sec || knownSsids[ssid]) runConnect(ssid, "");
+        else askPassword(ssid);
     }
 
     function submitPassword() {
         var pwd = passInput.text;
-        var ssid = selectedSsid;
+        if (!pwd) return;
+        passInput.text = "";
         promptPassword = false;
-        wifiActionProc.running = false;
-        var cmd = pwd ? "nmcli device wifi connect \"" + ssid + "\" password \"" + pwd + "\"" : "nmcli connection up id \"" + ssid + "\"";
-        wifiActionProc.command = ["sh", "-c", cmd];
-        wifiActionProc.running = true;
-        wifiOverlayRoot.toastRequested("Connecting to " + ssid, "󰤨", Atelier.sky);
+        runConnect(selectedSsid, pwd);
     }
 
     function openSettings() {
@@ -168,7 +274,9 @@ Item {
         animActive = true;
         promptPassword = false;
         wifiStateProc.running = true;
+        scanRetries = 0;
         wifiScanProc.running = true;
+        knownProc.running = true;
         focusTimer.restart();
     }
 
@@ -253,6 +361,15 @@ Item {
                         elide: Text.ElideRight
                     }
 
+                    Text {
+                        visible: wifiOverlayRoot.errorText !== ""
+                        text: wifiOverlayRoot.errorText
+                        font.family: wifiOverlayRoot.fontMono
+                        font.pixelSize: 11
+                        color: Atelier.red
+                        Layout.fillWidth: true
+                    }
+
                     Rectangle {
                         Layout.fillWidth: true
                         height: 40
@@ -265,12 +382,13 @@ Item {
                             id: passInput
                             anchors.fill: parent
                             anchors.leftMargin: 12
-                            anchors.rightMargin: 12
+                            anchors.rightMargin: 40
                             verticalAlignment: TextInput.AlignVCenter
                             font.family: wifiOverlayRoot.fontMono
                             font.pixelSize: 13
                             color: wifiOverlayRoot.colText
-                            echoMode: TextInput.Password
+                            echoMode: wifiOverlayRoot.showPassword ? TextInput.Normal : TextInput.Password
+                            clip: true
                             selectByMouse: true
 
                             Text {
@@ -284,7 +402,39 @@ Item {
                             }
 
                             Keys.onReturnPressed: wifiOverlayRoot.submitPassword()
-                            Keys.onEscapePressed: wifiOverlayRoot.promptPassword = false
+                            Keys.onEscapePressed: { wifiOverlayRoot.promptPassword = false; wifiOverlayRoot.errorText = ""; }
+                        }
+
+                        // show / hide password
+                        Rectangle {
+                            width: 28; height: 28
+                            radius: 14
+                            anchors.right: parent.right
+                            anchors.rightMargin: 6
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: eyeMa.containsMouse ? wifiOverlayRoot.colContainer : "transparent"
+                            Behavior on color { ColorAnimation { duration: 150 } }
+                            scale: eyeMa.pressed ? 0.86 : (eyeMa.containsMouse ? 1.18 : 1.0)
+                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: wifiOverlayRoot.showPassword ? "\u{F06D1}" : "\u{F0208}"   // eye-off / eye
+                                font.family: wifiOverlayRoot.fontMono
+                                font.pixelSize: 15
+                                color: wifiOverlayRoot.showPassword ? wifiOverlayRoot.colPrimary : wifiOverlayRoot.colSubtext
+                            }
+
+                            MouseArea {
+                                id: eyeMa
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    wifiOverlayRoot.showPassword = !wifiOverlayRoot.showPassword;
+                                    passInput.forceActiveFocus();
+                                }
+                            }
                         }
                     }
 
@@ -311,7 +461,7 @@ Item {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: wifiOverlayRoot.promptPassword = false
+                                onClicked: { wifiOverlayRoot.promptPassword = false; wifiOverlayRoot.errorText = ""; }
                             }
                         }
 
@@ -395,7 +545,10 @@ Item {
 
                     // Subtitle: X networks available
                     Text {
-                        text: wifiOverlayRoot.scannedNetworks.length + " networks available"
+                        text: !wifiOverlayRoot.wifiEnabled ? "Wi-Fi is off"
+                            : (wifiOverlayRoot.scannedNetworks.length === 0 || wifiOverlayRoot.scanRetries > 0)
+                                ? (wifiOverlayRoot.scanRetries >= 8 ? "No networks found" : "Scanning…")
+                                : wifiOverlayRoot.scannedNetworks.length + " networks available"
                         font.family: wifiOverlayRoot.fontMono
                         font.pixelSize: 11
                         color: wifiOverlayRoot.colSubtext
@@ -459,7 +612,7 @@ Item {
 
                                 // SSID Name
                                 Text {
-                                    text: modelData.ssid
+                                    text: modelData.ssid + (wifiOverlayRoot.busySsid === modelData.ssid ? "  · connecting…" : "")
                                     font.family: wifiOverlayRoot.fontMono
                                     font.pixelSize: 12
                                     font.bold: modelData.inUse
