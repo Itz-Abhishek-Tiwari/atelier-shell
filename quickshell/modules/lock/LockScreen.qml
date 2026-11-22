@@ -70,17 +70,26 @@ Scope {
     }
     Timer { interval: 20 * 60 * 1000; repeat: true; running: true; onTriggered: weatherProc.running = true }
 
-    // built-in looks: "depth" = DepthLock.qml (Samsung-style), anything else = LockContent.qml
-    readonly property bool depthStyle: Settings.lock.theme === "depth"
+    // built-in looks: "depth" = DepthLock.qml (Samsung-style), a phone style = PhoneLock.qml,
+    // "atelier" = LockContent.qml; anything else is a qylock theme (its own process)
+    readonly property var phoneStyles: ["cupertino", "hyper", "harmony", "oxygen", "material", "dot"]
+    function isBuiltin(t) { return !t || t === "atelier" || t === "depth" || phoneStyles.indexOf(t) >= 0; }
+    // the preview can show another style than the one in use (Settings → a card's Preview)
+    property string previewTheme: ""
+    readonly property string lockTheme: Settings.lock.theme
+    readonly property string shownTheme: previewing && previewTheme ? previewTheme : lockTheme
+    readonly property bool depthStyle: lockTheme === "depth"
     // touching DepthWall here keeps it alive, so it cuts out each new wallpaper ahead of time
     readonly property bool depthReady: depthStyle && DepthWall.ok
     Component { id: glassUi; LockContent { lockRoot: root } }
     Component { id: depthUi; DepthLock { lockRoot: root } }
+    Component { id: phoneUi; PhoneLock { lockRoot: root } }
+    function uiFor(t) { return t === "depth" ? depthUi : phoneStyles.indexOf(t) >= 0 ? phoneUi : glassUi; }
 
     function lock() {
         if (locked || themeLock.running) return;
         const theme = Settings.lock.theme;
-        if (theme && theme !== "atelier" && theme !== "depth") {
+        if (!isBuiltin(theme)) {
             // a qylock theme: its own lock process (scripts/qylock.py). If it fails or crashes
             // (non-zero exit), our own lock takes over at once: Hyprland allows a new locker to
             // replace a dead one (misc.allow_session_lock_restore), so the session is never left
@@ -106,6 +115,13 @@ Scope {
         resetState();
         previewing = true;
     }
+    // preview a built-in style without switching to it
+    function previewStyle(t: string): void {
+        if (!isBuiltin(t)) return;
+        previewTheme = t;
+        preview();
+    }
+    onPreviewingChanged: if (!previewing) previewTheme = ""
     // preview helpers (only ever affect the preview window, never a real lock)
     function previewAuth() { preview(); authMode = true; }
     function stopPreview() { if (previewing) { previewing = false; editing = false; resetState(); } }
@@ -184,8 +200,11 @@ Scope {
             Loader {
                 anchors.fill: parent
                 focus: true
-                sourceComponent: root.depthStyle ? depthUi : glassUi
-                onLoaded: item.screen = surface.screen
+                sourceComponent: root.uiFor(root.lockTheme)
+                onLoaded: {
+                    item.screen = surface.screen;
+                    if (item.variant !== undefined) item.variant = Qt.binding(() => root.lockTheme);
+                }
             }
         }
     }
@@ -203,9 +222,10 @@ Scope {
             anchors.fill: parent
             focus: true
             active: root.previewing
-            sourceComponent: root.depthStyle || root.editing ? depthUi : glassUi
+            sourceComponent: root.editing ? depthUi : root.uiFor(root.shownTheme)
             onLoaded: {
                 item.isPreview = true;
+                if (item.variant !== undefined) item.variant = Qt.binding(() => root.shownTheme);
                 if (root.editing) item.editing = Qt.binding(() => root.editing);
             }
         }

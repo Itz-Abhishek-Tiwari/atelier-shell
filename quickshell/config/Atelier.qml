@@ -72,6 +72,10 @@ Singleton {
     readonly property bool clock24: Settings.general.clock24
     function hour12(d) { const h = clock24 ? d.getHours() : (d.getHours() % 12 || 12); return (h < 10 ? "0" : "") + h; }
     function ampm(d) { return clock24 ? "" : (d.getHours() < 12 ? "AM" : "PM"); }   // "" in 24h mode (chips hide)
+    // the lock screens' own choice (Settings → Lock screen → Clock): system | 12 | 24
+    readonly property bool lockClock24: Settings.lock.clock === "24" ? true : Settings.lock.clock === "12" ? false : clock24
+    function lockHour(d) { const h = lockClock24 ? d.getHours() : (d.getHours() % 12 || 12); return (h < 10 ? "0" : "") + h; }
+    function lockAmpm(d) { return lockClock24 ? "" : (d.getHours() < 12 ? "AM" : "PM"); }
 
     readonly property string userName: {
         const n = Settings.general.userName;

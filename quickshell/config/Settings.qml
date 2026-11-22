@@ -34,6 +34,7 @@ Singleton {
     readonly property var idle: adapter.idle
     readonly property var updates: adapter.updates
     readonly property var drives: adapter.drives
+    readonly property var lockStyle: adapter.lockStyle
 
     readonly property string path: Quickshell.env("HOME") + "/.config/atelier/settings.json"
     property bool ready: false                  // true once the file has been read (or created)
@@ -289,6 +290,7 @@ Singleton {
                 // "atelier" = the shell's own lock screen (LockContent.qml); anything else is a
                 // qylock theme id (scripts/qylock.py), run as its own lock process
                 property string theme: "atelier"
+                property string clock: "system"             // system (General → 24-hour clock) | 12 | 24, for every built-in style
                 // "depth": Samsung-style lock (modules/lock/DepthLock.qml), clock behind the subject
                 property string depthLayout: "horizontal"   // horizontal (12:45) | stacked (12 over 45)
                 property real depthClockSize: 0.22          // digit height, share of the screen height
@@ -301,6 +303,29 @@ Singleton {
                 property bool depthEffect: true             // clock behind the subject (off = a plain big clock on top)
                 property string depthStyle: "solid"         // solid | glass (frosted digits)
                 property string depthColor: "auto"          // auto (from the wallpaper) | theme | white | black | theme role | "#rrggbb"
+            }
+
+            // the phone-inspired lock styles (modules/lock/PhoneLock.qml), each one's own options
+            property JsonObject lockStyle: JsonObject {
+                property real size: 0.72                    // every style's text and widgets, 0.5 … 1.1
+                property string cupertinoWeight: "bold"     // regular | bold | heavy
+                property string cupertinoTint: "white"      // white | soft | accent
+                property bool cupertinoWidgets: true        // the round gauges under the clock
+                property string cupertinoNotifs: "pile"     // pile | list | count
+                property string hyperGradient: "accent"     // accent | sunset | ocean | mono
+                property string hyperWeight: "regular"      // thin | regular | bold
+                property bool hyperCards: true              // weather / battery / notifications cards
+                property bool harmonyCalendar: true         // the month on the right
+                property bool harmonyAccent: false          // the big day number in the accent colour
+                property string harmonyWeekStart: "mon"     // mon | sun
+                property string oxygenShelf: "bottom"       // bottom | top
+                property string oxygenAccent: "red"         // red | theme
+                property bool oxygenSeconds: false
+                property string materialLayout: "grid"      // grid (2×2) | line
+                property bool materialShrink: true          // smaller tiles while there are notifications
+                property string dotColor: "white"           // white | red | theme
+                property bool dotSeconds: true              // the 60-dot seconds bar
+                property string dotBackground: "mono"       // mono (black & white wallpaper) | black
             }
 
             property JsonObject greeter: JsonObject {
