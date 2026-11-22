@@ -237,7 +237,7 @@ ShellRoot {
             }
         }
 
-        // Game library, fullscreen (Super+G)
+        // Game library, bottom drawer (Super+G)
         GamesOverlay {
             id: gamesOverlay
             onClosedSignal: {

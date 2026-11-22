@@ -130,11 +130,11 @@ The UI keeps the same look; the work behind it changes. Switch in the control ce
 | **Programming** | `Super+Shift+D` | Opaque windows (crisp text, no blur work behind them), 1-pass blur, faster window animations, no dimming, performance power profile (balanced on battery), screen kept awake. Remembered across logins. |
 | **Game** | `Super+Shift+G` | No blur / shadows / animations, opaque windows and shell glass, tearing allowed, performance power profile, Do Not Disturb, screen kept awake, desktop widgets not drawn. Not remembered across logins. |
 
-**Game library** (`Super+G`): a fullscreen, console-style launcher for every installed game —
+**Game library** (`Super+G`): a drawer from the bottom edge, styled like the rest of the shell, listing every installed game:
 Steam (all libraries, including `/mnt/games`), Heroic (Epic, GOG, sideloaded), Lutris, `.desktop`
 games and an optional hand-written `~/.config/atelier/games.json`
 (`[{"title": "…", "command": "…", "cover": "/path.jpg"}]`). Cover art is downloaded once into
-`~/.cache/atelier/game-art`. ←/→ or the wheel to choose, Enter to play, type to search.
+`~/.cache/atelier/game-art`. Arrow keys or a click to choose, Enter to play, type to search, Tab to switch source.
 
 *Game mode automatically* (Settings → Behavior, on by default): focusing a game (Steam, gamescope,
 Lutris, Heroic, ...) switches to Game mode, and closing it switches back. Leaving any mode restores
@@ -162,7 +162,7 @@ qs ipc call mode set game|dev|normal      # also: cycle, toggleGame, toggleDev, 
 | Emoji picker | `SUPER + ;` |
 | GIF finder (free GIPHY/Tenor key in Settings → General) | `SUPER + Shift + ;` |
 | On-screen keyboard | `SUPER + /` |
-| Game library (fullscreen) | `SUPER + G` |
+| Game library | `SUPER + G` |
 | Record screen (pick an area / stop) | `SUPER + Shift + R` (whole screen: `SUPER + Alt + R`, or `R` in the screenshot picker) |
 | Night light | `SUPER + Shift + N` (schedule and warmth in Settings → Appearance) |
 | Music drawer | hover the middle of the top screen edge, or `SUPER + M` |
