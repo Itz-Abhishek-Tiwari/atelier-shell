@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Effects
+import QtQuick.Shapes
 import Quickshell
 import Quickshell.Io
 import Quickshell.Widgets
@@ -32,7 +33,8 @@ Item {
     property bool isPreview: false
     property bool thumb: false
 
-    readonly property real u: height / 1000
+    // one unit = a thousandth of the height, times the Size setting (Settings → the style's options)
+    readonly property real u: height / 1000 * Math.max(0.5, Math.min(1.1, Settings.lockStyle.size || 0.72))
     readonly property bool auth: !thumb && lockRoot.authMode
     readonly property bool leaving: !thumb && lockRoot.unlocking
     readonly property string display: "Inter Display"
@@ -143,29 +145,30 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: "black"
-        opacity: (p.variant === "dot" ? 0.5 : 0) + (p.auth ? 0.28 : 0)
+        opacity: Math.min(1, (p.variant === "dot" ? (Settings.lockStyle.dotBackground === "black" ? 1 : 0.5) : 0) + (p.auth ? 0.28 : 0))
         Behavior on opacity { NumberAnimation { duration: 320 } }
     }
 
-    // ═══ Status, top right: Wi-Fi · battery (a laptop's corner) ══════════════
+    // ═══ Status, top right: Wi-Fi · battery (Oxygen has them in its shelf) ══
     Row {
+        visible: p.variant !== "oxygen"
         anchors.right: parent.right; anchors.top: parent.top
-        anchors.rightMargin: 36 * p.u; anchors.topMargin: 28 * p.u
-        spacing: 18 * p.u
-        opacity: p.leaving ? 0 : 0.92
+        anchors.rightMargin: 40 * p.u; anchors.topMargin: 32 * p.u
+        spacing: 22 * p.u
+        opacity: p.leaving ? 0 : 0.95
         Behavior on opacity { NumberAnimation { duration: 260 } }
-        readonly property bool mono: p.variant === "dot" || p.variant === "oxygen"
+        readonly property string fam: p.variant === "dot" ? Atelier.font : p.display
         Text {
             anchors.verticalCenter: parent.verticalCenter
-            text: SysState.wifiIcon + (SysState.wifiConnected && p.width > 900 ? "  " + SysState.ssid : "")
-            font.family: parent.mono ? Atelier.font : p.display; font.pixelSize: 20 * p.u; font.weight: Font.Normal
+            text: SysState.wifiIcon + (SysState.wifiConnected ? "  " + SysState.ssid : "")
+            font.family: parent.fam; font.pixelSize: 22 * p.u; font.weight: Font.Normal
             color: "white"
         }
         Text {
             visible: p.hasBattery
             anchors.verticalCenter: parent.verticalCenter
             text: (p.charging ? "󰂄 " : p.batPct <= 15 ? "󰂃 " : "󰁹 ") + p.batPct + "%"
-            font.family: parent.mono ? Atelier.font : p.display; font.pixelSize: 20 * p.u; font.weight: Font.Normal
+            font.family: parent.fam; font.pixelSize: 22 * p.u; font.weight: Font.Normal
             color: p.batPct <= 15 && !p.charging ? Qt.tint("white", Qt.alpha(Atelier.red, 0.8)) : "white"
         }
     }
@@ -177,16 +180,16 @@ Item {
         opacity: p.auth || p.leaving ? 0 : 1
         Behavior on opacity { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
         transform: Translate {
-            y: p.auth || p.leaving ? -70 * p.u : 0
+            y: p.auth || p.leaving ? -60 * p.u : 0
             Behavior on y { NumberAnimation { duration: 380; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard } }
         }
         layer.enabled: !p.thumb
         layer.effect: MultiEffect {
             shadowEnabled: true
-            shadowBlur: 0.6
-            shadowOpacity: 0.35
+            shadowBlur: 0.7
+            shadowOpacity: 0.3
             shadowColor: "black"
-            shadowVerticalOffset: 2
+            shadowVerticalOffset: 3
         }
         Loader {
             anchors.fill: parent
@@ -195,259 +198,480 @@ Item {
         }
     }
 
-    // ── Cupertino (iOS) ─────────────────────────────────────────────────────
+    // ── Cupertino (iOS): big clock, round gauges, a notification pile ──────
     Component {
         id: cupertinoFace
         Item {
+            readonly property var o: Settings.lockStyle
+            readonly property color ink: o.cupertinoTint === "accent" ? Qt.tint("white", Qt.alpha(Atelier.accent, 0.5))
+                                       : o.cupertinoTint === "soft" ? Qt.rgba(1, 1, 1, 0.82) : "white"
             Column {
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: 0.075 * p.height
+                y: 0.07 * p.height
+                spacing: 0
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: Qt.formatDate(p.now, "dddd d MMMM")
-                    font.family: p.display; font.pixelSize: 30 * p.u; font.weight: Font.DemiBold
-                    color: Qt.rgba(1, 1, 1, 0.9)
+                    text: Qt.formatDate(p.now, "dddd, d MMMM")
+                    font.family: p.display; font.pixelSize: 32 * p.u; font.weight: Font.DemiBold
+                    color: Qt.rgba(1, 1, 1, 0.88)
                 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: p.h1 + ":" + p.mm
-                    font.family: p.display; font.pixelSize: 220 * p.u; font.weight: Font.Bold
-                    color: "white"
-                    lineHeight: 0.95
+                    font.family: p.display; font.pixelSize: 250 * p.u
+                    font.weight: o.cupertinoWeight === "regular" ? Font.Medium : o.cupertinoWeight === "heavy" ? Font.Black : Font.Bold
+                    font.letterSpacing: -6 * p.u
+                    color: parent.parent.ink
+                    lineHeight: 0.92
                 }
+                // gauges, like the round lock-screen widgets
                 Row {
+                    visible: o.cupertinoWidgets
                     anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: 12 * p.u
-                    Glass { visible: p.temp !== ""; icon: "󰖐"; label: p.temp + (p.condition ? "  " + p.condition : "") }
-                    Glass { visible: p.hasBattery; icon: p.charging ? "󰂄" : "󰁹"; label: p.batPct + "%" }
+                    topPadding: 8 * p.u
+                    spacing: 22 * p.u
+                    Gauge {
+                        visible: p.hasBattery
+                        value: p.batPct / 100
+                        tint: p.batPct <= 15 && !p.charging ? Atelier.red : p.charging ? Atelier.green : "white"
+                        cap: p.charging ? "󰂄" : "󰁹"; big: String(p.batPct)
+                    }
+                    Gauge { visible: p.temp !== ""; value: -1; cap: "󰖐"; big: p.temp.replace(/[CF]$/, "") }
+                    Gauge { value: -1; cap: Qt.formatDate(p.now, "ddd").toUpperCase(); big: Qt.formatDate(p.now, "d") }
+                    Gauge { visible: p.notifs.length > 0; value: -1; cap: "󰂚"; big: String(p.notifs.length) }
                 }
             }
-            // under the clock on a narrow screen, a right-hand column on a wide one
-            Column {
-                x: p.wide ? p.width - p.sideW - 0.045 * p.width : (p.width - width) / 2
-                y: p.wide ? 0.16 * p.height : 0.52 * p.height
-                width: p.wide ? p.sideW : Math.min(p.width * 0.9, 640 * p.u)
-                spacing: 10 * p.u
-                NowPlaying { width: parent.width; visible: !!p.player }
-                Notes { width: parent.width; max: p.wide ? (p.player ? 4 : 5) : (p.player ? 2 : 3) }
+            // notifications at the bottom: a pile (newest on top, two edges peeking), a list or a count
+            Item {
+                id: pile
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom; anchors.bottomMargin: 120 * p.u
+                width: Math.min(620 * p.u, p.width * 0.8)
+                height: childrenRect.height
+                visible: p.notifs.length > 0 || !!p.player
+                Column {
+                    width: parent.width
+                    spacing: 10 * p.u
+                    NowPlaying { width: parent.width; visible: !!p.player }
+                    Item {
+                        visible: o.cupertinoNotifs === "pile" && p.notifs.length > 0
+                        width: parent.width; height: 74 * p.u + Math.min(2, p.notifs.length - 1) * 10 * p.u
+                        Repeater {
+                            model: Math.min(2, Math.max(0, p.notifs.length - 1))
+                            Rectangle {
+                                required property int index
+                                z: -1 - index
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                y: (index + 1) * 10 * p.u
+                                width: parent.width - (index + 1) * 36 * p.u
+                                height: 74 * p.u; radius: 24 * p.u
+                                color: Qt.rgba(1, 1, 1, 0.12 - index * 0.03)
+                            }
+                        }
+                        Notes { width: parent.width; max: 1; showMore: false }
+                    }
+                    Notes { visible: o.cupertinoNotifs === "list" && p.notifs.length > 0; width: parent.width; max: 3 }
+                    Text {
+                        visible: p.notifs.length > 0 && (o.cupertinoNotifs === "count" || (o.cupertinoNotifs === "pile" && p.notifs.length > 1))
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: o.cupertinoNotifs === "count" ? "󰂚  " + p.countText : (p.notifs.length - 1) + " more"
+                        font.family: p.display; font.pixelSize: 21 * p.u; font.weight: Font.DemiBold; color: Qt.rgba(1, 1, 1, 0.85)
+                    }
+                }
             }
-            // corner buttons + the home bar
             RoundBtn { anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.margins: 56 * p.u
                 icon: "󰄀"; onClicked: if (p.lockRoot.screenshot) p.lockRoot.screenshot(p.screen ? p.screen.name : "") }
             RoundBtn { anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 56 * p.u
                 icon: "󰤄"; onClicked: Quickshell.execDetached(["systemctl", "suspend"]) }
-            Hint { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 68 * p.u }
+            Hint { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 56 * p.u }
         }
     }
 
-    // ── Hyper (Xiaomi HyperOS) ──────────────────────────────────────────────
+    // ── Hyper (Xiaomi HyperOS): a huge gradient clock, frosted cards ───────
     Component {
         id: hyperFace
         Item {
+            readonly property var o: Settings.lockStyle
+            readonly property var grad: ({
+                accent: [Qt.tint("white", Qt.alpha(Atelier.accent, 0.25)), Qt.tint("white", Qt.alpha(Atelier.accent, 0.75))],
+                sunset: ["#ffe2b8", "#ff8a8a"],
+                ocean:  ["#c9f2ff", "#6f9dff"],
+                mono:   ["#ffffff", "#cfcfcf"]
+            })[o.hyperGradient] || ["#ffffff", "#cfcfcf"]
+            readonly property int weight: o.hyperWeight === "thin" ? Font.ExtraLight : o.hyperWeight === "bold" ? Font.Bold : Font.Normal
             Column {
-                id: hyperClock
+                id: hClock
                 x: 0.07 * p.width
-                y: 0.06 * p.height
-                spacing: -70 * p.u
-                Text { text: p.hh; font.family: p.display; font.pixelSize: 330 * p.u; font.weight: Font.Thin; color: "white" }
-                Text { text: p.mm; font.family: p.display; font.pixelSize: 330 * p.u; font.weight: Font.Thin; color: "white" }
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.verticalCenterOffset: -40 * p.u
+                spacing: -80 * p.u
+                GradText { text: p.hh; px: 330 * p.u; weight: parent.parent.weight; from: parent.parent.grad[0]; to: parent.parent.grad[1] }
+                GradText { text: p.mm; px: 330 * p.u; weight: parent.parent.weight; from: parent.parent.grad[0]; to: parent.parent.grad[1] }
             }
             Column {
-                x: hyperClock.x + 14 * p.u
-                anchors.top: hyperClock.bottom; anchors.topMargin: 10 * p.u
-                spacing: 6 * p.u
-                Text { text: Qt.formatDate(p.now, "ddd, d MMMM"); font.family: p.display; font.pixelSize: 34 * p.u; font.weight: Font.Medium; color: "white" }
-                Text { visible: p.temp !== ""; text: p.temp + (p.condition ? " · " + p.condition : "")
-                    font.family: p.display; font.pixelSize: 24 * p.u; color: Qt.rgba(1, 1, 1, 0.8) }
-                Text { visible: p.notifs.length > 0; text: "󰂚  " + p.countText
-                    font.family: Atelier.font; font.pixelSize: 20 * p.u; color: Qt.rgba(1, 1, 1, 0.75) }
+                anchors.left: hClock.left; anchors.leftMargin: 16 * p.u
+                anchors.top: hClock.bottom; anchors.topMargin: 6 * p.u
+                spacing: 4 * p.u
+                Text { text: Qt.formatDate(p.now, "dddd"); font.family: p.display; font.pixelSize: 38 * p.u; font.weight: Font.DemiBold; color: "white" }
+                Text { text: Qt.formatDate(p.now, "d MMMM yyyy"); font.family: p.display; font.pixelSize: 26 * p.u; color: Qt.rgba(1, 1, 1, 0.8) }
             }
-            Text {
-                anchors.left: parent.left; anchors.bottom: parent.bottom
-                anchors.leftMargin: 0.07 * p.width + 14 * p.u; anchors.bottomMargin: 56 * p.u
-                visible: p.hasBattery
-                text: (p.charging ? "󰂄  Charging · " : "󰁹  ") + p.batPct + "%"
-                font.family: Atelier.font; font.pixelSize: 20 * p.u; color: Qt.rgba(1, 1, 1, 0.8)
+            // cards on the right
+            Column {
+                visible: o.hyperCards
+                anchors.right: parent.right; anchors.rightMargin: 0.06 * p.width
+                anchors.verticalCenter: parent.verticalCenter
+                width: Math.min(480 * p.u, p.width * 0.32)
+                spacing: 16 * p.u
+                FrostCard {
+                    width: parent.width; height: 150 * p.u
+                    visible: p.temp !== ""
+                    Text { x: 30 * p.u; anchors.verticalCenter: parent.verticalCenter; text: p.temp
+                        font.family: p.display; font.pixelSize: 78 * p.u; font.weight: Font.Light; color: "white" }
+                    Column {
+                        anchors.right: parent.right; anchors.rightMargin: 30 * p.u; anchors.verticalCenter: parent.verticalCenter
+                        spacing: 4 * p.u
+                        Text { anchors.right: parent.right; text: "󰖐"; font.family: Atelier.font; font.pixelSize: 40 * p.u; color: "white" }
+                        Text { anchors.right: parent.right; text: p.condition || "Weather"; font.family: p.display; font.pixelSize: 22 * p.u; color: Qt.rgba(1, 1, 1, 0.8) }
+                    }
+                }
+                FrostCard {
+                    width: parent.width; height: 120 * p.u
+                    visible: p.hasBattery
+                    Column {
+                        x: 30 * p.u; width: parent.width - 60 * p.u
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 12 * p.u
+                        Item {
+                            width: parent.width; height: batT.height
+                            Text { id: batT; text: p.batPct + "%"; font.family: p.display; font.pixelSize: 44 * p.u; font.weight: Font.DemiBold; color: "white" }
+                            Text { anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
+                                text: p.charging ? "󰂄  Charging" : "󰁹  On battery"; font.family: p.display; font.pixelSize: 22 * p.u; color: Qt.rgba(1, 1, 1, 0.8) }
+                        }
+                        Rectangle {
+                            width: parent.width; height: 10 * p.u; radius: height / 2
+                            color: Qt.rgba(1, 1, 1, 0.2)
+                            Rectangle { width: parent.width * p.batPct / 100; height: parent.height; radius: parent.radius
+                                gradient: Gradient { orientation: Gradient.Horizontal
+                                    GradientStop { position: 0; color: hClock.parent.grad[0] }
+                                    GradientStop { position: 1; color: hClock.parent.grad[1] } } }
+                        }
+                    }
+                }
+                FrostCard {
+                    width: parent.width; height: 70 * p.u + Math.min(3, p.notifs.length) * 48 * p.u
+                    visible: p.notifs.length > 0
+                    Column {
+                        x: 30 * p.u; y: 22 * p.u; width: parent.width - 60 * p.u
+                        spacing: 10 * p.u
+                        Text { text: p.countText; font.family: p.display; font.pixelSize: 24 * p.u; font.weight: Font.DemiBold; color: "white" }
+                        Repeater {
+                            model: p.notifs.slice(0, 3)
+                            Row {
+                                spacing: 12 * p.u
+                                width: parent.width
+                                AppIcon { n: modelData; size: 34 * p.u }
+                                Text { width: parent.width - 50 * p.u; anchors.verticalCenter: parent.verticalCenter; elide: Text.ElideRight
+                                    text: (modelData.appName || "") + " · " + (modelData.summary || "")
+                                    font.family: p.display; font.pixelSize: 20 * p.u; color: Qt.rgba(1, 1, 1, 0.88) }
+                            }
+                        }
+                    }
+                }
+                NowPlaying { width: parent.width; visible: !!p.player }
             }
-            Hint { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 56 * p.u }
-            PlainBtn { anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 48 * p.u
-                icon: "󰄀"; onClicked: if (p.lockRoot.screenshot) p.lockRoot.screenshot(p.screen ? p.screen.name : "") }
+            Hint { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 50 * p.u }
         }
     }
 
-    // ── Harmony (Huawei HarmonyOS) ──────────────────────────────────────────
+    // ── Harmony (Huawei HarmonyOS): a calendar page ────────────────────────
     Component {
         id: harmonyFace
         Item {
-            Column {
-                anchors.horizontalCenter: parent.horizontalCenter
-                y: 0.1 * p.height
-                spacing: 4 * p.u
+            readonly property var o: Settings.lockStyle
+            Row {
+                id: hDate
+                x: 0.07 * p.width
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.verticalCenterOffset: -60 * p.u
+                spacing: 34 * p.u
                 Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: p.hh + ":" + p.mm
-                    font.family: p.display; font.pixelSize: 170 * p.u; font.weight: Font.Light; color: "white"
+                    id: dayNum
+                    text: Qt.formatDate(p.now, "d")
+                    font.family: p.display; font.pixelSize: 400 * p.u; font.weight: Font.Light
+                    font.letterSpacing: -12 * p.u
+                    color: parent.parent.o.harmonyAccent ? Qt.tint("white", Qt.alpha(Atelier.accent, 0.7)) : "white"
                 }
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: Qt.formatDate(p.now, "d MMMM  dddd") + (p.temp ? "   󰖐 " + p.temp : "")
-                    font.family: p.display; font.pixelSize: 28 * p.u; color: Qt.rgba(1, 1, 1, 0.88)
+                Column {
+                    anchors.top: parent.top; anchors.topMargin: 90 * p.u
+                    spacing: 8 * p.u
+                    Text { text: Qt.formatDate(p.now, "MMMM"); font.family: p.display; font.pixelSize: 56 * p.u; font.weight: Font.DemiBold; color: "white" }
+                    Text { text: Qt.formatDate(p.now, "dddd"); font.family: p.display; font.pixelSize: 36 * p.u; color: Qt.rgba(1, 1, 1, 0.85) }
+                    Text { text: Qt.formatDate(p.now, "yyyy"); font.family: p.display; font.pixelSize: 28 * p.u; color: Qt.rgba(1, 1, 1, 0.6) }
+                    Item { width: 1; height: 20 * p.u }
+                    Rectangle { width: 80 * p.u; height: 3 * p.u; color: Qt.rgba(1, 1, 1, 0.7) }
+                    Item { width: 1; height: 12 * p.u }
+                    Row {
+                        spacing: 10 * p.u
+                        Text { text: p.h1 + ":" + p.mm; font.family: p.display; font.pixelSize: 72 * p.u; font.weight: Font.Light; color: "white" }
+                        Text { visible: !Atelier.clock24; anchors.baseline: parent.children[0].baseline; text: Atelier.ampm(p.now)
+                            font.family: p.display; font.pixelSize: 26 * p.u; font.weight: Font.Medium; color: Qt.rgba(1, 1, 1, 0.8) }
+                    }
+                    Text { visible: p.temp !== ""; text: "󰖐  " + p.temp + (p.condition ? "  " + p.condition : "")
+                        font.family: p.display; font.pixelSize: 24 * p.u; color: Qt.rgba(1, 1, 1, 0.8) }
                 }
-                Item { width: 1; height: 26 * p.u; visible: !p.wide }
-                Notes { visible: !p.wide && p.notifs.length > 0; anchors.horizontalCenter: parent.horizontalCenter; width: Math.min(p.width * 0.86, 560 * p.u); max: 2 }
             }
-            Notes { visible: p.wide && p.notifs.length > 0; x: p.width - p.sideW - 0.045 * p.width; y: 0.16 * p.height; width: p.sideW; max: 5 }
-            Hint { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 44 * p.u; glyph: "󰌾" }
-            PlainBtn { anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 44 * p.u
-                icon: "󰄀"; onClicked: if (p.lockRoot.screenshot) p.lockRoot.screenshot(p.screen ? p.screen.name : "") }
+            Column {
+                anchors.right: parent.right; anchors.rightMargin: 0.06 * p.width
+                anchors.verticalCenter: parent.verticalCenter
+                width: Math.min(500 * p.u, p.width * 0.3)
+                spacing: 16 * p.u
+                MiniMonth { visible: parent.parent.o.harmonyCalendar; width: parent.width; mondayFirst: parent.parent.o.harmonyWeekStart !== "sun" }
+                Notes { width: parent.width; max: 2; visible: p.notifs.length > 0 }
+            }
+            Hint { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 50 * p.u; glyph: "󰌾" }
         }
     }
 
-    // ── Oxygen (OnePlus OxygenOS) ───────────────────────────────────────────
+    // ── Oxygen (OnePlus OxygenOS): a frosted shelf across the screen ───────
     Component {
         id: oxygenFace
         Item {
-            Column {
+            readonly property var o: Settings.lockStyle
+            readonly property bool atTop: o.oxygenShelf === "top"
+            readonly property color hot: o.oxygenAccent === "theme" ? Atelier.accent : "#eb0029"
+            Hint {
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: 0.11 * p.height
-                spacing: 6 * p.u
-                Text {
+                y: parent.atTop ? p.height - height - 50 * p.u : 50 * p.u
+            }
+            Item {
+                id: shelf
+                x: 0.04 * p.width
+                width: p.width * 0.92
+                height: 220 * p.u
+                y: parent.atTop ? 44 * p.u : p.height - height - 44 * p.u
+                // frosted: the wallpaper, blurred, seen through the shelf
+                ClippingRectangle {
+                    anchors.fill: parent
+                    radius: 52 * p.u
+                    color: "transparent"
+                    MultiEffect {
+                        x: -shelf.x; y: -shelf.y
+                        width: p.width; height: p.height
+                        source: wall
+                        autoPaddingEnabled: false
+                        blurEnabled: true; blurMax: 64; blur: 1
+                        brightness: -0.12
+                    }
+                    Rectangle { anchors.fill: parent; color: Qt.rgba(0, 0, 0, 0.28) }
+                }
+                Rectangle {
+                    anchors.fill: parent; radius: 52 * p.u
+                    color: "transparent"; border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.18)
+                }
+                // the accent line
+                Rectangle {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: Qt.formatDate(p.now, "dddd, MMM d").toUpperCase()
-                    font.family: p.display; font.pixelSize: 24 * p.u; font.weight: Font.Medium
-                    font.letterSpacing: 7 * p.u
-                    color: Qt.rgba(1, 1, 1, 0.88)
+                    y: shelf.parent.atTop ? parent.height - height - 14 * p.u : 14 * p.u
+                    width: 90 * p.u; height: 5 * p.u; radius: height / 2
+                    color: shelf.parent.hot
                 }
                 Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    Text { text: p.hh; font.family: Atelier.font; font.pixelSize: 190 * p.u; font.bold: true; color: Atelier.red }
-                    Text { text: ":"; font.family: Atelier.font; font.pixelSize: 190 * p.u; font.bold: true; color: "white" }
-                    Text { text: p.mm; font.family: Atelier.font; font.pixelSize: 190 * p.u; font.bold: true; color: "white" }
-                }
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: [p.temp, p.hasBattery ? (p.charging ? "󰂄 " : "󰁹 ") + p.batPct + "%" : ""].filter(x => x).join("     ")
-                    font.family: Atelier.font; font.pixelSize: 22 * p.u; color: Qt.rgba(1, 1, 1, 0.8)
-                }
-            }
-            Notes { dark: true
-                x: p.wide ? p.width - p.sideW - 0.045 * p.width : (p.width - width) / 2
-                y: p.wide ? 0.16 * p.height : 0.5 * p.height
-                width: p.wide ? p.sideW : Math.min(p.width * 0.9, 600 * p.u)
-                max: p.wide ? 5 : 3 }
-            // a pulsing lock ring (a laptop has no fingerprint pad here): click or type to unlock
-            Item {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.bottom; anchors.bottomMargin: 90 * p.u
-                width: 104 * p.u; height: 104 * p.u
-                Rectangle {
-                    anchors.fill: parent; radius: width / 2
-                    color: "transparent"
-                    border.width: 2 * p.u; border.color: Qt.alpha(Atelier.red, 0.7)
-                    SequentialAnimation on scale {
-                        running: !p.thumb; loops: Animation.Infinite
-                        NumberAnimation { from: 1; to: 1.12; duration: 1100; easing.type: Easing.InOutSine }
-                        NumberAnimation { from: 1.12; to: 1; duration: 1100; easing.type: Easing.InOutSine }
+                    anchors.verticalCenter: parent.verticalCenter
+                    x: 56 * p.u
+                    spacing: 44 * p.u
+                    Row {
+                        anchors.verticalCenter: parent.verticalCenter
+                        Text { text: p.hh; font.family: p.display; font.pixelSize: 140 * p.u; font.weight: Font.Bold; color: shelf.parent.hot }
+                        Text { text: ":" + p.mm; font.family: p.display; font.pixelSize: 140 * p.u; font.weight: Font.Bold; color: "white" }
+                        Text { visible: shelf.parent.o.oxygenSeconds; anchors.baseline: parent.children[0].baseline
+                            text: " " + Qt.formatTime(p.now, "ss"); font.family: p.display; font.pixelSize: 48 * p.u; font.weight: Font.Medium; color: Qt.rgba(1, 1, 1, 0.6) }
+                    }
+                    Rectangle { anchors.verticalCenter: parent.verticalCenter; width: 2 * p.u; height: 120 * p.u; color: Qt.rgba(1, 1, 1, 0.2) }
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 8 * p.u
+                        Text { text: Qt.formatDate(p.now, "dddd").toUpperCase(); font.family: p.display; font.pixelSize: 24 * p.u
+                            font.weight: Font.DemiBold; font.letterSpacing: 6 * p.u; color: shelf.parent.hot }
+                        Text { text: Qt.formatDate(p.now, "d MMMM"); font.family: p.display; font.pixelSize: 44 * p.u; font.weight: Font.Medium; color: "white" }
+                        Text { visible: p.temp !== ""; text: "󰖐  " + p.temp + (p.condition ? " · " + p.condition : "")
+                            font.family: p.display; font.pixelSize: 22 * p.u; color: Qt.rgba(1, 1, 1, 0.8) }
                     }
                 }
-                Text { anchors.centerIn: parent; text: "󰌾"; font.family: Atelier.font; font.pixelSize: 46 * p.u; color: "white" }
-                MouseArea { anchors.fill: parent; enabled: !p.thumb; cursorShape: Qt.PointingHandCursor
-                    onClicked: { p.lockRoot.authMode = true; p.forceActiveFocus(); } }
+                // status chips + the unlock button, on the right
+                Row {
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.right: parent.right; anchors.rightMargin: 48 * p.u
+                    spacing: 14 * p.u
+                    ShelfChip { icon: SysState.wifiIcon; label: SysState.wifiConnected ? SysState.ssid : "Offline" }
+                    ShelfChip { visible: p.hasBattery; icon: p.charging ? "󰂄" : "󰁹"; label: p.batPct + "%" }
+                    ShelfChip { visible: p.notifs.length > 0; icon: "󰂚"; label: String(p.notifs.length) }
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 96 * p.u; height: 96 * p.u; radius: width / 2
+                        color: shelf.parent.hot
+                        scale: unlockMa.pressed ? 0.92 : unlockMa.containsMouse ? 1.05 : 1
+                        Behavior on scale { NumberAnimation { duration: 120 } }
+                        Text { anchors.centerIn: parent; text: "󰌾"; font.family: Atelier.font; font.pixelSize: 40 * p.u; color: "white" }
+                        MouseArea { id: unlockMa; anchors.fill: parent; enabled: !p.thumb; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                            onClicked: { p.lockRoot.authMode = true; p.forceActiveFocus(); } }
+                    }
+                }
             }
-            Hint { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 44 * p.u }
         }
     }
 
-    // ── Material (Pixel / Material You) ─────────────────────────────────────
+    // ── Material (Pixel / Material You): each digit on its own tonal tile ──
     Component {
         id: materialFace
         Item {
-            readonly property color tone1: Qt.tint("white", Qt.alpha(Atelier.accent, 0.6))
-            readonly property color tone2: Qt.tint("white", Qt.alpha(Atelier.accent, 0.25))
-            // at a glance
-            Column {
-                x: 0.07 * p.width
-                y: 0.08 * p.height
-                spacing: 4 * p.u
-                Text { text: Qt.formatDate(p.now, "ddd, MMM d") + (p.temp ? "   󰖐 " + p.temp : "")
-                    font.family: p.display; font.pixelSize: 36 * p.u; font.weight: Font.Medium; color: "white" }
-                Text { visible: p.condition !== "" || p.notifs.length > 0
-                    text: [p.condition, p.notifs.length > 0 ? p.countText : ""].filter(x => x).join(" · ")
-                    font.family: p.display; font.pixelSize: 22 * p.u; color: Qt.rgba(1, 1, 1, 0.78) }
-            }
-            Column {
-                anchors.horizontalCenter: parent.horizontalCenter
-                y: 0.2 * p.height
-                spacing: -90 * p.u
-                Text { anchors.horizontalCenter: parent.horizontalCenter; text: p.hh
-                    font.family: p.display; font.pixelSize: 300 * p.u; font.weight: Font.Black; color: parent.parent.tone1 }
-                Text { anchors.horizontalCenter: parent.horizontalCenter; text: p.mm
-                    font.family: p.display; font.pixelSize: 300 * p.u; font.weight: Font.Black; color: parent.parent.tone2 }
-            }
-            // notification icons, Pixel-style
-            Row {
-                anchors.horizontalCenter: parent.horizontalCenter
-                y: 0.76 * p.height
-                spacing: 14 * p.u
+            readonly property var o: Settings.lockStyle
+            readonly property bool inLine: o.materialLayout === "line"
+            readonly property real tile: (inLine ? 210 : 250) * p.u * (o.materialShrink && p.notifs.length > 0 ? 0.82 : 1)
+            readonly property color dark: Qt.rgba(0.08, 0.08, 0.1, 0.62)
+            readonly property color toneA: Qt.tint(dark, Qt.alpha(Atelier.accent, 0.5))
+            readonly property color toneB: Qt.tint(dark, Qt.alpha(Atelier.accent, 0.28))
+            readonly property color onTone: Qt.tint("white", Qt.alpha(Atelier.accent, 0.22))
+            readonly property string digits: p.hh + p.mm
+            Grid {
+                id: tiles
+                columns: parent.inLine ? 4 : 2
+                spacing: 18 * p.u
+                x: parent.inLine ? (p.width - width) / 2 : 0.08 * p.width
+                y: parent.inLine ? 0.14 * p.height : (p.height - height) / 2 - 20 * p.u
                 Repeater {
-                    model: p.notifs.slice(0, 6)
-                    Item {
-                        width: 34 * p.u; height: 34 * p.u
-                        readonly property string src: Notifs.iconFor(modelData)
-                        IconImage { anchors.fill: parent; visible: parent.src !== ""; source: parent.src; asynchronous: true }
-                        Text { anchors.centerIn: parent; visible: parent.src === ""; text: "󰂚"; font.family: Atelier.font; font.pixelSize: 24 * p.u; color: "white" }
+                    model: 4
+                    Rectangle {
+                        required property int index
+                        width: tiles.parent.tile; height: tiles.parent.tile * (tiles.parent.inLine ? 1.25 : 1)
+                        radius: width * 0.34
+                        color: index < 2 ? tiles.parent.toneA : tiles.parent.toneB
+                        Text {
+                            anchors.centerIn: parent
+                            text: tiles.parent.digits.charAt(index)
+                            font.family: p.display; font.pixelSize: parent.width * 0.78; font.weight: Font.DemiBold
+                            color: tiles.parent.onTone
+                        }
                     }
                 }
             }
-            SquircleBtn { anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.margins: 52 * p.u; tint: parent.tone2
-                icon: "󰄀"; onClicked: if (p.lockRoot.screenshot) p.lockRoot.screenshot(p.screen ? p.screen.name : "") }
-            SquircleBtn { anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 52 * p.u; tint: parent.tone2
-                icon: "󰤄"; onClicked: Quickshell.execDetached(["systemctl", "suspend"]) }
+            // at a glance: date, weather, then notification chips
+            Column {
+                x: parent.inLine ? (p.width - width) / 2 : p.width - width - 0.07 * p.width
+                y: parent.inLine ? tiles.y + tiles.height + 50 * p.u : (p.height - height) / 2 - 20 * p.u
+                width: Math.min(560 * p.u, p.width * (parent.inLine ? 0.6 : 0.34))
+                spacing: 14 * p.u
+                Text { anchors.horizontalCenter: parent.parent.inLine ? parent.horizontalCenter : undefined
+                    text: Qt.formatDate(p.now, "dddd, MMM d"); font.family: p.display; font.pixelSize: 44 * p.u; font.weight: Font.Medium; color: "white" }
+                Flow {
+                    width: parent.width
+                    spacing: 10 * p.u
+                    M3Chip { visible: p.temp !== ""; icon: "󰖐"; label: p.temp + (p.condition ? " · " + p.condition : "") }
+                    M3Chip { visible: p.hasBattery; icon: p.charging ? "󰂄" : "󰁹"; label: p.batPct + "%" + (p.charging ? " · Charging" : "") }
+                }
+                Repeater {
+                    model: p.notifs.slice(0, 3)
+                    Rectangle {
+                        width: parent.width; height: 68 * p.u; radius: 26 * p.u
+                        color: tiles.parent.toneB
+                        Row {
+                            x: 18 * p.u; anchors.verticalCenter: parent.verticalCenter
+                            spacing: 14 * p.u
+                            AppIcon { n: modelData; size: 34 * p.u }
+                            Text { width: 420 * p.u; anchors.verticalCenter: parent.verticalCenter; elide: Text.ElideRight
+                                text: (modelData.appName || "") + " · " + (modelData.summary || "")
+                                font.family: p.display; font.pixelSize: 21 * p.u; color: tiles.parent.onTone }
+                        }
+                    }
+                }
+            }
+            // the lock button, Material FAB-style
             Column {
                 anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottom: parent.bottom; anchors.bottomMargin: 48 * p.u
-                spacing: 10 * p.u
+                anchors.bottom: parent.bottom; anchors.bottomMargin: 44 * p.u
+                spacing: 12 * p.u
                 Rectangle {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    width: 60 * p.u; height: 60 * p.u; radius: width / 2
-                    color: Qt.rgba(1, 1, 1, 0.16)
-                    Text { anchors.centerIn: parent; text: "󰌾"; font.family: Atelier.font; font.pixelSize: 26 * p.u; color: "white" }
+                    width: 84 * p.u; height: 84 * p.u; radius: 28 * p.u
+                    color: fabMa.containsMouse ? Qt.lighter(tiles.parent.toneA, 1.2) : tiles.parent.toneA
+                    Text { anchors.centerIn: parent; text: "󰌾"; font.family: Atelier.font; font.pixelSize: 34 * p.u; color: tiles.parent.onTone }
+                    MouseArea { id: fabMa; anchors.fill: parent; enabled: !p.thumb; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: { p.lockRoot.authMode = true; p.forceActiveFocus(); } }
                 }
                 Hint { anchors.horizontalCenter: parent.horizontalCenter }
             }
         }
     }
 
-    // ── Dot (Nothing OS) ────────────────────────────────────────────────────
+    // ── Dot (Nothing OS): dot-matrix clock, a seconds bar, a dot battery ───
     Component {
         id: dotFace
         Item {
+            readonly property var o: Settings.lockStyle
             readonly property string mono: Atelier.font
+            readonly property color ink: o.dotColor === "red" ? "#ff1f2d" : o.dotColor === "theme" ? Atelier.accent : "white"
             Column {
                 anchors.centerIn: parent
-                anchors.verticalCenterOffset: -70 * p.u
-                spacing: 34 * p.u
+                anchors.verticalCenterOffset: -40 * p.u
+                spacing: 40 * p.u
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: Qt.formatDate(p.now, "ddd d MMM").toUpperCase()
-                    font.family: parent.parent.mono; font.pixelSize: 28 * p.u; font.letterSpacing: 10 * p.u
+                    text: Qt.formatDate(p.now, "dddd  d MMM").toUpperCase()
+                    font.family: parent.parent.mono; font.pixelSize: 30 * p.u; font.letterSpacing: 12 * p.u
                     color: "white"
                 }
-                DotClock { anchors.horizontalCenter: parent.horizontalCenter; text: p.hh + ":" + p.mm; dot: 17 * p.u }
-                Text {
+                DotClock { anchors.horizontalCenter: parent.horizontalCenter; text: p.hh + ":" + p.mm; dot: 20 * p.u; ink: parent.parent.ink
+                    redInk: parent.parent.o.dotColor === "red" }
+                // seconds: 60 dots, the elapsed ones lit
+                Row {
+                    visible: parent.parent.o.dotSeconds
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: [p.temp, p.hasBattery ? "BAT " + p.batPct + "%" + (p.charging ? " +" : "") : "",
-                           p.notifs.length > 0 ? p.notifs.length + " NOTIF" : ""].filter(x => x).join("   ·   ")
-                    font.family: parent.parent.mono; font.pixelSize: 20 * p.u; font.letterSpacing: 4 * p.u
-                    color: Qt.rgba(1, 1, 1, 0.75)
+                    spacing: 6 * p.u
+                    Repeater {
+                        model: 60
+                        Rectangle {
+                            required property int index
+                            width: 7 * p.u; height: 7 * p.u; radius: width / 2
+                            color: index <= p.now.getSeconds() ? (index === p.now.getSeconds() ? "#ff1f2d" : "white") : Qt.rgba(1, 1, 1, 0.12)
+                        }
+                    }
+                }
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 40 * p.u
+                    Text { visible: p.temp !== ""; anchors.verticalCenter: parent.verticalCenter; text: p.temp.toUpperCase()
+                        font.family: parent.parent.parent.mono; font.pixelSize: 24 * p.u; font.letterSpacing: 4 * p.u; color: "white" }
+                    // battery as 10 dots
+                    Row {
+                        visible: p.hasBattery
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 12 * p.u
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: "BAT"; font.family: parent.parent.parent.parent.mono
+                            font.pixelSize: 24 * p.u; font.letterSpacing: 4 * p.u; color: "white" }
+                        Row {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 5 * p.u
+                            Repeater {
+                                model: 10
+                                Rectangle {
+                                    required property int index
+                                    width: 12 * p.u; height: 12 * p.u
+                                    color: index < Math.round(p.batPct / 10) ? (p.batPct <= 15 ? "#ff1f2d" : "white") : Qt.rgba(1, 1, 1, 0.15)
+                                }
+                            }
+                        }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: p.batPct + "%" + (p.charging ? " +" : "")
+                            font.family: parent.parent.parent.parent.mono; font.pixelSize: 24 * p.u; color: "white" }
+                    }
+                    Text { visible: p.notifs.length > 0; anchors.verticalCenter: parent.verticalCenter; text: p.notifs.length + " NOTIF"
+                        font.family: parent.parent.parent.mono; font.pixelSize: 24 * p.u; font.letterSpacing: 4 * p.u; color: "white" }
                 }
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom; anchors.bottomMargin: 56 * p.u
                 text: "[ TYPE TO UNLOCK ]"
-                font.family: parent.mono; font.pixelSize: 18 * p.u; font.letterSpacing: 6 * p.u
-                color: Qt.rgba(1, 1, 1, 0.55)
+                font.family: parent.mono; font.pixelSize: 20 * p.u; font.letterSpacing: 8 * p.u
+                color: Qt.rgba(1, 1, 1, 0.6)
             }
         }
     }
@@ -632,32 +856,12 @@ Item {
     }
 
     // ═══ Pieces ═════════════════════════════════════════════════════════════
-    // frosted pill widget (Cupertino)
-    component Glass: Rectangle {
-        id: gl
-        property string icon
-        property string label
-        width: glRow.width + 30 * p.u
-        height: 44 * p.u
-        radius: height / 2
-        color: Qt.rgba(1, 1, 1, 0.16)
-        border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.22)
-        Row {
-            id: glRow
-            anchors.centerIn: parent
-            spacing: 8 * p.u
-            Text { anchors.verticalCenter: parent.verticalCenter; text: gl.icon; font.family: Atelier.font; font.pixelSize: 20 * p.u; color: "white" }
-            Text { anchors.verticalCenter: parent.verticalCenter; text: gl.label; font.family: p.display; font.pixelSize: 20 * p.u; font.weight: Font.Medium; color: "white" }
-        }
-    }
-
     // notification stack: app + title only (never the message), "+N more"
     component Notes: Column {
         id: ns
         property int max: 3
         property bool dark: false
-        visible: p.notifs.length > 0
+        property bool showMore: true
         spacing: 8 * p.u
         Repeater {
             model: p.notifs.slice(0, ns.max)
@@ -695,7 +899,7 @@ Item {
             }
         }
         Text {
-            visible: p.notifs.length > ns.max
+            visible: ns.showMore && p.notifs.length > ns.max
             anchors.horizontalCenter: parent.horizontalCenter
             text: "+" + (p.notifs.length - ns.max) + " more"
             font.family: p.display; font.pixelSize: 18 * p.u; font.weight: Font.Medium; color: Qt.rgba(1, 1, 1, 0.75)
@@ -757,34 +961,190 @@ Item {
         Text { anchors.centerIn: parent; text: rb.icon; font.family: Atelier.font; font.pixelSize: 26 * p.u; color: "white" }
         MouseArea { id: rbMa; anchors.fill: parent; enabled: !p.thumb; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: rb.clicked() }
     }
-    // a bare glyph button (Hyper, Harmony)
-    component PlainBtn: Text {
-        id: pb
-        property string icon
-        signal clicked()
-        text: icon
-        font.family: Atelier.font; font.pixelSize: 30 * p.u
-        color: Qt.rgba(1, 1, 1, pbMa.containsMouse ? 1 : 0.75)
-        MouseArea { id: pbMa; anchors.fill: parent; anchors.margins: -12; enabled: !p.thumb; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: pb.clicked() }
-    }
-    // tonal rounded-square button (Material)
-    component SquircleBtn: Rectangle {
-        id: sq
-        property string icon
+    // a round lock-screen gauge (Cupertino): a ring when value >= 0, a small label over a big one
+    component Gauge: Item {
+        id: gg
+        property real value: -1
         property color tint: "white"
-        signal clicked()
-        width: 72 * p.u; height: 72 * p.u; radius: 24 * p.u
-        color: Qt.alpha(tint, sqMa.containsMouse ? 0.38 : 0.24)
-        Text { anchors.centerIn: parent; text: sq.icon; font.family: Atelier.font; font.pixelSize: 28 * p.u; color: "white" }
-        MouseArea { id: sqMa; anchors.fill: parent; enabled: !p.thumb; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: sq.clicked() }
+        property string cap
+        property string big
+        width: 104 * p.u; height: 104 * p.u
+        Rectangle { anchors.fill: parent; radius: width / 2; color: Qt.rgba(1, 1, 1, 0.16); border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.2) }
+        Shape {
+            anchors.fill: parent
+            visible: gg.value >= 0
+            preferredRendererType: Shape.CurveRenderer
+            ShapePath {
+                strokeColor: Qt.rgba(1, 1, 1, 0.22); strokeWidth: 6 * p.u; fillColor: "transparent"; capStyle: ShapePath.RoundCap
+                PathAngleArc { centerX: gg.width / 2; centerY: gg.height / 2; radiusX: gg.width / 2 - 9 * p.u; radiusY: radiusX; startAngle: 0; sweepAngle: 360 }
+            }
+            ShapePath {
+                strokeColor: gg.tint; strokeWidth: 6 * p.u; fillColor: "transparent"; capStyle: ShapePath.RoundCap
+                PathAngleArc { centerX: gg.width / 2; centerY: gg.height / 2; radiusX: gg.width / 2 - 9 * p.u; radiusY: radiusX; startAngle: -90; sweepAngle: 360 * Math.max(0.01, gg.value) }
+            }
+        }
+        Column {
+            anchors.centerIn: parent
+            spacing: -2 * p.u
+            Text { anchors.horizontalCenter: parent.horizontalCenter; text: gg.cap
+                font.family: /^[A-Z]+$/.test(gg.cap) ? p.display : Atelier.font; font.pixelSize: 18 * p.u; font.weight: Font.DemiBold
+                color: Qt.rgba(1, 1, 1, 0.85) }
+            Text { anchors.horizontalCenter: parent.horizontalCenter; text: gg.big
+                font.family: p.display; font.pixelSize: 34 * p.u; font.weight: Font.DemiBold; color: "white" }
+        }
     }
+
+    // text filled with a vertical gradient (Hyper's clock)
+    component GradText: Item {
+        id: gt
+        property string text
+        property real px: 100
+        property int weight: Font.Normal
+        property color from: "white"
+        property color to: "white"
+        width: gtText.implicitWidth
+        height: gtText.implicitHeight
+        Text {
+            id: gtText
+            text: gt.text
+            font.family: p.display; font.pixelSize: gt.px; font.weight: gt.weight
+            font.letterSpacing: -gt.px * 0.03
+            color: "white"
+            visible: false
+            layer.enabled: true
+        }
+        Rectangle {
+            id: gtFill
+            anchors.fill: parent
+            visible: false
+            layer.enabled: true
+            gradient: Gradient {
+                GradientStop { position: 0.15; color: gt.from }
+                GradientStop { position: 0.9; color: gt.to }
+            }
+        }
+        MultiEffect {
+            anchors.fill: parent
+            source: gtFill
+            maskEnabled: true
+            maskSource: gtText
+            maskThresholdMin: 0.4
+            maskSpreadAtMin: 0.6
+        }
+    }
+
+    // a tinted glass card (Hyper)
+    component FrostCard: Rectangle {
+        radius: 36 * p.u
+        color: Qt.rgba(0.04, 0.04, 0.07, 0.34)
+        border.width: 1
+        border.color: Qt.rgba(1, 1, 1, 0.16)
+    }
+
+    // an app's icon, a bell when it has none
+    component AppIcon: Item {
+        id: ai
+        property var n
+        property real size: 32
+        width: size; height: size
+        readonly property string src: n ? Notifs.iconFor(n) : ""
+        IconImage { anchors.fill: parent; visible: ai.src !== ""; source: ai.src; asynchronous: true }
+        Text { anchors.centerIn: parent; visible: ai.src === ""; text: "󰂚"; font.family: Atelier.font; font.pixelSize: ai.size * 0.7; color: "white" }
+    }
+
+    // this month, today ringed (Harmony)
+    component MiniMonth: Rectangle {
+        id: mm
+        property bool mondayFirst: true
+        readonly property int y0: p.now.getFullYear()
+        readonly property int m0: p.now.getMonth()
+        readonly property int days: new Date(y0, m0 + 1, 0).getDate()
+        readonly property int lead: { const d = new Date(y0, m0, 1).getDay(); return mondayFirst ? (d + 6) % 7 : d; }
+        readonly property real cell: (width - 48 * p.u) / 7
+        height: mmCol.height + 48 * p.u
+        radius: 36 * p.u
+        color: Qt.rgba(0.04, 0.04, 0.07, 0.34)
+        border.width: 1
+        border.color: Qt.rgba(1, 1, 1, 0.16)
+        Column {
+            id: mmCol
+            x: 24 * p.u; y: 24 * p.u
+            spacing: 10 * p.u
+            Text { text: Qt.formatDate(p.now, "MMMM yyyy"); font.family: p.display; font.pixelSize: 26 * p.u; font.weight: Font.DemiBold; color: "white"; leftPadding: 8 * p.u }
+            Grid {
+                columns: 7
+                Repeater {
+                    model: mm.mondayFirst ? ["M", "T", "W", "T", "F", "S", "S"] : ["S", "M", "T", "W", "T", "F", "S"]
+                    Text { required property string modelData; width: mm.cell; height: mm.cell * 0.7; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
+                        text: modelData; font.family: p.display; font.pixelSize: 18 * p.u; font.weight: Font.DemiBold; color: Qt.rgba(1, 1, 1, 0.55) }
+                }
+                Repeater {
+                    model: Math.ceil((mm.lead + mm.days) / 7) * 7
+                    Item {
+                        required property int index
+                        readonly property int day: index - mm.lead + 1
+                        readonly property bool today: day === p.now.getDate()
+                        width: mm.cell; height: mm.cell * 0.86
+                        Rectangle { anchors.centerIn: parent; width: Math.min(parent.width, parent.height) * 0.9; height: width; radius: width / 2
+                            visible: parent.today; color: Atelier.accent }
+                        Text { anchors.centerIn: parent; visible: parent.day >= 1 && parent.day <= mm.days; text: parent.day
+                            font.family: p.display; font.pixelSize: 20 * p.u; font.weight: parent.today ? Font.Bold : Font.Normal
+                            color: parent.today ? Atelier.onFill : "white" }
+                    }
+                }
+            }
+        }
+    }
+
+    // a status pill in Oxygen's shelf
+    component ShelfChip: Rectangle {
+        id: sc
+        property string icon
+        property string label
+        anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+        width: scRow.width + 36 * p.u
+        height: 56 * p.u
+        radius: height / 2
+        color: Qt.rgba(1, 1, 1, 0.12)
+        Row {
+            id: scRow
+            anchors.centerIn: parent
+            spacing: 10 * p.u
+            Text { anchors.verticalCenter: parent.verticalCenter; text: sc.icon; font.family: Atelier.font; font.pixelSize: 22 * p.u; color: "white" }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: sc.label; font.family: p.display; font.pixelSize: 21 * p.u; font.weight: Font.Medium; color: "white"
+                elide: Text.ElideRight; width: Math.min(implicitWidth, 220 * p.u) }
+        }
+    }
+
+    // a Material 3 assist chip
+    component M3Chip: Rectangle {
+        id: mc
+        property string icon
+        property string label
+        width: mcRow.width + 40 * p.u
+        height: 56 * p.u
+        radius: 18 * p.u
+        color: Qt.tint(Qt.rgba(0.08, 0.08, 0.1, 0.62), Qt.alpha(Atelier.accent, 0.28))
+        Row {
+            id: mcRow
+            anchors.centerIn: parent
+            spacing: 10 * p.u
+            Text { anchors.verticalCenter: parent.verticalCenter; text: mc.icon; font.family: Atelier.font; font.pixelSize: 22 * p.u
+                color: Qt.tint("white", Qt.alpha(Atelier.accent, 0.4)) }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: mc.label; font.family: p.display; font.pixelSize: 22 * p.u; font.weight: Font.Medium
+                color: Qt.tint("white", Qt.alpha(Atelier.accent, 0.22)) }
+        }
+    }
+
     // a 5×7 dot-matrix clock (Dot): lit dots white, the colon in red, unlit dots faint
     component DotClock: Row {
         id: dc
         property string text
         property real dot: 16
+        property color ink: "white"
+        property bool redInk: false             // red digits: the colon goes white instead
         readonly property var glyphs: ({
-            "0": ["01110", "10001", "10011", "10101", "11001", "10001", "01110"],
+            "0": ["01110", "10001", "10001", "10001", "10001", "10001", "01110"],
             "1": ["00100", "01100", "00100", "00100", "00100", "00100", "01110"],
             "2": ["01110", "10001", "00001", "00010", "00100", "01000", "11111"],
             "3": ["11111", "00010", "00100", "00010", "00001", "10001", "01110"],
@@ -812,7 +1172,7 @@ Item {
                         required property int index
                         readonly property bool lit: g.bits[Math.floor(index / g.columns)].charAt(index % g.columns) === "1"
                         width: dc.dot; height: dc.dot; radius: width / 2
-                        color: lit ? (g.colon ? Atelier.red : "white") : Qt.rgba(1, 1, 1, 0.08)
+                        color: lit ? (g.colon ? (dc.redInk ? "white" : "#ff1f2d") : dc.ink) : Qt.rgba(1, 1, 1, 0.05)
                     }
                 }
             }

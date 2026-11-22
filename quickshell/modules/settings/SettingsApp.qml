@@ -1553,6 +1553,82 @@ Item {
                                     checked: Settings.lock.depthShadow; onToggled: (v) => Settings.lock.depthShadow = v }
                             }
 
+                            // the phone-inspired style in use: its own options (config/Settings.qml lockStyle)
+                            SettingCard {
+                                id: styleCard
+                                readonly property string sid: Settings.lock.theme
+                                readonly property var info: lockPage.ownStyles.find(x => x.id === sid) || ({ name: "", note: "" })
+                                visible: lockPage.phoneIds.indexOf(sid) >= 0
+                                title: info.name + " options"; icon: "󰏘"; tint: Atelier.mauve
+                                SettingRow {
+                                    label: styleCard.info.note
+                                    description: "Changes show on your next lock; Preview to see them now"
+                                    RowLayout {
+                                        spacing: 6
+                                        Chip { icon: "󰈈"; text: "Preview"; tint: Atelier.mauve; interactive: true; implicitHeight: 30
+                                            onClicked: Quickshell.execDetached(["qs", "ipc", "call", "lock", "previewStyle", Settings.lock.theme]) }
+                                        Chip { icon: "󰌾"; text: "Lock now"; tint: Atelier.accent; interactive: true; implicitHeight: 30
+                                            onClicked: Quickshell.execDetached(["qs", "ipc", "call", "lock", "lock"]) }
+                                    }
+                                }
+                                SettingSlider { label: "Size"; description: "The clock, text and widgets; smaller shows more of your wallpaper"
+                                    from: 0.5; to: 1.1; step: 0.02; decimals: 2; suffix: "×"
+                                    value: Settings.lockStyle.size; onMoved: (v) => Settings.lockStyle.size = Math.round(v * 100) / 100 }
+                                // Cupertino
+                                SettingChoice { visible: styleCard.sid === "cupertino"; label: "Clock weight"
+                                    options: [{ id: "regular", label: "Regular" }, { id: "bold", label: "Bold" }, { id: "heavy", label: "Heavy" }]
+                                    value: Settings.lockStyle.cupertinoWeight; onPicked: (id) => Settings.lockStyle.cupertinoWeight = id }
+                                SettingChoice { visible: styleCard.sid === "cupertino"; label: "Clock colour"
+                                    options: [{ id: "white", label: "White" }, { id: "soft", label: "Soft" }, { id: "accent", label: "Accent" }]
+                                    value: Settings.lockStyle.cupertinoTint; onPicked: (id) => Settings.lockStyle.cupertinoTint = id }
+                                SettingSwitch { visible: styleCard.sid === "cupertino"; label: "Gauges"; description: "Round battery, weather, date and notification gauges under the clock"
+                                    checked: Settings.lockStyle.cupertinoWidgets; onToggled: (v) => Settings.lockStyle.cupertinoWidgets = v }
+                                SettingChoice { visible: styleCard.sid === "cupertino"; label: "Notifications"; description: "Pile: the newest on top of a stack"
+                                    options: [{ id: "pile", label: "Pile" }, { id: "list", label: "List" }, { id: "count", label: "Count" }]
+                                    value: Settings.lockStyle.cupertinoNotifs; onPicked: (id) => Settings.lockStyle.cupertinoNotifs = id }
+                                // Hyper
+                                SettingChoice { visible: styleCard.sid === "hyper"; label: "Clock gradient"
+                                    options: [{ id: "accent", label: "Accent" }, { id: "sunset", label: "Sunset" }, { id: "ocean", label: "Ocean" }, { id: "mono", label: "Mono" }]
+                                    value: Settings.lockStyle.hyperGradient; onPicked: (id) => Settings.lockStyle.hyperGradient = id }
+                                SettingChoice { visible: styleCard.sid === "hyper"; label: "Clock weight"
+                                    options: [{ id: "thin", label: "Thin" }, { id: "regular", label: "Regular" }, { id: "bold", label: "Bold" }]
+                                    value: Settings.lockStyle.hyperWeight; onPicked: (id) => Settings.lockStyle.hyperWeight = id }
+                                SettingSwitch { visible: styleCard.sid === "hyper"; label: "Cards"; description: "Weather, battery, notifications and media on the right"
+                                    checked: Settings.lockStyle.hyperCards; onToggled: (v) => Settings.lockStyle.hyperCards = v }
+                                // Harmony
+                                SettingSwitch { visible: styleCard.sid === "harmony"; label: "Month calendar"; description: "This month on the right, today ringed"
+                                    checked: Settings.lockStyle.harmonyCalendar; onToggled: (v) => Settings.lockStyle.harmonyCalendar = v }
+                                SettingChoice { visible: styleCard.sid === "harmony" && Settings.lockStyle.harmonyCalendar; label: "Week starts on"
+                                    options: [{ id: "mon", label: "Monday" }, { id: "sun", label: "Sunday" }]
+                                    value: Settings.lockStyle.harmonyWeekStart; onPicked: (id) => Settings.lockStyle.harmonyWeekStart = id }
+                                SettingSwitch { visible: styleCard.sid === "harmony"; label: "Coloured day"; description: "The big day number in your accent colour"
+                                    checked: Settings.lockStyle.harmonyAccent; onToggled: (v) => Settings.lockStyle.harmonyAccent = v }
+                                // Oxygen
+                                SettingChoice { visible: styleCard.sid === "oxygen"; label: "Shelf"
+                                    options: [{ id: "bottom", label: "Bottom" }, { id: "top", label: "Top" }]
+                                    value: Settings.lockStyle.oxygenShelf; onPicked: (id) => Settings.lockStyle.oxygenShelf = id }
+                                SettingChoice { visible: styleCard.sid === "oxygen"; label: "Accent"
+                                    options: [{ id: "red", label: "Red" }, { id: "theme", label: "Theme" }]
+                                    value: Settings.lockStyle.oxygenAccent; onPicked: (id) => Settings.lockStyle.oxygenAccent = id }
+                                SettingSwitch { visible: styleCard.sid === "oxygen"; label: "Seconds"
+                                    checked: Settings.lockStyle.oxygenSeconds; onToggled: (v) => Settings.lockStyle.oxygenSeconds = v }
+                                // Material
+                                SettingChoice { visible: styleCard.sid === "material"; label: "Clock tiles"
+                                    options: [{ id: "grid", label: "2 × 2" }, { id: "line", label: "In a line" }]
+                                    value: Settings.lockStyle.materialLayout; onPicked: (id) => Settings.lockStyle.materialLayout = id }
+                                SettingSwitch { visible: styleCard.sid === "material"; label: "Make room for notifications"; description: "Smaller tiles while there are notifications"
+                                    checked: Settings.lockStyle.materialShrink; onToggled: (v) => Settings.lockStyle.materialShrink = v }
+                                // Dot
+                                SettingChoice { visible: styleCard.sid === "dot"; label: "Dots"
+                                    options: [{ id: "white", label: "White" }, { id: "red", label: "Red" }, { id: "theme", label: "Theme" }]
+                                    value: Settings.lockStyle.dotColor; onPicked: (id) => Settings.lockStyle.dotColor = id }
+                                SettingSwitch { visible: styleCard.sid === "dot"; label: "Seconds bar"; description: "60 dots under the clock, filling up each minute"
+                                    checked: Settings.lockStyle.dotSeconds; onToggled: (v) => Settings.lockStyle.dotSeconds = v }
+                                SettingChoice { visible: styleCard.sid === "dot"; label: "Background"
+                                    options: [{ id: "mono", label: "Wallpaper, black & white" }, { id: "black", label: "Black" }]
+                                    value: Settings.lockStyle.dotBackground; onPicked: (id) => Settings.lockStyle.dotBackground = id }
+                            }
+
                             Item {
                                 id: lockPage
                                 Layout.fillWidth: true
