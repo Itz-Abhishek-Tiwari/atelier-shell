@@ -541,6 +541,8 @@ ShellRoot {
             target: "lock"
             function lock(): void { shellRoot.closeAllOverlays(); lockScreen.lock(); }
             function preview(): void { shellRoot.closeAllOverlays(); lockScreen.preview(); }   // try the design, no real lock
+            // try a built-in style without switching to it: cupertino, hyper, harmony, oxygen, material, dot, depth, atelier
+            function previewStyle(style: string): void { shellRoot.closeAllOverlays(); lockScreen.previewStyle(style); }
             function isLocked(): bool { return lockScreen.isLocked; }
             function previewAuth(): void { shellRoot.closeAllOverlays(); lockScreen.previewAuth(); }
             function stopPreview(): void { lockScreen.stopPreview(); }

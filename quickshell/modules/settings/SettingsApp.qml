@@ -8,6 +8,7 @@ import qs.components
 import qs.config
 import qs.modules.background
 import qs.modules.bar
+import qs.modules.lock
 import qs.services
 
 // The Atelier Settings app: a drawer out of the right edge (an Item inside DrawerHost, so no
@@ -57,7 +58,7 @@ Item {
           keys: "sound audio volume speaker headphones output input microphone mic mute apps pipewire bluetooth" },
         { id: "shortcuts",     group: "Hardware",    icon: "󰘳", label: "Shortcuts",       sub: "Change keys and add your own",
           keys: "shortcuts keybinds keybindings hotkeys keys bind rebind custom command" },
-        { id: "lock",          group: "Security",    icon: "󰌾", label: "Lock screen",     sub: "Atelier or one of the qylock themes",
+        { id: "lock",          group: "Security",    icon: "󰌾", label: "Lock screen",     sub: "Built-in styles, or a qylock theme from GitHub",
           keys: "lock screen qylock themes notifications privacy" },
         { id: "login",         group: "Security",    icon: "󰍂", label: "Login screen",    sub: "The greetd login: layout, look, sync",
           keys: "login greeter greetd sddm boot quiet sync" },
@@ -1443,22 +1444,15 @@ Item {
                                 title: "Lock screen"; icon: "󰌾"; tint: Atelier.mauve
                                 SettingRow {
                                     label: "In use"
-                                    description: Settings.lock.theme === "atelier"
-                                        ? "Atelier, the shell's own lock screen (matches your theme)"
-                                        : Settings.lock.theme === "depth"
-                                        ? "Depth: a big clock tucked behind your wallpaper's subject"
-                                        : lockPage.nameOf(Settings.lock.theme) + " (a qylock theme)"
+                                    description: {
+                                        const own = lockPage.ownStyles.find(x => x.id === Settings.lock.theme);
+                                        return own ? own.name + " · " + own.note : lockPage.nameOf(Settings.lock.theme) + " (a qylock theme from GitHub)";
+                                    }
                                     Chip { icon: "󰌾"; text: "Lock now"; tint: Atelier.mauve; interactive: true; implicitHeight: 30
                                         onClicked: Quickshell.execDetached(["qs", "ipc", "call", "lock", "lock"]) }
                                 }
                                 SettingSwitch { label: "Show notifications"; description: "App name and title only, never the message text"
                                     checked: Settings.notifications.lockShowCount; onToggled: (v) => Settings.notifications.lockShowCount = v }
-                                SettingRow {
-                                    label: "qylock themes"
-                                    description: "Lock screens by Darkkal44 (GPL-3.0). Hover a card to play its preview; a theme downloads the first time you preview or use it. If a theme ever fails, the Atelier lock takes over."
-                                    Chip { icon: "󰊤"; text: "GitHub"; tint: Atelier.subtext; interactive: true; implicitHeight: 30
-                                        onClicked: Quickshell.execDetached(["xdg-open", "https://github.com/Darkkal44/qylock"]) }
-                                }
                             }
 
                             SettingCard {
@@ -1569,6 +1563,30 @@ Item {
                                 readonly property bool shown: win.visible && win.page === "lock"
                                 onShownChanged: if (shown) refresh()
 
+                                readonly property var ownStyles: [
+                                    { id: "atelier",   name: "Atelier",   note: "Glass panel, this shell's own" },
+                                    { id: "depth",     name: "Depth",     note: "Clock behind the subject, Samsung-style" },
+                                    { id: "cupertino", name: "Cupertino", note: "iOS-style" },
+                                    { id: "hyper",     name: "Hyper",     note: "Xiaomi HyperOS-style" },
+                                    { id: "harmony",   name: "Harmony",   note: "Huawei HarmonyOS-style" },
+                                    { id: "oxygen",    name: "Oxygen",    note: "OnePlus OxygenOS-style" },
+                                    { id: "material",  name: "Material",  note: "Pixel, Material You-style" },
+                                    { id: "dot",       name: "Dot",       note: "Nothing OS-style" }
+                                ].map(x => Object.assign({ builtin: true, downloaded: true, preview: "", sizeMB: 0 }, x))
+                                readonly property var phoneIds: ["cupertino", "hyper", "harmony", "oxygen", "material", "dot"]
+                                // what the live miniatures read instead of the real lock (never locks anything)
+                                QtObject {
+                                    id: lockStub
+                                    property bool active: false
+                                    property bool authMode: false
+                                    property bool unlocking: false
+                                    property bool checking: false
+                                    property bool previewing: false
+                                    property string buffer: ""
+                                    property string message: ""
+                                    property string weather: ""
+                                }
+
                                 function nameOf(id) { const t = themes.find(x => x.id === id); return t ? t.name : id; }
                                 function refresh() { listProc.running = true; }
                                 function fetchThen(t, then) {
@@ -1583,7 +1601,8 @@ Item {
                                     else fetchThen(t, "use");
                                 }
                                 function preview(t) {
-                                    if (t.downloaded) Quickshell.execDetached([script, "preview", t.id]);
+                                    if (t.builtin) Quickshell.execDetached(["qs", "ipc", "call", "lock", "previewStyle", t.id]);
+                                    else if (t.downloaded) Quickshell.execDetached([script, "preview", t.id]);
                                     else fetchThen(t, "preview");
                                 }
 
@@ -1608,14 +1627,39 @@ Item {
                                     }
                                 }
 
-                                Flow {
+                                Column {
                                     id: gallery
                                     width: parent.width
-                                    spacing: 12
-                                    Repeater {
-                                        model: [{ id: "atelier", name: "Atelier", builtin: true, downloaded: true, preview: "", sizeMB: 0 },
-                                                { id: "depth", name: "Depth", builtin: true, downloaded: true, preview: "", sizeMB: 0 }].concat(lockPage.themes)
-                                        delegate: LockThemeCard {}
+                                    spacing: 14
+
+                                    // ── ours: built into the shell ──
+                                    GalleryHead {
+                                        title: "Atelier styles"
+                                        sub: "Built into the shell: instant, on your wallpaper, nothing to download. The phone-inspired ones echo each phone's clock and layout, made for a laptop: a keyboard login, Wi-Fi and battery top right."
+                                    }
+                                    Flow {
+                                        width: parent.width
+                                        spacing: 12
+                                        Repeater { model: lockPage.ownStyles; delegate: LockThemeCard {} }
+                                    }
+
+                                    // ── from the qylock repo on GitHub ──
+                                    Item { width: 1; height: 10 }
+                                    GalleryHead {
+                                        title: "From GitHub · qylock"
+                                        sub: "Lock screens by Darkkal44 (GPL-3.0). Hover a card to play its preview; a theme downloads the first time you preview or use it. If one ever fails, the Atelier lock takes over."
+                                        Chip { icon: "󰊤"; text: "GitHub"; tint: Atelier.subtext; interactive: true; implicitHeight: 30
+                                            onClicked: Quickshell.execDetached(["xdg-open", "https://github.com/Darkkal44/qylock"]) }
+                                    }
+                                    Flow {
+                                        width: parent.width
+                                        spacing: 12
+                                        Repeater { model: lockPage.themes; delegate: LockThemeCard {} }
+                                    }
+                                    Text {
+                                        visible: lockPage.themes.length === 0
+                                        text: "Loading the list…"
+                                        font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext
                                     }
                                 }
                             }
@@ -2257,6 +2301,21 @@ Item {
         }
     }
     }
+    // ── A section title in the lock gallery (title, a line of text, optional chips) ──
+    component GalleryHead: RowLayout {
+        property string title
+        property string sub
+        width: parent ? parent.width : 0
+        spacing: 12
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 2
+            Text { text: parent.parent.title; font.family: Atelier.fontUi; font.pixelSize: 15; font.weight: Font.DemiBold; color: Atelier.text }
+            Text { Layout.fillWidth: true; text: parent.parent.sub; wrapMode: Text.Wrap
+                font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
+        }
+    }
+
     // ── A lock-screen theme in the gallery (Settings → Lock screen) ─────────
     component LockThemeCard: Rectangle {
         id: tc
@@ -2264,7 +2323,7 @@ Item {
         readonly property bool builtin: !!modelData.builtin
         readonly property bool inUse: Settings.lock.theme === modelData.id
         readonly property bool busy: lockPage.busy === modelData.id
-        width: Math.floor((gallery.width - 2 * gallery.spacing) / 3)
+        width: Math.floor((gallery.width - 2 * 12) / 3)
         height: shot.height + 66
         radius: 14
         color: Atelier.container
@@ -2324,6 +2383,15 @@ Item {
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     sourceSize.width: 420
+                }
+            }
+
+            // a phone style: the real PhoneLock, live and small (a stub instead of the lock)
+            Loader {
+                anchors.fill: parent
+                active: lockPage.shown && lockPage.phoneIds.indexOf(tc.modelData.id) >= 0
+                sourceComponent: Component {
+                    PhoneLock { thumb: true; lockRoot: lockStub; variant: tc.modelData.id }
                 }
             }
 
@@ -2392,14 +2460,13 @@ Item {
                 Text { Layout.fillWidth: true; text: tc.modelData.name; font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold; color: Atelier.text; elide: Text.ElideRight }
                 Text {
                     Layout.fillWidth: true
-                    text: tc.builtin ? "Built in" : tc.busy ? "Downloading…" : tc.modelData.downloaded ? "Downloaded" : tc.modelData.sizeMB + " MB"
+                    text: tc.builtin ? tc.modelData.note : tc.busy ? "Downloading…" : tc.modelData.downloaded ? "Downloaded" : tc.modelData.sizeMB + " MB"
                     font.family: Atelier.fontUi; font.pixelSize: 10
                     color: tc.busy ? Atelier.mauve : Atelier.subtext
                     elide: Text.ElideRight
                 }
             }
             Chip {
-                visible: !tc.builtin
                 icon: "󰈈"; text: ""
                 tint: Atelier.subtext; interactive: !tc.busy; implicitHeight: 26
                 onClicked: lockPage.preview(tc.modelData)
