@@ -10,6 +10,7 @@ ColumnLayout {
     property string title: ""
     property string icon: ""
     property color tint: Atelier.accent
+    property bool highlighted: false          // e.g. the display picked in Displays → Arrangement
     default property alias content: col.data
 
     Layout.fillWidth: true
@@ -31,8 +32,8 @@ ColumnLayout {
         implicitHeight: col.implicitHeight + 8
         radius: 12
         color: Atelier.container
-        border.width: 1
-        border.color: Atelier.outline
+        border.width: card.highlighted ? 2 : 1
+        border.color: card.highlighted ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
 
         ColumnLayout {
             id: col

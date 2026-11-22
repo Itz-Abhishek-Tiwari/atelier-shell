@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland
 import qs.components
 import qs.config
 
@@ -121,36 +122,182 @@ ColumnLayout {
         }
     }
 
-    // ── arrangement preview ─────────────────────────────────────────────────
+    // ── arrangement: drag displays to place them ────────────────────────────
+    // Boxes are the displays in layout pixels (rotation and scale applied), scaled to fit.
+    // Dragging snaps the box edge-to-edge against the others (and lines its edges up with
+    // theirs), so there are never gaps or overlaps; letting go writes "XxY" as its position
+    // through change() → the usual Keep / Revert banner.
+    property string selected: ""
     SettingCard {
-        visible: page.enabledCount > 1
+        visible: page.enabledCount >= 1
         title: "Arrangement"
         Item {
             id: arr
             Layout.fillWidth: true
-            implicitHeight: 150
+            implicitHeight: page.enabledCount > 1 ? 210 : 150
             readonly property var boxes: page.mons.filter(m => !m.disabled).map(m => {
                 const rot = m.transform % 2 === 1;
-                const w = (rot ? m.height : m.width) / m.scale, h = (rot ? m.width : m.height) / m.scale;
-                return { name: m.name, x: m.x, y: m.y, w: w, h: h, focused: m.focused };
+                const w = Math.round((rot ? m.height : m.width) / m.scale), h = Math.round((rot ? m.width : m.height) / m.scale);
+                return { name: m.name, mon: m, x: m.x, y: m.y, w: w, h: h, focused: m.focused };
             })
-            readonly property real minX: Math.min.apply(null, boxes.map(b => b.x).concat([0]))
-            readonly property real minY: Math.min.apply(null, boxes.map(b => b.y).concat([0]))
-            readonly property real spanW: Math.max.apply(null, boxes.map(b => b.x + b.w).concat([1])) - minX
-            readonly property real spanH: Math.max.apply(null, boxes.map(b => b.y + b.h).concat([1])) - minY
-            readonly property real k: Math.min((width - 24) / spanW, (height - 24) / spanH)
+            // the frame stays put while dragging (so the box doesn't chase the scale)
+            property var frame: computeFrame(boxes)
+            onBoxesChanged: if (!dragging) frame = computeFrame(boxes)
+            property bool dragging: false
+            function computeFrame(bs) {
+                const minX = Math.min.apply(null, bs.map(b => b.x).concat([0]));
+                const minY = Math.min.apply(null, bs.map(b => b.y).concat([0]));
+                const spanW = Math.max.apply(null, bs.map(b => b.x + b.w).concat([1])) - minX;
+                const spanH = Math.max.apply(null, bs.map(b => b.y + b.h).concat([1])) - minY;
+                // leave room around the layout to drag into
+                const padX = page.enabledCount > 1 ? spanW * 0.45 : spanW * 0.1;
+                const padY = page.enabledCount > 1 ? spanH * 0.45 : spanH * 0.1;
+                const k = Math.min((arr.width - 24) / (spanW + 2 * padX), (arr.height - 24) / (spanH + 2 * padY));
+                return { minX: minX, minY: minY, spanW: spanW, spanH: spanH, k: k > 0 ? k : 0.05 };
+            }
+            onWidthChanged: frame = computeFrame(boxes)
+            function toView(lx, ly) {
+                const f = frame;
+                return { x: (arr.width - f.spanW * f.k) / 2 + (lx - f.minX) * f.k, y: (arr.height - f.spanH * f.k) / 2 + (ly - f.minY) * f.k };
+            }
+            function toLayout(vx, vy) {
+                const f = frame;
+                return { x: f.minX + (vx - (arr.width - f.spanW * f.k) / 2) / f.k, y: f.minY + (vy - (arr.height - f.spanH * f.k) / 2) / f.k };
+            }
+            // nearest edge-to-edge spot next to any other display, edges aligned when close
+            function snap(b, px, py) {
+                const others = boxes.filter(o => o.name !== b.name);
+                if (!others.length) return { x: b.x, y: b.y };
+                const thr = 80;                                  // layout px: "close enough" to line up
+                const clampAlign = (v, lo, hi, a1, a2) => {
+                    v = Math.max(lo, Math.min(hi, v));
+                    if (Math.abs(v - a1) < thr) v = a1; else if (Math.abs(v - a2) < thr) v = a2;
+                    return v;
+                };
+                let best = null;
+                for (const o of others) {
+                    const cands = [
+                        { x: o.x + o.w, y: clampAlign(py, o.y - b.h + 1, o.y + o.h - 1, o.y, o.y + o.h - b.h) },   // right of o
+                        { x: o.x - b.w, y: clampAlign(py, o.y - b.h + 1, o.y + o.h - 1, o.y, o.y + o.h - b.h) },   // left
+                        { y: o.y + o.h, x: clampAlign(px, o.x - b.w + 1, o.x + o.w - 1, o.x, o.x + o.w - b.w) },   // below
+                        { y: o.y - b.h, x: clampAlign(px, o.x - b.w + 1, o.x + o.w - 1, o.x, o.x + o.w - b.w) }    // above
+                    ];
+                    for (const c of cands) {
+                        // no overlap with any other display
+                        if (others.some(q => c.x < q.x + q.w && c.x + b.w > q.x && c.y < q.y + q.h && c.y + b.h > q.y)) continue;
+                        const d = Math.hypot(c.x - px, c.y - py);
+                        if (!best || d < best.d) best = { x: Math.round(c.x), y: Math.round(c.y), d: d };
+                    }
+                }
+                return best ? best : { x: b.x, y: b.y };
+            }
+
+            // faint grid
+            Repeater {
+                model: 9
+                Rectangle { required property int index; x: arr.width * (index + 1) / 10; width: 1; height: arr.height; color: Atelier.outline; opacity: 0.5 }
+            }
+
             Repeater {
                 model: arr.boxes
                 Rectangle {
+                    id: box
                     required property var modelData
-                    x: (arr.width - arr.spanW * arr.k) / 2 + (modelData.x - arr.minX) * arr.k
-                    y: (arr.height - arr.spanH * arr.k) / 2 + (modelData.y - arr.minY) * arr.k
-                    width: modelData.w * arr.k - 4; height: modelData.h * arr.k - 4
-                    radius: 8
-                    color: Qt.alpha(Atelier.accent, modelData.focused ? 0.22 : 0.10)
-                    border.width: 1
-                    border.color: Qt.alpha(Atelier.accent, 0.5)
-                    Text { anchors.centerIn: parent; text: modelData.name; font.family: Atelier.font; font.pixelSize: 11; color: Atelier.text }
+                    readonly property var b: modelData
+                    readonly property bool sel: page.selected === b.name
+                    readonly property bool movable: page.enabledCount > 1
+                    // where it is drawn: its real spot, or the snapped spot while dragging
+                    property var live: null
+                    readonly property var at: arr.toView(live ? live.x : b.x, live ? live.y : b.y)
+                    x: at.x + 2; y: at.y + 2
+                    width: b.w * arr.frame.k - 4; height: b.h * arr.frame.k - 4
+                    z: dragMa.drag.active ? 10 : (sel ? 2 : 1)
+                    radius: 10
+                    color: dragMa.pressed ? Qt.alpha(Atelier.accent, 0.30) : Qt.alpha(Atelier.accent, sel ? 0.22 : 0.10)
+                    border.width: sel ? 2 : 1
+                    border.color: Qt.alpha(Atelier.accent, sel ? 0.9 : 0.5)
+                    Behavior on x { enabled: !dragMa.pressed; NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                    Behavior on y { enabled: !dragMa.pressed; NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 2
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; text: box.b.name
+                            font.family: Atelier.font; font.pixelSize: 12; font.bold: true; color: Atelier.text }
+                        Text { anchors.horizontalCenter: parent.horizontalCenter; visible: box.height > 44
+                            text: box.live ? box.live.x + ", " + box.live.y
+                                : box.b.mon.width + "×" + box.b.mon.height + (box.b.mon.scale !== 1 ? " · " + (Math.round(box.b.mon.scale * 100) / 100) + "×" : "")
+                            font.family: Atelier.font; font.pixelSize: 10; color: Atelier.subtext }
+                    }
+                    MouseArea {
+                        id: dragMa
+                        anchors.fill: parent
+                        cursorShape: box.movable ? (pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor) : Qt.PointingHandCursor
+                        property point grab: Qt.point(0, 0)
+                        onPressed: (m) => { page.selected = box.b.name; grab = Qt.point(m.x, m.y); if (box.movable) arr.dragging = true; }
+                        onPositionChanged: (m) => {
+                            if (!pressed || !box.movable) return;
+                            const p = box.mapToItem(arr, m.x - grab.x, m.y - grab.y);
+                            const l = arr.toLayout(p.x - 2, p.y - 2);
+                            box.live = arr.snap(box.b, l.x, l.y);
+                        }
+                        onReleased: {
+                            arr.dragging = false;
+                            const l = box.live;
+                            box.live = null;
+                            if (l && (l.x !== box.b.x || l.y !== box.b.y))
+                                page.change(box.b.mon, { position: l.x + "x" + l.y });
+                            arr.frame = arr.computeFrame(arr.boxes);
+                        }
+                    }
+                }
+            }
+
+            Text {
+                visible: page.enabledCount <= 1
+                anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter
+                text: "Connect another display to arrange them by dragging"
+                font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+            }
+        }
+        SettingRow {
+            label: page.enabledCount > 1 ? "Drag a display to move it" : "Your display"
+            description: page.enabledCount > 1 ? "It snaps to the edges of the others · click one to select it" : "Identify shows each display's name on it"
+            Chip { icon: "󰍹"; text: "Identify"; tint: Atelier.accent; interactive: true; implicitHeight: 30; onClicked: identify.show() }
+        }
+    }
+
+    // "Identify": each display's name, big, on that display for 2.5 s
+    QtObject {
+        id: identify
+        property bool on: false
+        function show() { on = true; identifyTimer.restart(); }
+    }
+    Timer { id: identifyTimer; interval: 2500; onTriggered: identify.on = false }
+    LazyLoader {
+        active: identify.on
+        Variants {
+            model: Quickshell.screens
+            PanelWindow {
+                required property var modelData
+                screen: modelData
+                anchors { top: true; left: true }
+                margins { top: 40; left: 40 }
+                implicitWidth: idText.implicitWidth + 56
+                implicitHeight: idText.implicitHeight + 36
+                color: "transparent"
+                exclusionMode: ExclusionMode.Ignore
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 20
+                    color: Atelier.accentFill
+                    Text {
+                        id: idText
+                        anchors.centerIn: parent
+                        text: parent.parent.modelData.name
+                        font.family: Atelier.font; font.pixelSize: 40; font.bold: true
+                        color: Atelier.onFill
+                    }
                 }
             }
         }
@@ -174,6 +321,7 @@ ColumnLayout {
             readonly property string res: cur.w + "x" + cur.h
             readonly property var others: page.mons.filter(x => x.name !== m.name)
             title: page.niceName(m) + "  ·  " + m.name
+            highlighted: page.selected === m.name
 
             SettingRow {
                 label: m.disabled ? "Off" : (m.width + " × " + m.height + " at " + page.hzLabel(m.refreshRate))
@@ -229,10 +377,12 @@ ColumnLayout {
             SettingChoice {
                 visible: !card.m.disabled && page.enabledCount > 1
                 label: "Position"
-                description: "Where it sits next to your other displays"
+                description: "Or drag it in Arrangement above"
+                readonly property string pos: card.e ? (card.e.position || "auto") : "auto"
                 options: [{ id: "auto", label: "Auto" }, { id: "auto-left", label: "Left" }, { id: "auto-right", label: "Right" },
                           { id: "auto-up", label: "Above" }, { id: "auto-down", label: "Below" }]
-                value: card.e ? (card.e.position || "auto") : "auto"
+                    .concat(/^-?\d+x-?\d+$/.test(pos) ? [{ id: pos, label: "Placed (" + pos.replace("x", ", ") + ")" }] : [])
+                value: pos
                 onPicked: (id) => page.change(card.m, { position: id })
             }
             SettingChoice {
