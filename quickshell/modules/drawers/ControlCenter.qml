@@ -160,7 +160,7 @@ Item {
     ]
     readonly property var shortcuts: (Settings.controlCenter.shortcuts || []).map(id => allShortcuts.find(x => x.id === id)).filter(x => x).slice(0, 5)
     property bool showAllNotifs: false
-    onVisibleChanged: if (!visible) showAllNotifs = false
+    onVisibleChanged: { if (!visible) showAllNotifs = false; IPhone.watch(visible); }
 
     // ── Dismiss ──────────────────────────────────────────────────────────────
     Item {
@@ -298,6 +298,61 @@ Item {
                             }
                             Text { text: (root.charging ? "󰂄" : "") + Math.round(root.batPct * 100) + "%"
                                 font.family: root.mono; font.pixelSize: 11; color: Atelier.subtext }
+                        }
+                    }
+                }
+            }
+
+            // ── iPhone (Tether): name, status, battery; click opens Tether ──────────
+            Rectangle {
+                visible: IPhone.paired
+                Layout.fillWidth: true
+                implicitHeight: 54
+                radius: 16
+                color: phMa.containsMouse ? Atelier.containerHigh : Atelier.container
+                border.width: 1
+                border.color: Atelier.outline
+                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                readonly property real pct: IPhone.battery
+                readonly property color hue: pct < 0 ? Atelier.subtext : pct <= 0.2 ? Atelier.red : pct <= 0.4 ? Atelier.yellow : Atelier.green
+                MouseArea { id: phMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { IPhone.openApp(); root.close(); } }
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: 10
+                    anchors.rightMargin: 14
+                    spacing: 10
+                    Rectangle {
+                        implicitWidth: 34; implicitHeight: 34; radius: 17
+                        color: IPhone.connected ? Qt.alpha(Atelier.accent, 0.14) : Atelier.containerHigh
+                        Text { anchors.centerIn: parent; text: "󰄜"; font.family: Atelier.font; font.pixelSize: 16
+                            color: IPhone.connected ? Atelier.accent : Atelier.subtext }
+                    }
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        Layout.minimumWidth: 0
+                        spacing: 1
+                        Text { Layout.fillWidth: true; text: IPhone.name; elide: Text.ElideRight
+                            font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium; color: Atelier.text }
+                        Text { Layout.fillWidth: true; text: IPhone.status; elide: Text.ElideRight
+                            font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
+                    }
+                    // battery: slim bar + number (only while it's known)
+                    ColumnLayout {
+                        visible: parent.parent.pct >= 0
+                        spacing: 4
+                        Text {
+                            Layout.alignment: Qt.AlignRight
+                            text: Math.round(parent.parent.parent.pct * 100) + "%"
+                            font.family: root.mono; font.pixelSize: 12; font.bold: true
+                            color: parent.parent.parent.pct <= 0.2 ? Atelier.red : Atelier.text
+                        }
+                        Rectangle {
+                            implicitWidth: 44; implicitHeight: 5; radius: 2.5
+                            color: Atelier.containerHigh
+                            Rectangle {
+                                width: parent.width * Math.max(0.05, parent.parent.parent.parent.pct); height: parent.height; radius: 2.5
+                                color: parent.parent.parent.parent.hue
+                            }
                         }
                     }
                 }
