@@ -2,16 +2,19 @@
 return {
     name              = "wallpaper-light",
     -- active: mauve flowing into red at 45 deg (NamiConfig style); inactive: muted grey
-    active_border     = { "rgba(7a61beee)", "rgba(aa6171ee)" },
-    inactive_border   = "rgba(d2b8abaa)",
-    group_active      = { "rgba(7a61beee)", "rgba(aa6171ee)" },
-    group_inactive    = "rgba(d2b8abaa)",
-    groupbar_active   = "rgba(7a61becc)",
-    groupbar_inactive = "rgba(e4c9bc99)",
-    groupbar_text     = "rgba(321f15ff)",
+    active_border     = { "rgba(7563c0ee)", "rgba(b75037ee)" },
+    inactive_border   = "rgba(b6c3acaa)",
+    group_active      = { "rgba(7563c0ee)", "rgba(b75037ee)" },
+    group_inactive    = "rgba(b6c3acaa)",
+    groupbar_active   = "rgba(7563c0cc)",
+    groupbar_inactive = "rgba(c7d5bd99)",
+    groupbar_text     = "rgba(1e2816ff)",
     -- plain, tight dark shadow (no coloured glow)
-    shadow            = 0x55ecd1c4,
-    shadow_inactive   = 0x33ecd1c4,
+    shadow            = 0x55cfddc5,
+    shadow_inactive   = 0x33cfddc5,
+    -- window title bars (Traditional layout, conf/traditional.lua): the theme's surface and ink
+    titlebar = { bg = "rgba(ebf9e1ff)", text = "rgba(3c4633ff)", inactive = "rgba(b6c3acff)",
+                 close = "rgba(b75037ff)", min = "rgba(938d16ff)", max = "rgba(3d902aff)" },
     cursor            = "Bibata-Modern-Classic",
     cursor_size       = 24,
 }

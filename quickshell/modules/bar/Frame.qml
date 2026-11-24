@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Wayland
 import qs.components
 import qs.config
+import qs.modules.dock
 import qs.services
 
 // Caelestia-style screen frame: the bar (on any edge) and a thin border around the whole
@@ -18,6 +19,7 @@ Scope {
     signal edgeHovered()          // pointer rested on the right screen edge (Open on hover)
     signal topHovered()           // pointer rested on the middle of the top edge (music drawer)
     signal topClicked()
+    signal openApps()             // the dock's app grid button (Traditional layout)
     property bool topHover: topSensor.containsMouse   // DrawerHost keeps the music drawer open while true
 
     PanelWindow {
@@ -42,6 +44,9 @@ Scope {
             item: barArea
             Region { item: edgeSensor.enabled ? edgeSensor : null }
             Region { item: topSensor.enabled ? topSensor : null }
+            // the dock in the bottom bar (Traditional layout): sizes go to 0 when it's off
+            Region { item: dock.hitZone }
+            Region { item: dock.menuZone }
         }
 
         // Open on hover: pointing at the right screen edge shows the volume/brightness OSD
@@ -85,8 +90,25 @@ Scope {
             readonly property real x0: Atelier.insetLeft
             readonly property real y0: Atelier.insetTop
             readonly property real x1: width - Atelier.insetRight
-            readonly property real y1: height - Atelier.insetBottom
+            // dock shelf (Traditional): the bottom edge stays thin, and the middle rises to the
+            // dock's height between two concave fillets (sL..sR, top sT)
+            readonly property bool shelf: Atelier.dockShelf && dock.shelfRight > dock.shelfLeft
+            readonly property real y1: height - (shelf ? Atelier.frame : Atelier.insetBottom)
             readonly property real r: Atelier.rounding
+            readonly property real sT: height - Atelier.dockHeight
+            readonly property real sF: Math.min(12, (y1 - sT) / 2)                       // fillet
+            readonly property real sC: Math.min(Atelier.rounding, 18, y1 - sT - sF)       // shelf corners
+            readonly property real sL: Math.max(x0 + r + sF, dock.shelfLeft)
+            readonly property real sR: Math.min(x1 - r - sF, dock.shelfRight)
+            readonly property string shelfPath: !shelf ? "" :
+                  " L " + (sR + sF) + " " + y1
+                + " A " + sF + " " + sF + " 0 0 1 " + sR + " " + (y1 - sF)
+                + " L " + sR + " " + (sT + sC)
+                + " A " + sC + " " + sC + " 0 0 0 " + (sR - sC) + " " + sT
+                + " L " + (sL + sC) + " " + sT
+                + " A " + sC + " " + sC + " 0 0 0 " + sL + " " + (sT + sC)
+                + " L " + sL + " " + (y1 - sF)
+                + " A " + sF + " " + sF + " 0 0 1 " + (sL - sF) + " " + y1
 
             ShapePath {
                 fillRule: ShapePath.OddEvenFill
@@ -101,6 +123,7 @@ Scope {
                         + " A " + ring.r + " " + ring.r + " 0 0 1 " + ring.x1 + " " + (ring.y0 + ring.r)
                         + " L " + ring.x1 + " " + (ring.y1 - ring.r)
                         + " A " + ring.r + " " + ring.r + " 0 0 1 " + (ring.x1 - ring.r) + " " + ring.y1
+                        + ring.shelfPath
                         + " L " + (ring.x0 + ring.r) + " " + ring.y1
                         + " A " + ring.r + " " + ring.r + " 0 0 1 " + ring.x0 + " " + (ring.y1 - ring.r)
                         + " L " + ring.x0 + " " + (ring.y0 + ring.r)
@@ -152,6 +175,13 @@ Scope {
         IdleInhibitor {
             window: frameWindow
             enabled: Atelier.caffeine
+        }
+
+        // Traditional layout: the bottom edge is a bar (Atelier.insetBottom) and these are its icons
+        Dock {
+            id: dock
+            anchors.fill: parent
+            onOpenApps: root.openApps()
         }
 
         Item {

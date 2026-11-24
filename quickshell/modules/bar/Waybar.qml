@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Wayland
 import Quickshell.Widgets
 import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
@@ -142,8 +143,8 @@ Item {
         anchors.leftMargin: bar.vertical ? 0 : 10
         anchors.rightMargin: bar.vertical ? 0 : 10
         flow: bar.vertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
-        rows: bar.vertical ? 12 : 1
-        columns: bar.vertical ? 1 : 12
+        rows: bar.vertical ? 16 : 1
+        columns: bar.vertical ? 1 : 16
         rowSpacing: 8
         columnSpacing: 8
 
@@ -160,11 +161,47 @@ Item {
             onClicked: bar.openLauncher()
         }
 
+        // Flat bar (Traditional, bar on top): small workspace dots instead of the tile pill.
+        // Occupied = ink dot, empty = faint dot, the active one a short accent bar.
+        Row {
+            visible: Atelier.flatBar && Settings.bar.showWorkspaces
+            Layout.alignment: bar.crossAlign
+            spacing: 2
+            Repeater {
+                model: bar.wsCount
+                Item {
+                    id: flatWs
+                    required property int index
+                    readonly property int wsId: index + 1
+                    readonly property bool isActive: bar.activeWs === wsId
+                    readonly property var ws: bar.wsById[wsId] || null
+                    readonly property bool isOccupied: !!(ws && ws.toplevels.values.length > 0)
+                    width: isActive ? 26 : 14
+                    height: 22
+                    Behavior on width { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: flatWs.isActive ? 18 : 6
+                        height: 6
+                        radius: 3
+                        color: flatWs.isActive ? Atelier.accent : Atelier.text
+                        opacity: flatWs.isActive ? 1 : flatWs.isOccupied ? 0.75 : 0.28
+                        Behavior on width { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
+                    }
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: bar.goToWorkspace(flatWs.wsId) }
+                }
+            }
+            WheelHandler {
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                onWheel: (e) => bar.scrollWorkspace(e.angleDelta.y > 0)
+            }
+        }
+
         // Workspaces: sliding accent tile; occupied workspaces show their main app's icon
         Rectangle {
             id: wsPill
             Layout.alignment: bar.crossAlign
-            visible: Settings.bar.showWorkspaces
+            visible: Settings.bar.showWorkspaces && !Atelier.flatBar
             readonly property int slot: 30
             implicitWidth: bar.vertical ? bar.pillWidth : bar.wsCount * slot + 8
             implicitHeight: bar.vertical ? bar.wsCount * slot + 8 : bar.pillWidth
@@ -274,7 +311,7 @@ Item {
         // Pinned apps
         Pill {
             Layout.alignment: bar.crossAlign
-            visible: Settings.bar.showApps && Settings.bar.pinned.length > 0
+            visible: Settings.bar.showApps && Settings.bar.pinned.length > 0 && !Atelier.dockOn   // the dock has them
             pad: 4
             gap: 2
             Repeater {
@@ -297,10 +334,47 @@ Item {
             Layout.alignment: bar.crossAlign
             implicitWidth: bar.vertical ? bar.pillWidth : 10
             implicitHeight: bar.vertical ? 10 : bar.pillWidth
-            opacity: Settings.bar.showTitle ? 1 : 0
+            opacity: Settings.bar.showTitle || Atelier.flatBar ? 1 : 0   // the flat bar always names the app
             clip: true
 
             readonly property string title: Hyprland.activeToplevel && Hyprland.activeToplevel.title ? Hyprland.activeToplevel.title : ""
+            // flat bar: the focused app's icon and name (its desktop entry), then the window title
+            readonly property string appId: ToplevelManager.activeToplevel ? (ToplevelManager.activeToplevel.appId || "") : ""
+            readonly property var app: appId ? DesktopEntries.heuristicLookup(appId) : null
+            readonly property string appName: app && app.name ? app.name
+                : appId ? appId.split(".").pop().replace(/^./, c => c.toUpperCase()) : "Desktop"
+
+            Row {
+                visible: Atelier.flatBar
+                anchors.left: parent.left
+                anchors.leftMargin: 4
+                anchors.verticalCenter: parent.verticalCenter
+                width: titleSlot.width - 8
+                spacing: 8
+                IconImage {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: !!(titleSlot.app && titleSlot.app.icon)
+                    implicitSize: 16
+                    source: titleSlot.app && titleSlot.app.icon ? Quickshell.iconPath(titleSlot.app.icon, true) : ""
+                    asynchronous: true
+                }
+                Text {
+                    id: flatApp
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: titleSlot.appName
+                    font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold
+                    color: Atelier.text
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: Math.max(0, parent.width - x)
+                    visible: Settings.bar.showTitle && titleSlot.title !== "" && titleSlot.title !== titleSlot.appName
+                    text: titleSlot.title
+                    font.family: Atelier.fontUi; font.pixelSize: 12
+                    color: Atelier.subtext
+                    elide: Text.ElideRight
+                }
+            }
 
             Text {
                 visible: bar.vertical
@@ -317,7 +391,7 @@ Item {
                 Behavior on opacity { NumberAnimation { duration: 200 } }
             }
             Text {
-                visible: !bar.vertical
+                visible: !bar.vertical && !Atelier.flatBar
                 anchors.centerIn: parent
                 width: titleSlot.width - 16
                 horizontalAlignment: Text.AlignHCenter
@@ -453,9 +527,18 @@ Item {
                     color: Atelier.blue
                 }
             }
+            // flat bar: "Tue 24 Nov   4:12 PM" as plain text
+            Text {
+                visible: Atelier.flatBar
+                text: Qt.formatDate(bar.now, "ddd d MMM") + "    "
+                    + (Atelier.clock24 ? Qt.formatTime(bar.now, "HH:mm") : Qt.formatTime(bar.now, "h:mm AP"))
+                font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium
+                font.features: { "tnum": 1 }
+                color: Atelier.text
+            }
             // top/bottom bar: hh:mm AM in one line
             Row {
-                visible: !bar.vertical
+                visible: !bar.vertical && !Atelier.flatBar
                 spacing: 5
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
@@ -610,7 +693,7 @@ Item {
         implicitWidth: bar.vertical ? bar.pillWidth : grid.implicitWidth + 2 * pad + 6
         implicitHeight: bar.vertical ? grid.implicitHeight + 2 * pad : bar.pillWidth
         radius: bar.pillWidth / 2
-        color: highlighted ? Qt.alpha(Atelier.accent, 0.18) : Atelier.container
+        color: highlighted ? Qt.alpha(Atelier.accent, 0.18) : Atelier.flatBar ? "transparent" : Atelier.container
         Behavior on color { ColorAnimation { duration: 150 } }
 
         MouseArea {

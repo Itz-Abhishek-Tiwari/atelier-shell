@@ -234,7 +234,7 @@ def write_defaults(updates):
     tmp = MIMEAPPS.with_name(MIMEAPPS.name + ".atelier-tmp")
     tmp.write_text(text)
     tmp.replace(MIMEAPPS)
-    if SEED.parent.is_dir() and CONF == HOME / ".config":
+    if SEED.parent.is_dir() and CONF == HOME / ".config" and not os.environ.get("ATELIER_NO_SEED"):
         try:
             shutil.copyfile(MIMEAPPS, SEED)
         except OSError:

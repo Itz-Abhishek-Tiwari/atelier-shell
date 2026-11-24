@@ -135,7 +135,7 @@ for i = 1, 10 do
         first and "Workspaces · Go to workspace @ Super + 1 … 0" or nil)
     bind(mainMod .. " + Shift + " .. key, hl.dsp.window.move({ workspace = i }),
         first and "Workspaces · Move window there @ Super + Shift + 1 … 0" or nil)
-    bind(mainMod .. " + Alt + " .. key, hl.dsp.window.move({ workspace = i, silent = true }),
+    bind(mainMod .. " + Alt + " .. key, hl.dsp.window.move({ workspace = i, follow = false }),
         first and "Workspaces · Send window, stay here @ Super + Alt + 1 … 0" or nil)
 end
 bind(mainMod .. " + grave",      hl.dsp.focus({ workspace = "previous" }), "Workspaces · Previous workspace")

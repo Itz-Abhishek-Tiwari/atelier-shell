@@ -137,6 +137,7 @@ libreoffice-fresh
 ghostty
 firefox
 nautilus
+nautilus-python
 haruna
 gparted
 zathura

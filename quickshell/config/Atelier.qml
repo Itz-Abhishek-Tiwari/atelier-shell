@@ -48,9 +48,20 @@ Singleton {
 
     // ── Geometry ─────────────────────────────────────────────────────────────
     // (user-adjustable in the Settings app → Settings.qml / settings.json)
-    readonly property int barWidth: Settings.appearance.barWidth    // left bar (part of the frame)
+    // Traditional with the bar on top: a slim, flat macOS-style bar (no pills; Waybar.qml)
+    readonly property bool flatBar: Settings.appearance.layout === "classic" && Settings.appearance.barPosition === "top"
+    readonly property int barWidth: flatBar ? 32 : Settings.appearance.barWidth   // bar thickness (part of the frame)
     readonly property int frame: Settings.appearance.frame          // border thickness on top/right/bottom
     readonly property int rounding: Settings.appearance.rounding    // inner frame corners + drawer corners
+    // Traditional layout (Settings → Bar → Layout): floating windows with title bars, and the
+    // bottom frame edge becomes a bar holding the dock (part of the frame, like the top bar).
+    // Not while the bar itself is on the bottom edge.
+    readonly property bool classic: Settings.appearance.layout === "classic"
+    readonly property bool dockOn: classic && Settings.appearance.barPosition !== "bottom"
+    readonly property int dockHeight: Settings.dock.iconSize + 14
+    // the dock as a shelf: only the middle of the bottom edge rises to dockHeight (Frame.qml Ring);
+    // the rest of the edge stays a thin frame. Windows still keep clear of the full height.
+    readonly property bool dockShelf: dockOn && Settings.dock.style !== "bar"
     readonly property int fillet: Math.min(22, rounding)            // concave join between drawer and frame
 
     // Where the bar lives. The bar is `barWidth` thick on that edge; the other edges get `frame`.
@@ -60,8 +71,8 @@ Singleton {
     readonly property int insetLeft: barEdge === "left" ? barWidth : frame
     readonly property int insetRight: barEdge === "right" ? barWidth : frame
     readonly property int insetTop: barEdge === "top" ? barWidth : frame
-    readonly property int insetBottom: barEdge === "bottom" ? barWidth : frame
-    readonly property int maxInset: Math.max(barWidth, frame)
+    readonly property int insetBottom: barEdge === "bottom" ? barWidth : dockOn ? dockHeight : frame
+    readonly property int maxInset: Math.max(barWidth, frame, dockOn ? dockHeight : 0)
     function inset(edge) { return edge === "left" ? insetLeft : edge === "right" ? insetRight : edge === "top" ? insetTop : insetBottom; }
 
     // ── Palette roles (live) ─────────────────────────────────────────────────
@@ -159,19 +170,26 @@ Singleton {
     readonly property color outline: Qt.alpha(c.text, 0.08)
 
     // ── Motion (Caelestia / M3 expressive curves) ───────────────────────────
-    // One motion language everywhere, matching Hyprland's elastic springs (hypr/conf/animations.lua):
-    // things that arrive or move overshoot and spring back; things that leave, hovers and colour
-    // fades stay smooth (an overshooting colour or a bouncing close looks like a glitch).
+    // One motion language everywhere: things that arrive or move ease in with one soft
+    // overshoot; things that leave, hovers and colour fades stay smooth (an overshooting colour
+    // or a bouncing close looks like a glitch). Hyprland's own set is in hypr/atelier-mode.lua
+    // (M.motion), one profile per performance mode, and so is this one:
+    //
+    //   normal  expressive: 500 ms opens with the M3 overshoot
+    //   dev     crisp: ~25 % shorter, no overshoot (decelerate only), nothing pulls the eye
+    //   game    quick: about half as long, no overshoot, so drawers over a game are on screen
+    //           (and redrawing) for as few frames as possible
     //
     // curveElastic: Material 3 "expressive default spatial", the curve Caelestia uses for
     // everything that moves: ONE cubic with a single smooth overshoot (no joins, so no jerk
     // where segments meet). The 1.21 sets the bounce: higher = springier.
     readonly property var curveElastic: [0.38, 1.21, 0.22, 1, 1, 1]
     readonly property var curveSmooth: [0.05, 0.7, 0.1, 1, 1, 1]      // M3 emphasizedDecel, no overshoot
-    readonly property var curveOpen: curveElastic                       // drawers, popups, indicators
+    readonly property var curveOpen: Perf.mode === "normal" ? curveElastic : curveSmooth   // drawers, popups, indicators
     readonly property var curveClose: [0.3, 0, 0.8, 0.15, 1, 1]       // emphasizedAccel
     readonly property var curveStandard: [0.2, 0, 0, 1, 1, 1]         // standard (hovers, colours)
-    readonly property real speed: Math.max(0.25, Settings.general.animSpeed)    // 2 = twice as fast
+    readonly property real modeSpeed: Perf.game ? 1.9 : Perf.dev ? 1.3 : 1
+    readonly property real speed: Math.max(0.25, Settings.general.animSpeed) * modeSpeed    // 2 = twice as fast
     readonly property int durOpen: Math.round(500 / speed)             // Caelestia's expressiveDefaultSpatial
     readonly property int durClose: Math.round(200 / speed)
     readonly property int durFast: Math.round(180 / speed)       // hovers, colour changes

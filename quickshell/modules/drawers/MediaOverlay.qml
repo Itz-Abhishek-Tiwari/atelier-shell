@@ -122,8 +122,9 @@ Item {
     // ══ Output devices ══════════════════════════════════════════════════════
     // only while the drawer is open (a frozen node copy can hold deleted objects; see SoundPage.qml)
     readonly property var sinks: root.visible ? Pipewire.nodes.values.filter(n => n.isSink && !n.isStream && n.audio) : []
-    function sinkName(n) { return n.description || n.nickname || n.name; }
+    function sinkName(n) { return n ? (n.description || n.nickname || n.name) : ""; }   // n: may be a node that just went away
     function sinkIcon(n) {
+        if (!n) return "󰓃";
         const s = (n.name + " " + n.description).toLowerCase();
         if (s.includes("bluez") || s.includes("bluetooth")) return "󰂯";
         if (s.includes("hdmi") || s.includes("displayport")) return "󰡁";

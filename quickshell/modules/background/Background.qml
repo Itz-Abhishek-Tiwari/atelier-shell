@@ -134,6 +134,8 @@ PanelWindow {
         front = back;
         old.shown = false;
         old.source = "";
+        // the outline masks are full-resolution textures only the transition shader reads
+        mapImg.source = ""; penImg.source = "";
     }
 
     readonly property real dx: dir === "left" ? -1 : dir === "right" ? 1 : 0   // where it comes FROM

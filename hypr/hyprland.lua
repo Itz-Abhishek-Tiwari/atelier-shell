@@ -23,7 +23,7 @@
 
 local modules = {
     "monitors", "env", "autostart", "appearance", "layouts",
-    "input", "system", "animations", "keybinds", "rules",
+    "input", "system", "animations", "keybinds", "rules", "traditional",
 }
 
 -- A broken module is reported and skipped; the rest still load.
@@ -41,7 +41,7 @@ end
 local mode = require("conf.lib").mode
 if mode then
     local ok, err = pcall(function()
-        mode.animations(1)                -- always defined, even if a mode then turns them off
+        mode.animations("normal", 1)      -- always defined, even if a mode then turns them off
         mode.apply(mode.saved_mode())
     end)
     if not ok then

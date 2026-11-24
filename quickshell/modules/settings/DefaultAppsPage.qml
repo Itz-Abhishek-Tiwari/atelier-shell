@@ -50,6 +50,7 @@ ColumnLayout {
         setProc.cid = cid;
         setProc.command = ["python3", Quickshell.shellDir + "/scripts/default-apps.py", "set", cid, appId];
         setProc.running = true;
+        if (cid === "files") Settings.rememberFiles(appId);   // per layout (Settings.setLayout)
     }
 
     onVisibleChanged: if (visible) refresh()

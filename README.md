@@ -142,9 +142,9 @@ The UI keeps the same look; the work behind it changes. Switch in the control ce
 
 | Mode | Key | What it does |
 |---|---|---|
-| **Normal** | | Your own look and settings. |
-| **Programming** | `Super+Shift+D` | Opaque windows (crisp text, no blur work behind them), 1-pass blur, faster window animations, no dimming, performance power profile (balanced on battery), screen kept awake. Remembered across logins. |
-| **Game** | `Super+Shift+G` | No blur / shadows / animations, opaque windows and shell glass, tearing allowed, performance power profile, Do Not Disturb, screen kept awake, desktop widgets not drawn. Not remembered across logins. |
+| **Normal** | | Your own look and settings. Windows glide in on a soft spring; drawers open with one gentle overshoot. |
+| **Programming** | `Super+Shift+D` | Opaque windows (crisp text, no blur work behind them), 1-pass blur, crisp low-travel animations (shorter, barely any scale or slide, no overshoot, in windows and the shell alike), no dimming, performance power profile (balanced on battery), screen kept awake. Remembered across logins. |
+| **Game** | `Super+Shift+G` | No blur / shadows / animations (or, if you keep them, fades only: nothing moves over the game), quick shell drawers, opaque windows and shell glass, tearing allowed, performance power profile, Do Not Disturb, screen kept awake, desktop widgets not drawn. Not remembered across logins. |
 
 **Game library** (`Super+G`): a drawer from the bottom edge, styled like the rest of the shell, listing every installed game:
 Steam (all libraries, including `/mnt/games`), Heroic (Epic, GOG, sideloaded), Lutris, `.desktop`
