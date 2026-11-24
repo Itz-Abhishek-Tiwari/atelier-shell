@@ -297,6 +297,15 @@ Singleton {
                 property bool tpClickfinger: true       // 2 fingers = right, 3 = middle click
                 property bool tpDwt: true               // ignore the touchpad while typing
                 property bool tpDragLock: false         // lifting a finger mid-drag doesn't drop
+                // touchpad gestures (hypr/conf/input.lua)
+                property bool gestureWorkspace: true    // swipe sideways: previous / next workspace
+                property int gestureFingers: 3          // 3 | 4 for that swipe; the overview uses the other count
+                property bool gestureInvert: false      // swipe the other way round
+                property bool gestureCreateNew: true    // swiping past the last workspace makes a new one
+                property int gestureDistance: 300       // px of finger travel for one workspace
+                property bool gestureOverview: true     // swipe up / down: open / close the overview
+                property bool gestureLauncher: true     // pinch in / out: open / close the launcher
+                property int pinchFingers: 4            // 3 | 4
             }
 
             property JsonObject displays: JsonObject {  // Hyprland monitors (Settings → Displays)
@@ -428,7 +437,19 @@ Singleton {
             follow_mouse: i.followMouse ? 1 : 0,
             touchpad: { natural_scroll: i.tpNatural, scroll_factor: i.tpScroll, tap_to_click: i.tpTap,
                         clickfinger_behavior: i.tpClickfinger, disable_while_typing: i.tpDwt, drag_lock: i.tpDragLock ? 1 : 0 }
-        }) + ",\n    mouse_curve = " + i.mouseCurve + ",\n";
+        }) + ",\n    mouse_curve = " + i.mouseCurve + ",\n" + root.luaGestures;
+    }
+    // registration (on/off, finger counts) needs a config reload; the rest applies live
+    readonly property string luaGestureReg: {
+        const i = adapter.input;
+        const f = (n, d) => (n === 3 || n === 4) ? n : d;
+        return "workspace = " + i.gestureWorkspace + ", workspace_fingers = " + f(i.gestureFingers, 3)
+            + ", overview = " + i.gestureOverview + ", launcher = " + i.gestureLauncher + ", pinch_fingers = " + f(i.pinchFingers, 4);
+    }
+    readonly property string luaGestures: {
+        const i = adapter.input;
+        return "    gestures = { " + root.luaGestureReg + ", invert = " + i.gestureInvert + ", create_new = " + i.gestureCreateNew
+            + ", distance = " + Math.round(Math.max(100, Math.min(1000, i.gestureDistance))) + " },\n";
     }
     readonly property string luaMonitors: {
         const list = (adapter.displays.monitors || []).filter(m => m && m.output).map(m => {
@@ -502,6 +523,7 @@ Singleton {
     property string _appliedMonitors: ""
     property string _appliedReserved: ""
     property string _appliedBinds: ""
+    property string _appliedGestures: ""
     property var _monitorOutputs: []
 
     FileView {
@@ -542,6 +564,15 @@ Singleton {
             if (root.luaBinds !== root._appliedBinds) {
                 if (!first) extra += "if atelier_apply_binds then atelier_apply_binds(t.binds) end; ";
                 root._appliedBinds = root.luaBinds;
+            }
+            // a gesture switched on/off or to other fingers: only a config reload re-registers them
+            // (it re-reads the file written above, so it also covers everything below)
+            const gestReload = !first && root.luaGestureReg !== root._appliedGestures;
+            root._appliedGestures = root.luaGestureReg;
+            if (gestReload) {
+                hyprEval.command = ["hyprctl", "reload"];
+                hyprEval.running = true;
+                return;
             }
             hyprEval.command = ["hyprctl", "eval",
                 'local t = dofile(os.getenv("HOME") .. "/.config/hypr/atelier-settings.lua"); ' + mode + extra + 'hl.config({ '
