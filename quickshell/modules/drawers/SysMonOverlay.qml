@@ -5,12 +5,13 @@ import qs.components
 import qs.config
 import qs.services
 
-// System monitor: a bottom drawer with three tabs.
+// System monitor: a bottom drawer with four tabs.
 //   Overview  CPU (temperature + a 40 s graph), memory, graphics, network
 //   Apps      the busiest apps by CPU and by memory, with a stop button
 //   Battery   charge, power draw, health, the charge limit, the hungriest apps
+//   Screen time  the last 7 days as a chart + the apps used most that day / week (services/ScreenTime)
 // The data feed (scripts/sysmon.py) runs only while this drawer is open.
-// Open: Super+Shift+M · IPC `sysmon toggle|open|close|tab <overview|apps|battery>` · launcher "System monitor".
+// Open: Super+Shift+M · IPC `sysmon toggle|open|close|tab <overview|apps|battery|screentime>` · launcher "System monitor".
 Item {
     id: root
     visible: false
@@ -30,8 +31,25 @@ Item {
     readonly property var tabs: [
         { id: "overview", label: "Overview", icon: "󰾆" },
         { id: "apps", label: "Apps", icon: "󰀻" },
-        { id: "battery", label: "Battery", icon: "󰂁" }
+        { id: "battery", label: "Battery", icon: "󰂁" },
+        { id: "screentime", label: "Screen time", icon: "󰔛" }
     ]
+
+    // Screen time: "" = today, a "yyyy-MM-dd" day from the chart, or "week"
+    property string stDay: ""
+    readonly property var stWeek: { ScreenTime.revision; return ScreenTime.week(); }
+    readonly property string stKey: stDay === "" ? ScreenTime.dayKey() : stDay
+    readonly property real stWeekTotal: stWeek.reduce((a, d) => a + d.t, 0)
+    readonly property real stAvg: { const used = stWeek.filter(d => d.t > 0); return used.length ? stWeekTotal / used.length : 0; }
+    readonly property real stShown: stKey === "week" ? stWeekTotal : (stWeek.find(d => d.key === stKey) || { t: 0 }).t
+    readonly property var stApps: { ScreenTime.revision; return ScreenTime.apps(stKey === "week" ? stWeek.map(d => d.key) : [stKey]).slice(0, 6); }
+    function stLabel(key) {
+        if (key === "week") return "Last 7 days";
+        if (key === ScreenTime.dayKey()) return "Today";
+        if (key === ScreenTime.dayKey(new Date(Date.now() - 86400000))) return "Yesterday";
+        const d = stWeek.find(x => x.key === key);
+        return d ? Qt.formatDate(d.date, "dddd d MMM") : key;
+    }
 
     function toggle() { if (visible && animActive) close(); else open(); }
     function open(t) {
@@ -40,6 +58,8 @@ Item {
         animActive = true;
         openedAt = Date.now();
         focusTimer.restart();
+        stDay = "";
+        ScreenTime.flushNow();
     }
     function close() {
         animActive = false;
@@ -168,6 +188,7 @@ Item {
                 else if (e.key === Qt.Key_1) root.tab = "overview";
                 else if (e.key === Qt.Key_2) root.tab = "apps";
                 else if (e.key === Qt.Key_3) root.tab = "battery";
+                else if (e.key === Qt.Key_4) root.tab = "screentime";
                 else if (e.key === Qt.Key_Tab || e.key === Qt.Key_Right) root.cycle(1);
                 else if (e.key === Qt.Key_Backtab || e.key === Qt.Key_Left) root.cycle(-1);
                 else return;
@@ -197,7 +218,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
-                EmptyState { anchors.centerIn: parent; visible: !SysMon.ready; icon: "󰍛"; text: "Reading sensors…" }
+                EmptyState { anchors.centerIn: parent; visible: !SysMon.ready && root.tab !== "screentime"; icon: "󰍛"; text: "Reading sensors…" }
 
                 // ── Overview ─────────────────────────────────────────────────────
                 RowLayout {
@@ -375,9 +396,136 @@ Item {
                         }
                     }
                 }
+
+                // ── Screen time ───────────────────────────────────────────────────
+                Item {
+                    anchors.fill: parent
+                    visible: root.tab === "screentime"
+
+                    EmptyState { anchors.centerIn: parent; visible: !ScreenTime.enabled; icon: "󰔛"
+                                 text: "Screen time is off · Settings → Power & battery" }
+
+                    RowLayout {
+                        anchors.fill: parent
+                        visible: ScreenTime.enabled
+                        spacing: 10
+
+                        Stat {
+                            Layout.preferredWidth: 3
+                            icon: "󰔛"; name: root.stLabel(root.stKey); tint: Atelier.green
+                            big: ScreenTime.fmt(root.stShown)
+                            side: root.stAvg > 0 ? "Daily average  " + ScreenTime.fmt(root.stAvg) : ""
+
+                            // 7 days, today on the right; click a day to see its apps
+                            RowLayout {
+                                id: chart
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                spacing: 10
+                                readonly property real peak: Math.max(3600, root.stWeek.reduce((a, d) => Math.max(a, d.t), 0))
+                                Repeater {
+                                    model: root.stWeek
+                                    ColumnLayout {
+                                        id: dayCol
+                                        required property var modelData
+                                        readonly property bool picked: root.stKey === "week" || root.stKey === modelData.key
+                                        Layout.fillWidth: true
+                                        Layout.fillHeight: true
+                                        spacing: 6
+                                        Item {
+                                            Layout.fillWidth: true
+                                            Layout.fillHeight: true
+                                            // the average as a faint line across every column
+                                            Rectangle {
+                                                visible: root.stAvg > 0
+                                                width: parent.width; height: 1
+                                                y: parent.height * (1 - root.stAvg / chart.peak)
+                                                color: Qt.alpha(Atelier.subtext, 0.35)
+                                            }
+                                            Rectangle {
+                                                anchors.bottom: parent.bottom
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                width: Math.min(34, parent.width)
+                                                height: Math.max(4, parent.height * dayCol.modelData.t / chart.peak)
+                                                radius: Math.min(8, width / 2)
+                                                color: dayCol.modelData.t <= 0 ? Atelier.containerHigh
+                                                     : Qt.alpha(Atelier.green, dayCol.picked ? 1 : (dayMa.containsMouse ? 0.7 : 0.4))
+                                                Behavior on height { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
+                                                Behavior on color { ColorAnimation { duration: 150 } }
+                                            }
+                                            MouseArea {
+                                                id: dayMa
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: root.stDay = dayCol.modelData.key
+                                            }
+                                        }
+                                        Text {
+                                            Layout.alignment: Qt.AlignHCenter
+                                            text: dayMa.containsMouse && dayCol.modelData.t > 0 ? ScreenTime.fmt(dayCol.modelData.t)
+                                                : dayCol.modelData.key === ScreenTime.dayKey() ? "Today" : Qt.formatDate(dayCol.modelData.date, "ddd")
+                                            font.family: dayMa.containsMouse ? Atelier.font : Atelier.fontUi; font.pixelSize: 10
+                                            color: dayCol.picked && root.stKey !== "week" ? Atelier.text : Atelier.subtext
+                                        }
+                                    }
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 8
+                                Text { Layout.fillWidth: true; text: "7 days  " + ScreenTime.fmt(root.stWeekTotal)
+                                       font.family: Atelier.font; font.pixelSize: 11; color: Atelier.subtext }
+                                Chip { icon: "󰸗"; text: "Whole week"; implicitHeight: 24; interactive: true
+                                       tint: root.stKey === "week" ? Atelier.green : Atelier.subtext
+                                       onClicked: root.stDay = root.stKey === "week" ? "" : "week" }
+                            }
+                        }
+
+                        Stat {
+                            Layout.preferredWidth: 2
+                            icon: "󰀻"; name: "Most used"; tint: Atelier.teal
+                            side: root.stLabel(root.stKey)
+
+                            EmptyState { Layout.alignment: Qt.AlignCenter; Layout.fillHeight: true; visible: root.stApps.length === 0
+                                         icon: "󰔛"; text: "Nothing counted yet" }
+                            Repeater {
+                                model: root.stApps
+                                RowLayout {
+                                    id: use
+                                    required property var modelData
+                                    readonly property string iconSrc: ScreenTime.appIcon(modelData.id)
+                                    Layout.fillWidth: true
+                                    spacing: 10
+                                    Item {
+                                        implicitWidth: 22; implicitHeight: 22
+                                        Image { anchors.fill: parent; visible: use.iconSrc !== ""; source: use.iconSrc
+                                                sourceSize: Qt.size(44, 44); smooth: true; asynchronous: true }
+                                        Text { anchors.centerIn: parent; visible: use.iconSrc === ""; text: "󰣆"
+                                               font.family: Atelier.font; font.pixelSize: 14; color: Atelier.teal }
+                                    }
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        Layout.minimumWidth: 0
+                                        spacing: 4
+                                        RowLayout {
+                                            Layout.fillWidth: true
+                                            Text { Layout.fillWidth: true; text: ScreenTime.appName(use.modelData.id); elide: Text.ElideRight
+                                                   font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.Medium; color: Atelier.text }
+                                            Text { text: ScreenTime.fmt(use.modelData.secs); font.family: Atelier.font; font.pixelSize: 11; color: Atelier.teal }
+                                        }
+                                        LevelBar { Layout.fillWidth: true; implicitHeight: 3; tint: Atelier.teal
+                                                   value: use.modelData.secs / Math.max(1, root.stShown) }
+                                    }
+                                }
+                            }
+                            Item { Layout.fillHeight: true }
+                        }
+                    }
+                }
             }
 
-            HintLine { Layout.fillWidth: true; text: "1 2 3 or Tab switch views  ·  ✕ stops an app  ·  Esc closes" }
+            HintLine { Layout.fillWidth: true; text: "1–4 or Tab switch views  ·  ✕ stops an app  ·  Esc closes" }
         }
     }
 }

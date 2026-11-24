@@ -1285,6 +1285,24 @@ Item {
                             }
 
                             SettingCard {
+                                title: "Screen time"; icon: "󰔛"; tint: Atelier.green
+                                SettingSwitch { label: "Count screen time"; tint: Atelier.green
+                                    description: "Time in each app, shown in the System monitor (Super+Shift+M). Stays on this computer; paused while locked or away"
+                                    checked: Settings.behavior.screenTime; onToggled: (v) => Settings.behavior.screenTime = v }
+                                SettingRow {
+                                    label: "Clear history"; description: "Forget every day counted so far"
+                                    Chip {   // two steps: the first click asks
+                                        id: stClear
+                                        property bool armed: false
+                                        icon: "󰆴"; text: armed ? "Click again to clear" : "Clear"
+                                        tint: armed ? Atelier.red : Atelier.subtext; interactive: true; implicitHeight: 28
+                                        onClicked: { if (armed) { ScreenTime.clear(); armed = false; } else { armed = true; stDisarm.restart(); } }
+                                        Timer { id: stDisarm; interval: 3000; onTriggered: stClear.armed = false }
+                                    }
+                                }
+                            }
+
+                            SettingCard {
                                 title: "Battery"; icon: "󰂃"; tint: Atelier.yellow
                                 SettingSwitch { label: "Low battery alerts"; description: "A notification when it runs low; the critical one stays up and gets through Do Not Disturb"; tint: Atelier.yellow
                                     checked: Settings.battery.alerts; onToggled: (v) => Settings.battery.alerts = v }

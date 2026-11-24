@@ -273,6 +273,7 @@ Singleton {
                 property int pomoShort: 5
                 property int pomoLong: 15
                 property int pomoEvery: 4               // a long break after this many focus rounds
+                property bool screenTime: true          // count screen time per app (System monitor → Screen time)
             }
 
             property JsonObject input: JsonObject {     // Hyprland input (Settings → Keyboard & mouse)
