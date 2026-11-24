@@ -192,6 +192,8 @@ ShellRoot {
 
     // Lock screen (iPhone-style; real WlSessionLock + PAM)
     LockScreen { id: lockScreen }
+    // screen time stops counting while locked (also brings the tracker up at start)
+    Binding { target: ScreenTime; property: "locked"; value: lockScreen.locked }
 
     // Screenshot tool (freeze → pick region/window/screen → save + copy + preview)
     ScreenshotOverlay {
