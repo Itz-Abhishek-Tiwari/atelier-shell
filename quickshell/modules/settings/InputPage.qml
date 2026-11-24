@@ -115,6 +115,38 @@ ColumnLayout {
             checked: page.i.tpDragLock; onToggled: (v) => Settings.input.tpDragLock = v }
     }
 
+    // hypr/conf/input.lua. Turning a gesture on/off or changing fingers reloads Hyprland (it can't
+    // remove a gesture); direction, distance and new workspaces apply live.
+    SettingCard {
+        id: gestureCard
+        visible: page.hasTouchpad
+        title: "Touchpad gestures"
+        readonly property int swipeFingers: page.i.gestureFingers === 4 ? 4 : 3
+        readonly property int otherFingers: 7 - swipeFingers
+        SettingSwitch { label: "Swipe between workspaces"; description: "Slide sideways; the workspace follows your fingers"
+            checked: page.i.gestureWorkspace; onToggled: (v) => Settings.input.gestureWorkspace = v }
+        SettingChoice { visible: page.i.gestureWorkspace || page.i.gestureOverview
+            label: "Workspace swipe fingers"; description: "The overview swipe uses the other count"
+            options: [{ id: "3", label: "Three" }, { id: "4", label: "Four" }]
+            value: String(gestureCard.swipeFingers); onPicked: (id) => Settings.input.gestureFingers = Number(id) }
+        SettingSwitch { visible: page.i.gestureWorkspace; label: "Reverse direction"; description: "Swipe left to go to the next workspace"
+            checked: page.i.gestureInvert; onToggled: (v) => Settings.input.gestureInvert = v }
+        SettingSwitch { visible: page.i.gestureWorkspace; label: "Make a new workspace at the end"; description: "Swiping past the last one opens an empty workspace"
+            checked: page.i.gestureCreateNew; onToggled: (v) => Settings.input.gestureCreateNew = v }
+        SettingSlider { visible: page.i.gestureWorkspace; label: "Swipe distance"; description: "How far to slide for one workspace; shorter is quicker"
+            from: 100; to: 800; step: 25; suffix: " px"
+            value: page.i.gestureDistance; onMoved: (v) => Settings.input.gestureDistance = Math.round(v) }
+        SettingSwitch { label: "Swipe up for the overview"
+            description: gestureCard.otherFingers + " fingers up opens every workspace at a glance, down closes it"
+            checked: page.i.gestureOverview; onToggled: (v) => Settings.input.gestureOverview = v }
+        SettingSwitch { label: "Pinch for the launcher"; description: "Pinch in to open the launcher, spread out to close it"
+            checked: page.i.gestureLauncher; onToggled: (v) => Settings.input.gestureLauncher = v }
+        SettingChoice { visible: page.i.gestureLauncher
+            label: "Pinch fingers"; description: "Two-finger pinch stays with apps (zoom in browsers, image viewers)"
+            options: [{ id: "3", label: "Three" }, { id: "4", label: "Four" }]
+            value: String(page.i.pinchFingers === 3 ? 3 : 4); onPicked: (id) => Settings.input.pinchFingers = Number(id) }
+    }
+
     SettingCard {
         title: "Pointer"
         SettingSwitch { label: "Focus follows the pointer"; description: "Windows get the keyboard when the pointer moves onto them"

@@ -47,6 +47,13 @@ M.defaults = {
         },
     },
     mouse_curve = true,          -- macOS-style acceleration curve on the 2.4 GHz mouse
+    -- Settings → Keyboard & mouse → Touchpad gestures (registered in conf/input.lua)
+    gestures = {
+        workspace = true, workspace_fingers = 3,   -- swipe sideways: previous / next workspace
+        invert = false, create_new = true, distance = 300,
+        overview = true,                           -- the other finger count, up opens / down closes
+        launcher = true, pinch_fingers = 4,        -- pinch in opens, pinch out closes
+    },
     -- Settings → Modes: what Programming and Game mode change (missing keys: these)
     modes = {
         dev  = { opaque = true, dim = false, blur = "light", shadows = true, animations = true, anim_speed = 0.6 },
@@ -162,6 +169,12 @@ function M.apply_input(t)
     t = t or M.settings()
     local input = t.input or M.defaults.input
     hl.config({ input = input })
+    local g = t.gestures or M.defaults.gestures
+    hl.config({ gestures = {
+        workspace_swipe_invert     = g.invert == true,
+        workspace_swipe_create_new = g.create_new ~= false,
+        workspace_swipe_distance   = math.floor(tonumber(g.distance) or 300),
+    } })
     hl.device({
         name          = M.MOUSE,
         accel_profile = t.mouse_curve ~= false and M.MOUSE_CURVE or (input.accel_profile or "adaptive"),
