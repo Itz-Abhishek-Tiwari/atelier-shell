@@ -32,13 +32,9 @@ Item {
         return Math.max(12, Math.min(calOverlayRoot.height - cardHeight - 12, cy - cardHeight / 2));
     }
 
-    readonly property string fontMono: "SpaceMono Nerd Font Propo"
-    readonly property color colSurface: isLight
-        ? Qt.rgba(245/255, 247/255, 250/255, 0.96)
-        : Qt.rgba(22/255, 18/255, 24/255, 0.95)
-    readonly property color colBorder: isLight
-        ? Qt.rgba(0, 0, 0, 0.08)
-        : Qt.rgba(1, 1, 1, 0.08)
+    readonly property string fontMono: Atelier.font
+    readonly property color colSurface: Atelier.surface
+    readonly property color colBorder: Atelier.outline
 
     signal closedSignal()
 
@@ -160,15 +156,15 @@ Item {
                 Rectangle {
                     width: 28
                     height: 28
-                    radius: 14
-                    color: prevMa.containsMouse ? (calOverlayRoot.isLight ? Qt.rgba(0,0,0,0.06) : Qt.rgba(1, 1, 1, 0.08)) : "transparent"
+                    radius: Atelier.radiusMd
+                    color: prevMa.containsMouse ? (calOverlayRoot.Qt.alpha(Atelier.text, 0.08)) : "transparent"
 
                     Text {
                         anchors.centerIn: parent
                         text: "󰅁"
                         font.family: calOverlayRoot.fontMono
                         font.pixelSize: 14
-                        color: calOverlayRoot.isLight ? Atelier.text : Atelier.text
+                        color: Atelier.text
                     }
 
                     MouseArea {
@@ -184,16 +180,16 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     height: 28
-                    radius: 14
-                    color: calOverlayRoot.isLight ? Qt.rgba(0,0,0,0.04) : Qt.rgba(1, 1, 1, 0.05)
+                    radius: Atelier.radiusMd
+                    color: calOverlayRoot.Qt.alpha(Atelier.text, 0.05)
 
                     Text {
                         anchors.centerIn: parent
                         text: calOverlayRoot.monthNames[calOverlayRoot.viewMonth] + " " + calOverlayRoot.viewYear
                         font.family: calOverlayRoot.fontMono
-                        font.pixelSize: 13
+                        font.pixelSize: Atelier.fsLg
                         font.bold: true
-                        color: calOverlayRoot.isLight ? Atelier.peach : Atelier.peach
+                        color: Atelier.peach
                     }
 
                     MouseArea {
@@ -207,15 +203,15 @@ Item {
                 Rectangle {
                     width: 28
                     height: 28
-                    radius: 14
-                    color: nextMa.containsMouse ? (calOverlayRoot.isLight ? Qt.rgba(0,0,0,0.06) : Qt.rgba(1, 1, 1, 0.08)) : "transparent"
+                    radius: Atelier.radiusMd
+                    color: nextMa.containsMouse ? (calOverlayRoot.Qt.alpha(Atelier.text, 0.08)) : "transparent"
 
                     Text {
                         anchors.centerIn: parent
                         text: "󰅂"
                         font.family: calOverlayRoot.fontMono
                         font.pixelSize: 14
-                        color: calOverlayRoot.isLight ? Atelier.text : Atelier.text
+                        color: Atelier.text
                     }
 
                     MouseArea {
@@ -243,7 +239,7 @@ Item {
                             anchors.centerIn: parent
                             text: modelData
                             font.family: calOverlayRoot.fontMono
-                            font.pixelSize: 10
+                            font.pixelSize: Atelier.fsMicro
                             font.bold: true
                             color: calOverlayRoot.isLight ? Atelier.overlay1 : Atelier.subtext
                         }
@@ -272,7 +268,7 @@ Item {
                         id: dayCell
                         Layout.preferredWidth: (calPopoutContainer.bodyWidth - 28) / 7
                         Layout.preferredHeight: 32
-                        radius: 16
+                        radius: Atelier.radiusMd
 
                         readonly property int dayNum: index - calGrid.firstDay + 1
                         readonly property bool isValidDay: dayNum > 0 && dayNum <= calGrid.daysInMonth
@@ -280,21 +276,21 @@ Item {
                         readonly property bool isHovered: dayMa.containsMouse && isValidDay
 
                         color: isToday 
-                            ? (calOverlayRoot.isLight ? Atelier.peach : Atelier.peach)
-                            : (isHovered ? (calOverlayRoot.isLight ? Qt.rgba(0,0,0,0.06) : Qt.rgba(1, 1, 1, 0.08)) : "transparent")
+                            ? (Atelier.peach)
+                            : (isHovered ? (calOverlayRoot.Qt.alpha(Atelier.text, 0.08)) : "transparent")
 
                         Text {
                             anchors.centerIn: parent
                             visible: dayCell.isValidDay
                             text: dayCell.dayNum
                             font.family: calOverlayRoot.fontMono
-                            font.pixelSize: 11
+                            font.pixelSize: Atelier.fsSm
                             font.bold: dayCell.isToday
                             color: dayCell.isToday 
                                 ? Atelier.crust 
                                 : (dayCell.isHovered 
                                     ? (calOverlayRoot.isLight ? Atelier.blue : Atelier.sky) 
-                                    : (calOverlayRoot.isLight ? Atelier.text : Atelier.text))
+                                    : (Atelier.text))
                         }
 
                         MouseArea {
@@ -311,8 +307,8 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 height: 28
-                radius: 14
-                color: calOverlayRoot.isLight ? Qt.rgba(0,0,0,0.03) : Qt.rgba(1, 1, 1, 0.04)
+                radius: Atelier.radiusMd
+                color: calOverlayRoot.Qt.alpha(Atelier.text, 0.04)
 
                 RowLayout {
                     anchors.centerIn: parent
@@ -321,16 +317,16 @@ Item {
                     Text {
                         text: "󰸗"
                         font.family: calOverlayRoot.fontMono
-                        font.pixelSize: 12
+                        font.pixelSize: Atelier.fsMd
                         color: calOverlayRoot.isLight ? Atelier.blue : Atelier.sky
                     }
 
                     Text {
                         text: Qt.formatDateTime(calOverlayRoot.today, "dddd, MMMM d, yyyy")
                         font.family: calOverlayRoot.fontMono
-                        font.pixelSize: 10
+                        font.pixelSize: Atelier.fsMicro
                         font.bold: true
-                        color: calOverlayRoot.isLight ? Atelier.text : Atelier.text
+                        color: Atelier.text
                     }
                 }
             }

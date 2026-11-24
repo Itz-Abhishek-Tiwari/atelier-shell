@@ -135,7 +135,7 @@ Item {
         Behavior on shown { NumberAnimation { duration: Atelier.durOpen; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
         opacity: c.lockRoot.unlocking ? 0 : Math.min(1, shown * 1.4)
         scale: c.lockRoot.unlocking ? 0.94 : 0.9 + 0.1 * shown
-        Behavior on opacity { NumberAnimation { duration: 260 } }
+        Behavior on opacity { NumberAnimation { duration: Atelier.durMedium } }
         Behavior on scale { NumberAnimation { duration: 380; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveClose } }
 
         RectangularShadow {
@@ -188,7 +188,7 @@ Item {
                         Text {
                             Layout.fillWidth: true
                             text: c.condition || (c.weather ? "" : "Fetching weather…")
-                            font.family: Atelier.fontUi; font.pixelSize: 13
+                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg
                             color: Atelier.subtext1
                             elide: Text.ElideRight
                         }
@@ -209,7 +209,7 @@ Item {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             Layout.minimumHeight: 60
-                            radius: 16
+                            radius: Atelier.radiusMd
                             color: Qt.alpha(Atelier.pink, 0.10)
                             Image {
                                 anchors.fill: parent
@@ -229,7 +229,7 @@ Item {
                             Layout.fillWidth: true
                             spacing: 2
                             Text { Layout.fillWidth: true; text: c.player ? (c.player.trackTitle || c.player.identity) : "Play something to see it here"; font.family: Atelier.fontUi; font.pixelSize: 14; font.weight: Font.DemiBold; color: Atelier.text; elide: Text.ElideRight }
-                            Text { Layout.fillWidth: true; visible: !!c.player; text: c.player ? (c.player.trackArtist || "") : ""; font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext; elide: Text.ElideRight }
+                            Text { Layout.fillWidth: true; visible: !!c.player; text: c.player ? (c.player.trackArtist || "") : ""; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext; elide: Text.ElideRight }
                         }
                         SlimBar {
                             Layout.fillWidth: true
@@ -289,7 +289,7 @@ Item {
                         Layout.alignment: Qt.AlignHCenter
                         spacing: 8
                         Text { text: "󰸗"; font.family: Atelier.font; font.pixelSize: 14; color: Atelier.peach }
-                        Text { text: Qt.formatDate(c.now, "dddd, d MMMM"); font.family: Atelier.fontUi; font.pixelSize: 15; color: Atelier.subtext1 }
+                        Text { text: Qt.formatDate(c.now, "dddd, d MMMM"); font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl; color: Atelier.subtext1 }
                     }
 
                     // avatar (~/.face if present, else the initial) with an accent ring
@@ -346,14 +346,14 @@ Item {
                             border.width: c.lockRoot.authMode || c.lockRoot.message ? 2 : 1
                             border.color: c.lockRoot.message ? Qt.alpha(Atelier.red, 0.75)
                                 : c.lockRoot.authMode ? Qt.alpha(Atelier.accent, 0.7) : Atelier.outline
-                            Behavior on border.color { ColorAnimation { duration: 200 } }
+                            Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
                         }
                         Text {
                             anchors.left: parent.left; anchors.leftMargin: 20
                             anchors.verticalCenter: parent.verticalCenter
                             visible: c.lockRoot.buffer.length === 0
                             text: c.lockRoot.checking ? "Checking…" : "Type your password"
-                            font.family: Atelier.fontUi; font.pixelSize: 13
+                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg
                             color: Atelier.subtext
                         }
                         Row {
@@ -367,14 +367,14 @@ Item {
                                     color: Atelier.accent
                                     scale: 0
                                     Component.onCompleted: scale = 1
-                                    Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
+                                    Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
                                 }
                             }
                         }
                         Rectangle {
                             anchors.right: parent.right; anchors.rightMargin: 6
                             anchors.verticalCenter: parent.verticalCenter
-                            width: 36; height: 36; radius: 18
+                            width: 36; height: 36; radius: Atelier.radiusLg
                             visible: c.lockRoot.buffer.length > 0 || c.lockRoot.checking
                             color: Qt.alpha(Atelier.accent, goMa.containsMouse ? 0.32 : 0.2)
                             border.width: 1
@@ -393,7 +393,7 @@ Item {
                         Layout.alignment: Qt.AlignHCenter
                         Layout.topMargin: 10
                         text: c.lockRoot.message || (c.isPreview ? "Preview · Esc to close" : "Enter to unlock")
-                        font.family: Atelier.fontUi; font.pixelSize: 11
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm
                         font.weight: c.lockRoot.message ? Font.DemiBold : Font.Normal
                         color: c.lockRoot.message ? Atelier.red : Atelier.subtext
                     }
@@ -437,13 +437,13 @@ Item {
                             Layout.fillWidth: true
                             visible: c.hasBattery
                             spacing: 10
-                            Text { text: c.charging ? "󰂄" : "󰁹"; font.family: Atelier.font; font.pixelSize: 15; color: c.batPct <= 0.15 && !c.charging ? Atelier.red : Atelier.green }
+                            Text { text: c.charging ? "󰂄" : "󰁹"; font.family: Atelier.font; font.pixelSize: Atelier.fsXl; color: c.batPct <= 0.15 && !c.charging ? Atelier.red : Atelier.green }
                             SlimBar {
                                 Layout.fillWidth: true
                                 value: c.batPct
                                 tint: c.batPct <= 0.15 && !c.charging ? Atelier.red : Atelier.green
                             }
-                            Text { text: Math.round(c.batPct * 100) + "%"; font.family: Atelier.font; font.pixelSize: 12; color: Atelier.subtext1 }
+                            Text { text: Math.round(c.batPct * 100) + "%"; font.family: Atelier.font; font.pixelSize: Atelier.fsMd; color: Atelier.subtext1 }
                         }
                         Flow {
                             Layout.fillWidth: true
@@ -479,7 +479,7 @@ Item {
                                 // (possibly already deleted) notification object and can segfault
                                 Layout.fillWidth: true
                                 implicitHeight: 52
-                                radius: 14
+                                radius: Atelier.radiusMd
                                 color: Atelier.container
                                 border.width: 1
                                 border.color: Atelier.outline
@@ -492,9 +492,9 @@ Item {
                                         readonly property string src: Notifs.iconFor(modelData)
                                         IconImage { anchors.fill: parent; visible: parent.src !== ""; source: parent.src; asynchronous: true }
                                         Rectangle {
-                                            anchors.fill: parent; visible: parent.src === ""; radius: 8
+                                            anchors.fill: parent; visible: parent.src === ""; radius: Atelier.radiusSm
                                             color: Qt.alpha(Atelier.lavender, 0.16)
-                                            Text { anchors.centerIn: parent; text: "󰂚"; font.family: Atelier.font; font.pixelSize: 13; color: Atelier.lavender }
+                                            Text { anchors.centerIn: parent; text: "󰂚"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: Atelier.lavender }
                                         }
                                     }
                                     ColumnLayout {
@@ -502,10 +502,10 @@ Item {
                                         spacing: 1
                                         RowLayout {
                                             Layout.fillWidth: true
-                                            Text { Layout.fillWidth: true; text: modelData.appName || "Notification"; font.family: Atelier.fontUi; font.pixelSize: 10; color: Atelier.subtext; elide: Text.ElideRight }
-                                            Text { text: Notifs.timeAgo(Notifs.receivedAt(modelData)); font.family: Atelier.fontUi; font.pixelSize: 10; color: Atelier.subtext; opacity: 0.7 }
+                                            Text { Layout.fillWidth: true; text: modelData.appName || "Notification"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMicro; color: Atelier.subtext; elide: Text.ElideRight }
+                                            Text { text: Notifs.timeAgo(Notifs.receivedAt(modelData)); font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMicro; color: Atelier.subtext; opacity: 0.7 }
                                         }
-                                        Text { Layout.fillWidth: true; text: modelData.summary; font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold; color: Atelier.text; elide: Text.ElideRight }
+                                        Text { Layout.fillWidth: true; text: modelData.summary; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; color: Atelier.text; elide: Text.ElideRight }
                                     }
                                 }
                             }
@@ -525,7 +525,7 @@ Item {
                                 anchors.top: parent.top
                                 visible: c.notifs.length > 4
                                 text: "+" + (c.notifs.length - 4) + " more"
-                                font.family: Atelier.fontUi; font.pixelSize: 11; font.weight: Font.DemiBold
+                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.DemiBold
                                 color: Atelier.subtext
                             }
                         }
@@ -603,7 +603,7 @@ Item {
         border.width: 1
         border.color: Qt.alpha(tint, 0.38)
         scale: tbMa.pressed ? 0.92 : 1
-        Behavior on scale { NumberAnimation { duration: 120 } }
+        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
         Text { anchors.centerIn: parent; text: tb.icon; font.family: Atelier.font; font.pixelSize: tb.size * 0.38; color: tb.tint }
         MouseArea { id: tbMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: tb.clicked() }

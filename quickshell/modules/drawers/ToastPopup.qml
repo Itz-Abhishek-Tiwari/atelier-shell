@@ -41,7 +41,7 @@ Item {
         cornerRadius: 22
         anchorPos: -1   // top centre (top-right belongs to notifications)
 
-        Behavior on bodyWidth { NumberAnimation { duration: 200; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard } }
+        Behavior on bodyWidth { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard } }
 
         RowLayout {
             id: row
@@ -59,7 +59,7 @@ Item {
                     anchors.centerIn: parent
                     text: toastRoot.iconText
                     font.family: Atelier.font
-                    font.pixelSize: 12
+                    font.pixelSize: Atelier.fsMd
                     font.bold: true
                     color: toastRoot.iconColor
                 }
@@ -68,9 +68,9 @@ Item {
             Text {
                 text: toastRoot.message
                 font.family: Atelier.font
-                font.pixelSize: 12
+                font.pixelSize: Atelier.fsMd
                 font.bold: true
-                color: Atelier.isLight ? Atelier.text : Atelier.text
+                color: Atelier.text
             }
         }
     }

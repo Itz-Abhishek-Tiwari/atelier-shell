@@ -20,23 +20,19 @@ Item {
     property int selectedIndex: 0 // 0: Lock, 1: Sleep, 2: Logout, 3: Reboot, 4: Power
 
     // Space Mono Typography & Catppuccin Mocha colors
-    readonly property string fontMono: "SpaceMono Nerd Font Propo"
-    readonly property color colBase: isLight
-        ? Qt.rgba(245/255, 247/255, 250/255, 0.96)
-        : Qt.rgba(24/255, 22/255, 28/255, 0.94)
-    readonly property color colBorder: isLight
-        ? Qt.rgba(0, 0, 0, 0.08)
-        : Qt.rgba(1, 1, 1, 0.08)
+    readonly property string fontMono: Atelier.font
+    readonly property color colBase: Atelier.surface
+    readonly property color colBorder: Atelier.outline
     readonly property color colMauve:   Atelier.accent
     readonly property color colLavend:  Atelier.lavender
     readonly property color colBlue:    Atelier.blue
     readonly property color colGreen:   Atelier.green
     readonly property color colYellow:  Atelier.yellow
     readonly property color colRed:     Atelier.red
-    readonly property color colText:    isLight ? Atelier.text : Atelier.text
-    readonly property color colSubtext: isLight ? Atelier.subtext : Atelier.subtext
-    readonly property color colSurface: isLight ? Qt.rgba(0, 0, 0, 0.05) : Qt.rgba(1, 1, 1, 0.06)
-    readonly property color colSurf0:   isLight ? Qt.rgba(0, 0, 0, 0.03) : Qt.rgba(1, 1, 1, 0.04)
+    readonly property color colText:    Atelier.text
+    readonly property color colSubtext: Atelier.subtext
+    readonly property color colSurface: Qt.alpha(Atelier.text, 0.06)
+    readonly property color colSurf0: Atelier.container
 
     signal closedSignal()
 
@@ -206,13 +202,13 @@ Item {
                         border.width: 1
                         border.color: isActive
                             ? Qt.rgba(modelData.accent.r, modelData.accent.g, modelData.accent.b, 0.6)
-                            : (powerRoot.isLight ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.06))
+                            : (powerRoot.Qt.alpha(Atelier.text, 0.06))
                         scale: btnMa.pressed ? 0.90 : (btnMa.containsMouse ? 1.06 : 1.0)
 
-                        Behavior on radius { NumberAnimation { duration: 260; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
-                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
-                        Behavior on color { ColorAnimation { duration: 150 } }
-                        Behavior on border.color { ColorAnimation { duration: 150 } }
+                        Behavior on radius { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
+                        Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
+                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
 
                         Text {
                             anchors.centerIn: parent
@@ -221,7 +217,7 @@ Item {
                             font.family: powerRoot.fontMono
                             font.pixelSize: 24
                             color: sessBtn.isActive ? sessBtn.modelData.accent : powerRoot.colText
-                            Behavior on color { ColorAnimation { duration: 150 } }
+                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                         }
 
                         Text {
@@ -252,7 +248,7 @@ Item {
                     Layout.topMargin: 4
                     text: powerRoot.uptimeStr
                     font.family: powerRoot.fontMono
-                    font.pixelSize: 10
+                    font.pixelSize: Atelier.fsMicro
                     color: powerRoot.colSubtext
                 }
             }

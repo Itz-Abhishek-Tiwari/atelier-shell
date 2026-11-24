@@ -173,7 +173,7 @@ Item {
                 Layout.fillWidth: true
                 spacing: 10
                 Rectangle {
-                    implicitWidth: 36; implicitHeight: 36; radius: 12
+                    implicitWidth: 36; implicitHeight: 36; radius: Atelier.radiusMd
                     color: Qt.alpha(Atelier.accent, 0.14)
                     border.width: 1
                     border.color: Qt.alpha(Atelier.accent, 0.35)
@@ -191,10 +191,10 @@ Item {
                     spacing: 0
                     Text { Layout.fillWidth: true; elide: Text.ElideRight
                            text: root.current ? root.current.title : (root.loaded ? "No open windows" : "Windows")
-                           font.family: Atelier.fontUi; font.pixelSize: 15; font.weight: Font.DemiBold; color: Atelier.text }
+                           font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl; font.weight: Font.DemiBold; color: Atelier.text }
                     Text { Layout.fillWidth: true; elide: Text.ElideRight
                            text: root.current ? root.nameFor(root.current) + "  ·  workspace " + root.current.ws : ""
-                           font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
+                           font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
                 }
                 Chip { visible: root.wins.length > 0; text: (root.sel + 1) + " / " + root.wins.length; mono: true; tint: Atelier.accent; implicitHeight: 22; pad: 9 }
             }
@@ -214,7 +214,7 @@ Item {
                         readonly property bool on: root.sel === index
                         readonly property var toplevel: root.animActive ? root.toplevelFor(modelData.addr) : null
                         width: root.tileW; height: root.tileH
-                        radius: 18
+                        radius: Atelier.radiusLg
                         color: on ? Atelier.containerHigh : (tm.containsMouse ? Atelier.containerHigh : Atelier.container)
                         border.width: on ? 2 : 1
                         border.color: on ? Atelier.accent : Atelier.outline
@@ -257,7 +257,7 @@ Item {
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                     text: root.nameFor(tile.modelData)
-                                    font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: tile.on ? Font.DemiBold : Font.Medium
+                                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: tile.on ? Font.DemiBold : Font.Medium
                                     color: tile.on ? Atelier.text : Atelier.subtext1
                                 }
                             }

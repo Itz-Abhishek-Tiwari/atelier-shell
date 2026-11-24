@@ -132,7 +132,7 @@ Item {
                 Rectangle {
                     implicitWidth: 220
                     implicitHeight: 32
-                    radius: 16
+                    radius: Atelier.radiusMd
                     color: Atelier.container
                     border.width: 1
                     border.color: search.activeFocus ? Qt.alpha(Atelier.accent, 0.5) : Atelier.outline
@@ -141,12 +141,12 @@ Item {
                         anchors.leftMargin: 12
                         anchors.rightMargin: 10
                         spacing: 8
-                        Text { text: "󰍉"; font.family: Atelier.font; font.pixelSize: 13; color: Atelier.subtext }
+                        Text { text: "󰍉"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: Atelier.subtext }
                         TextInput {
                             id: search
                             Layout.fillWidth: true
                             font.family: Atelier.fontUi
-                            font.pixelSize: 12
+                            font.pixelSize: Atelier.fsMd
                             color: Atelier.text
                             clip: true
                             selectByMouse: true
@@ -166,7 +166,7 @@ Item {
                                 visible: !search.text
                                 text: "Search history…"
                                 font.family: Atelier.fontUi
-                                font.pixelSize: 12
+                                font.pixelSize: Atelier.fsMd
                                 color: Atelier.subtext
                                 opacity: 0.6
                             }
@@ -193,7 +193,7 @@ Item {
                         readonly property bool on: clipRoot.filter === modelData.id
                         implicitWidth: fRow.implicitWidth + 20
                         implicitHeight: 28
-                        radius: 14
+                        radius: Atelier.radiusMd
                         color: on ? Qt.alpha(modelData.tint, 0.18) : (fMa.containsMouse ? Atelier.containerHigh : Atelier.container)
                         border.width: 1
                         border.color: on ? Qt.alpha(modelData.tint, 0.45) : Atelier.outline
@@ -202,8 +202,8 @@ Item {
                             id: fRow
                             anchors.centerIn: parent
                             spacing: 5
-                            Text { text: modelData.icon; font.family: Atelier.font; font.pixelSize: 12; color: parent.parent.on ? modelData.tint : Atelier.subtext }
-                            Text { text: modelData.label; font.family: Atelier.fontUi; font.pixelSize: 11; font.weight: Font.DemiBold; color: parent.parent.on ? modelData.tint : Atelier.text }
+                            Text { text: modelData.icon; font.family: Atelier.font; font.pixelSize: Atelier.fsMd; color: parent.parent.on ? modelData.tint : Atelier.subtext }
+                            Text { text: modelData.label; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.DemiBold; color: parent.parent.on ? modelData.tint : Atelier.text }
                         }
                         MouseArea { id: fMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { clipRoot.filter = modelData.id; list.currentIndex = 0; } }
                     }
@@ -233,7 +233,7 @@ Item {
 
                     width: list.width
                     implicitHeight: modelData.kind === "image" ? 74 : Math.max(48, rowText.implicitHeight + 24)
-                    radius: 14
+                    radius: Atelier.radiusMd
                     color: current ? Qt.alpha(Atelier.accent, 0.12) : (rowMa.containsMouse ? Atelier.containerHigh : Atelier.container)
                     border.width: 1
                     border.color: current ? Qt.alpha(Atelier.accent, 0.4) : Atelier.outline
@@ -259,7 +259,7 @@ Item {
                             visible: row.modelData.kind !== "image"
                             implicitWidth: 30
                             implicitHeight: 30
-                            radius: 10
+                            radius: Atelier.radiusSm
                             color: Qt.alpha(row.tint, 0.14)
                             border.width: 1
                             border.color: Qt.alpha(row.tint, 0.32)
@@ -275,7 +275,7 @@ Item {
                             visible: row.modelData.kind === "image"
                             implicitWidth: 96
                             implicitHeight: 56
-                            radius: 10
+                            radius: Atelier.radiusSm
                             color: Qt.alpha(row.tint, 0.14)
                             Image {
                                 anchors.fill: parent
@@ -297,7 +297,7 @@ Item {
                                 Layout.fillWidth: true
                                 text: row.modelData.kind === "image" ? "Image" : row.modelData.text
                                 font.family: row.modelData.kind === "text" && /[{};=<>]|^\s{2,}/.test(row.modelData.text) ? Atelier.font : Atelier.fontUi
-                                font.pixelSize: 12
+                                font.pixelSize: Atelier.fsMd
                                 font.weight: row.modelData.kind === "image" ? Font.DemiBold : Font.Normal
                                 color: row.modelData.kind === "link" ? Atelier.sky : Atelier.text
                                 wrapMode: Text.WrapAnywhere
@@ -309,7 +309,7 @@ Item {
                                 visible: row.modelData.meta !== ""
                                 text: row.modelData.meta
                                 font.family: Atelier.font
-                                font.pixelSize: 10
+                                font.pixelSize: Atelier.fsMicro
                                 color: Atelier.subtext
                             }
                         }
@@ -318,11 +318,11 @@ Item {
                         Rectangle {
                             implicitWidth: 28
                             implicitHeight: 28
-                            radius: 14
+                            radius: Atelier.radiusMd
                             opacity: rowMa.containsMouse || delMa.containsMouse || row.current ? 1 : 0
                             color: delMa.containsMouse ? Qt.alpha(Atelier.red, 0.22) : "transparent"
                             Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
-                            Text { anchors.centerIn: parent; text: "󰆴"; font.family: Atelier.font; font.pixelSize: 13; color: delMa.containsMouse ? Atelier.red : Atelier.subtext }
+                            Text { anchors.centerIn: parent; text: "󰆴"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: delMa.containsMouse ? Atelier.red : Atelier.subtext }
                             MouseArea { id: delMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: clipRoot.remove(row.modelData) }
                         }
                     }
@@ -342,7 +342,7 @@ Item {
                 Layout.fillWidth: true
                 visible: clipRoot.filtered.length === 0
                 implicitHeight: 64
-                radius: 14
+                radius: Atelier.radiusMd
                 color: Atelier.container
                 border.width: 1
                 border.color: Atelier.outline
@@ -353,7 +353,7 @@ Item {
                     Text {
                         text: clipRoot.entries.length === 0 ? "Nothing copied yet" : "No matches"
                         font.family: Atelier.fontUi
-                        font.pixelSize: 12
+                        font.pixelSize: Atelier.fsMd
                         color: Atelier.subtext
                     }
                 }
@@ -364,7 +364,7 @@ Item {
                 Layout.alignment: Qt.AlignRight
                 text: "↑↓ move  ·  Enter copy  ·  Del remove  ·  Tab filter  ·  Esc close"
                 font.family: Atelier.fontUi
-                font.pixelSize: 10
+                font.pixelSize: Atelier.fsMicro
                 color: Atelier.subtext
                 opacity: 0.6
             }

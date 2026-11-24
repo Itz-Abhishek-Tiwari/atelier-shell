@@ -78,6 +78,21 @@ Singleton {
     // ── Palette roles (live) ─────────────────────────────────────────────────
     readonly property string font:      "SpaceMono Nerd Font Propo"   // numbers, glyphs, clocks
     readonly property string fontUi: "Inter"                         // labels and body text
+    readonly property string fontDisplay: "Inter Display"            // big clocks and headings
+    readonly property string fontEmoji: "Noto Color Emoji"
+
+    // Type scale (px). Use these instead of bare numbers so the whole shell scales together.
+    readonly property int fsMicro: 10
+    readonly property int fsSm: 11      // captions, chips
+    readonly property int fsMd: 12      // body
+    readonly property int fsLg: 13      // emphasised body, buttons
+    readonly property int fsXl: 15      // card and drawer titles
+    readonly property int fsTitle: 22   // page titles
+
+    // Corner radii: small controls / cards / panels
+    readonly property int radiusSm: 10
+    readonly property int radiusMd: 14
+    readonly property int radiusLg: 18
 
     // 12-hour clock helpers (the atelier style: "03:49" + an AM/PM chip)
     readonly property bool clock24: Settings.general.clock24
@@ -168,6 +183,8 @@ Singleton {
     readonly property color container: Qt.alpha(c.text, isLight ? 0.06 : 0.06)
     readonly property color containerHigh: Qt.alpha(c.text, isLight ? 0.11 : 0.11)
     readonly property color outline: Qt.alpha(c.text, 0.08)
+    readonly property color hover: Qt.alpha(c.text, 0.05)      // row under the pointer
+    readonly property color pressed: Qt.alpha(c.text, 0.10)    // selected / pressed row
 
     // ── Motion (Caelestia / M3 expressive curves) ───────────────────────────
     // One motion language everywhere: things that arrive or move ease in with one soft

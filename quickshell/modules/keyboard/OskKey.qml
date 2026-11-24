@@ -16,7 +16,7 @@ Rectangle {
     property int labelSize: 15
     signal tapped()
 
-    radius: 10
+    radius: Atelier.radiusSm
     color: active ? Qt.alpha(tint, 0.3) : (ma.pressed ? Atelier.containerHigh : (ma.containsMouse ? Atelier.containerHigh : Atelier.container))
     border.width: 1
     border.color: active ? Qt.alpha(tint, 0.7) : Atelier.outline
@@ -32,7 +32,7 @@ Rectangle {
         anchors.topMargin: 4
         text: key.sub
         font.family: Atelier.font
-        font.pixelSize: 10
+        font.pixelSize: Atelier.fsMicro
         color: Atelier.subtext
         opacity: 0.8
     }

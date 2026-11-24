@@ -158,10 +158,6 @@ PanelWindow {
         repeat: true
         onTriggered: if (root.player) root.player.positionChanged()
     }
-    function fmt(s) {
-        s = Math.max(0, Math.floor(s || 0));
-        return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
-    }
 
     // ── Tasks (~/day_plan.md: "- [ ] task" / "- [x] task") ──────────────────
     FileView {
@@ -332,7 +328,7 @@ PanelWindow {
             font.weight: root.w.dateCaps ? Font.DemiBold : Font.Medium
             font.letterSpacing: (root.w.dateCaps ? 3 : 0.3) * root.k
             color: dateMa.containsMouse ? Qt.lighter(root.dateInk, 1.1) : root.dateInk
-            Behavior on color { ColorAnimation { duration: 150 } }
+            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
             MouseArea { id: dateMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.requestOverlay("calendar") }
         }
 
@@ -511,7 +507,7 @@ PanelWindow {
                 font.family: Atelier.fontUi; font.pixelSize: Math.round(14.5 * root.k)
                 font.features: { "tnum": 1 }
                 color: lnMa.containsMouse ? root.ink : root.inkSoft
-                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
             }
         }
         MouseArea {

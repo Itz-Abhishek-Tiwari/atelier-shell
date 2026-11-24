@@ -174,7 +174,7 @@ Item {
                 spacing: 10
 
                 Rectangle {
-                    implicitWidth: 36; implicitHeight: 36; radius: 12
+                    implicitWidth: 36; implicitHeight: 36; radius: Atelier.radiusMd
                     color: Qt.alpha(Atelier.accent, 0.14)
                     border.width: 1
                     border.color: Qt.alpha(Atelier.accent, 0.35)
@@ -182,12 +182,12 @@ Item {
                 }
                 ColumnLayout {
                     spacing: 0
-                    Text { text: "Games"; font.family: Atelier.fontUi; font.pixelSize: 15; font.weight: Font.DemiBold; color: Atelier.text }
+                    Text { text: "Games"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl; font.weight: Font.DemiBold; color: Atelier.text }
                     Text {
                         text: !gv.scanned ? "Looking…"
                             : gv.shown.length === gv.all.length ? gv.all.length + (gv.all.length === 1 ? " game" : " games")
                             : gv.shown.length + " of " + gv.all.length
-                        font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
                     }
                 }
                 Item { implicitWidth: 4 }
@@ -196,7 +196,7 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     implicitHeight: 36
-                    radius: 18
+                    radius: Atelier.radiusLg
                     color: Atelier.container
                     border.width: 1
                     border.color: searchField.activeFocus ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
@@ -206,12 +206,12 @@ Item {
                         anchors.leftMargin: 14
                         anchors.rightMargin: 12
                         spacing: 8
-                        Text { text: "󰍉"; font.family: Atelier.font; font.pixelSize: 13; color: Atelier.subtext }
+                        Text { text: "󰍉"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: Atelier.subtext }
                         TextInput {
                             id: searchField
                             Layout.fillWidth: true
                             font.family: Atelier.fontUi
-                            font.pixelSize: 13
+                            font.pixelSize: Atelier.fsLg
                             color: Atelier.text
                             clip: true
                             selectByMouse: true
@@ -261,7 +261,7 @@ Item {
                 visible: !!gv.current
                 Layout.fillWidth: true
                 implicitHeight: 156
-                radius: 18
+                radius: Atelier.radiusLg
                 color: Atelier.container
                 border.width: 1
                 border.color: Atelier.outline
@@ -275,7 +275,7 @@ Item {
                         Layout.preferredWidth: 85
                         Layout.preferredHeight: 128
                         game: gv.current
-                        radius: 12
+                        radius: Atelier.radiusMd
                     }
 
                     ColumnLayout {
@@ -301,7 +301,7 @@ Item {
                             Text {
                                 visible: !!gv.current && gv.current.source !== "App"
                                 text: gv.current ? gv.ago(gv.current.lastPlayed) : ""
-                                font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext
+                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext
                             }
                         }
                     }
@@ -314,8 +314,8 @@ Item {
                         radius: height / 2
                         color: playMa.containsMouse ? Qt.lighter(Atelier.accentFill, 1.08) : Atelier.accentFill
                         scale: playMa.pressed ? 0.94 : (playMa.containsMouse ? 1.04 : 1)
-                        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
-                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                         RowLayout {
                             id: playRow
                             anchors.centerIn: parent
@@ -364,7 +364,7 @@ Item {
                         scrollAnim.to = Math.max(0, Math.min(target, Math.max(0, contentHeight - height)));
                         scrollAnim.restart();
                     }
-                    NumberAnimation { id: scrollAnim; target: grid; property: "contentY"; duration: 180; easing.type: Easing.OutCubic }
+                    NumberAnimation { id: scrollAnim; target: grid; property: "contentY"; duration: Atelier.durFast; easing.type: Easing.OutCubic }
                     Keys.onLeftPressed: go(currentIndex - 1)
                     Keys.onRightPressed: go(currentIndex + 1)
                     Keys.onUpPressed: { if (currentIndex < cols) searchField.forceActiveFocus(); else go(currentIndex - cols); }
@@ -399,15 +399,15 @@ Item {
                             anchors.fill: parent
                             anchors.margins: 6
                             scale: tileMa.pressed ? 0.96 : (tileMa.containsMouse ? 1.03 : 1)
-                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+                            Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
 
-                            Poster { anchors.fill: parent; game: tile.modelData; radius: 14 }
+                            Poster { anchors.fill: parent; game: tile.modelData; radius: Atelier.radiusMd }
 
                             // selection: a soft ring outside the poster
                             Rectangle {
                                 anchors.fill: parent
                                 anchors.margins: -4
-                                radius: 18
+                                radius: Atelier.radiusLg
                                 color: "transparent"
                                 border.width: 2
                                 border.color: Atelier.accent
@@ -441,7 +441,7 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: gv.query ? "Nothing matches “" + gv.query + "”"
                             : "No games yet. Install some with Steam, Heroic or Lutris (on /mnt/games) and they show up here."
-                        font.family: Atelier.fontUi; font.pixelSize: 13
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg
                         color: Atelier.subtext
                     }
                 }
@@ -451,7 +451,7 @@ Item {
             Text {
                 Layout.fillWidth: true
                 text: "Arrows choose  ·  Enter or click to play  ·  " + (gv.sources.length > 1 ? "Tab switches source  ·  " : "") + "type to search"
-                font.family: Atelier.fontUi; font.pixelSize: 11
+                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm
                 color: Atelier.subtext
             }
         }
@@ -466,15 +466,15 @@ Item {
         signal clicked()
         implicitWidth: plRow.implicitWidth + 22
         implicitHeight: 30
-        radius: 15
+        radius: Atelier.radiusMd
         color: on ? Atelier.accentFill : (plMa.containsMouse ? Atelier.containerHigh : Atelier.container)
         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
         Row {
             id: plRow
             anchors.centerIn: parent
             spacing: 6
-            Text { visible: pl.icon !== ""; text: pl.icon; font.family: Atelier.font; font.pixelSize: 12; color: pl.on ? Atelier.onFill : Atelier.subtext; anchors.verticalCenter: parent.verticalCenter }
-            Text { text: pl.label; font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold; color: pl.on ? Atelier.onFill : Atelier.text; anchors.verticalCenter: parent.verticalCenter }
+            Text { visible: pl.icon !== ""; text: pl.icon; font.family: Atelier.font; font.pixelSize: Atelier.fsMd; color: pl.on ? Atelier.onFill : Atelier.subtext; anchors.verticalCenter: parent.verticalCenter }
+            Text { text: pl.label; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; color: pl.on ? Atelier.onFill : Atelier.text; anchors.verticalCenter: parent.verticalCenter }
         }
         MouseArea { id: plMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: pl.clicked() }
     }
@@ -484,7 +484,7 @@ Item {
     component Poster: Item {
         id: po
         property var game: null
-        property real radius: 14
+        property real radius: Atelier.radiusMd
         readonly property bool ready: poImg.status === Image.Ready
 
         Rectangle {
@@ -520,7 +520,7 @@ Item {
                     wrapMode: Text.WordWrap
                     maximumLineCount: 2
                     elide: Text.ElideRight
-                    font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
                 }
                 Item { Layout.fillHeight: true }
             }

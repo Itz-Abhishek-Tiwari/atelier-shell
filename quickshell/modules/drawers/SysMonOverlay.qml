@@ -103,17 +103,17 @@ Item {
                 Rectangle {
                     implicitWidth: 26; implicitHeight: 26; radius: 9
                     color: Qt.alpha(st.tint, 0.14)
-                    Text { anchors.centerIn: parent; text: st.icon; font.family: Atelier.font; font.pixelSize: 13; color: st.tint }
+                    Text { anchors.centerIn: parent; text: st.icon; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: st.tint }
                 }
                 Text { Layout.fillWidth: true; text: st.name; elide: Text.ElideRight
-                       font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold; color: Atelier.text }
-                Text { visible: st.side !== ""; text: st.side; font.family: Atelier.font; font.pixelSize: 11; color: st.sideTint }
+                       font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; color: Atelier.text }
+                Text { visible: st.side !== ""; text: st.side; font.family: Atelier.font; font.pixelSize: Atelier.fsSm; color: st.sideTint }
             }
             Row {
                 visible: st.big !== ""
                 spacing: 4
                 Text { id: bigT; text: st.big; font.family: Atelier.font; font.pixelSize: 28; font.weight: Font.Bold; color: Atelier.text }
-                Text { anchors.baseline: bigT.baseline; text: st.unit; font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext }
+                Text { anchors.baseline: bigT.baseline; text: st.unit; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext }
             }
             ColumnLayout {
                 id: stBody
@@ -130,8 +130,8 @@ Item {
         property color tint: Atelier.subtext1
         Layout.fillWidth: true
         spacing: 8
-        Text { Layout.fillWidth: true; text: label; elide: Text.ElideRight; font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
-        Text { text: value; font.family: Atelier.font; font.pixelSize: 11; color: tint }
+        Text { Layout.fillWidth: true; text: label; elide: Text.ElideRight; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
+        Text { text: value; font.family: Atelier.font; font.pixelSize: Atelier.fsSm; color: tint }
     }
     // the last 40 seconds as thin rounded columns, newest on the right
     component Spark: Item {
@@ -255,9 +255,9 @@ Item {
                                 RowLayout {
                                     Layout.fillWidth: true
                                     Text { Layout.fillWidth: true; text: modelData.name; elide: Text.ElideRight
-                                           font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.text }
+                                           font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.text }
                                     Text { text: modelData.asleep ? "asleep" : modelData.busy + "%"
-                                           font.family: modelData.asleep ? Atelier.fontUi : Atelier.font; font.pixelSize: 11
+                                           font.family: modelData.asleep ? Atelier.fontUi : Atelier.font; font.pixelSize: Atelier.fsSm
                                            color: modelData.asleep ? Atelier.subtext : Atelier.green }
                                 }
                                 LevelBar { Layout.fillWidth: true; value: modelData.busy / 100; tint: Atelier.green; opacity: modelData.asleep ? 0.35 : 1 }
@@ -306,12 +306,12 @@ Item {
                                             Layout.fillWidth: true
                                             spacing: 6
                                             Text { Layout.fillWidth: true; text: app.modelData.name; elide: Text.ElideRight
-                                                   font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.Medium; color: Atelier.text }
+                                                   font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.Medium; color: Atelier.text }
                                             Text { visible: app.modelData.n > 1; text: app.modelData.n + " processes"
-                                                   font.family: Atelier.fontUi; font.pixelSize: 10; color: Atelier.subtext }
+                                                   font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMicro; color: Atelier.subtext }
                                             Text { Layout.preferredWidth: 58; horizontalAlignment: Text.AlignRight
                                                    text: app.cpu ? app.modelData.cpu.toFixed(0) + "%" : SysMon.fmtBytes(app.modelData.mem)
-                                                   font.family: Atelier.font; font.pixelSize: 11; color: col.tint }
+                                                   font.family: Atelier.font; font.pixelSize: Atelier.fsSm; color: col.tint }
                                         }
                                         LevelBar {
                                             Layout.fillWidth: true
@@ -370,7 +370,7 @@ Item {
                                 Layout.fillWidth: true
                                 spacing: 10
                                 Text { Layout.fillWidth: true; text: "Conservation mode"
-                                       font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium; color: Atelier.text }
+                                       font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.Medium; color: Atelier.text }
                                 ToggleSwitch { on: !!(root.bat && root.bat.limited); enabled: !SysMon.limitBusy
                                                onToggled: SysMon.setChargeLimit(!on) }
                             }
@@ -380,7 +380,7 @@ Item {
                                 lineHeight: 1.15
                                 text: !root.bat || !root.bat.limitable ? "This laptop doesn't let the system cap charging."
                                     : "Stops charging at about 80 % so the battery wears slower. Best when you're plugged in most of the day."
-                                font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
                             }
                             Item { Layout.fillHeight: true }
                         }
@@ -392,7 +392,7 @@ Item {
                             }
                             Item { Layout.fillHeight: true }
                             Text { Layout.fillWidth: true; wrapMode: Text.WordWrap; text: "Ranked by CPU use, the main drain you can act on."
-                                   font.family: Atelier.fontUi; font.pixelSize: 10; color: Atelier.subtext; opacity: 0.8 }
+                                   font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMicro; color: Atelier.subtext; opacity: 0.8 }
                         }
                     }
                 }
@@ -451,7 +451,7 @@ Item {
                                                 color: dayCol.modelData.t <= 0 ? Atelier.containerHigh
                                                      : Qt.alpha(Atelier.green, dayCol.picked ? 1 : (dayMa.containsMouse ? 0.7 : 0.4))
                                                 Behavior on height { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
-                                                Behavior on color { ColorAnimation { duration: 150 } }
+                                                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                                             }
                                             MouseArea {
                                                 id: dayMa
@@ -465,7 +465,7 @@ Item {
                                             Layout.alignment: Qt.AlignHCenter
                                             text: dayMa.containsMouse && dayCol.modelData.t > 0 ? ScreenTime.fmt(dayCol.modelData.t)
                                                 : dayCol.modelData.key === ScreenTime.dayKey() ? "Today" : Qt.formatDate(dayCol.modelData.date, "ddd")
-                                            font.family: dayMa.containsMouse ? Atelier.font : Atelier.fontUi; font.pixelSize: 10
+                                            font.family: dayMa.containsMouse ? Atelier.font : Atelier.fontUi; font.pixelSize: Atelier.fsMicro
                                             color: dayCol.picked && root.stKey !== "week" ? Atelier.text : Atelier.subtext
                                         }
                                     }
@@ -475,7 +475,7 @@ Item {
                                 Layout.fillWidth: true
                                 spacing: 8
                                 Text { Layout.fillWidth: true; text: "7 days  " + ScreenTime.fmt(root.stWeekTotal)
-                                       font.family: Atelier.font; font.pixelSize: 11; color: Atelier.subtext }
+                                       font.family: Atelier.font; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
                                 Chip { icon: "󰸗"; text: "Whole week"; implicitHeight: 24; interactive: true
                                        tint: root.stKey === "week" ? Atelier.green : Atelier.subtext
                                        onClicked: root.stDay = root.stKey === "week" ? "" : "week" }
@@ -511,8 +511,8 @@ Item {
                                         RowLayout {
                                             Layout.fillWidth: true
                                             Text { Layout.fillWidth: true; text: ScreenTime.appName(use.modelData.id); elide: Text.ElideRight
-                                                   font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.Medium; color: Atelier.text }
-                                            Text { text: ScreenTime.fmt(use.modelData.secs); font.family: Atelier.font; font.pixelSize: 11; color: Atelier.teal }
+                                                   font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.Medium; color: Atelier.text }
+                                            Text { text: ScreenTime.fmt(use.modelData.secs); font.family: Atelier.font; font.pixelSize: Atelier.fsSm; color: Atelier.teal }
                                         }
                                         LevelBar { Layout.fillWidth: true; implicitHeight: 3; tint: Atelier.teal
                                                    value: use.modelData.secs / Math.max(1, root.stShown) }

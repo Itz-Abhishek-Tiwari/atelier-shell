@@ -36,18 +36,14 @@ Item {
     }
 
     // Space Mono Typography & Caelestia M3 Colors
-    readonly property string fontMono: "SpaceMono Nerd Font Propo"
-    readonly property color colSurface: isLight
-        ? Qt.rgba(240/255, 242/255, 246/255, 0.96)
-        : Qt.rgba(18/255, 16/255, 22/255, 0.94)
-    readonly property color colBorder: isLight
-        ? Qt.rgba(0, 0, 0, 0.08)
-        : Qt.rgba(1, 1, 1, 0.08)
-    readonly property color colPrimary: isLight ? Atelier.accent : Atelier.accent
-    readonly property color colOnPrimary: isLight ? "#ffffff" : Atelier.crust
-    readonly property color colText: isLight ? Atelier.text : Atelier.text
-    readonly property color colSubtext: isLight ? Atelier.subtext : Atelier.subtext
-    readonly property color colContainer: isLight ? Qt.rgba(0, 0, 0, 0.05) : Qt.rgba(1, 1, 1, 0.06)
+    readonly property string fontMono: Atelier.font
+    readonly property color colSurface: Atelier.surface
+    readonly property color colBorder: Atelier.outline
+    readonly property color colPrimary: Atelier.accent
+    readonly property color colOnPrimary: Atelier.onFill
+    readonly property color colText: Atelier.text
+    readonly property color colSubtext: Atelier.subtext
+    readonly property color colContainer: Atelier.container
 
     signal toastRequested(string msg, string icon, color clr)
     signal closedSignal()
@@ -240,7 +236,7 @@ get_devices()
                     Text {
                         text: "Bluetooth"
                         font.family: btOverlayRoot.fontMono
-                        font.pixelSize: 15
+                        font.pixelSize: Atelier.fsXl
                         font.bold: true
                         color: btOverlayRoot.colText
                     }
@@ -253,33 +249,12 @@ get_devices()
                         Text {
                             text: "Enabled"
                             font.family: btOverlayRoot.fontMono
-                            font.pixelSize: 13
+                            font.pixelSize: Atelier.fsLg
                             color: btOverlayRoot.colText
                             Layout.fillWidth: true
                         }
 
-                        Rectangle {
-                            id: powerSwitch
-                            width: 40; height: 22
-                            radius: 11
-                            color: btOverlayRoot.btPowered ? btOverlayRoot.colPrimary : Qt.rgba(1, 1, 1, 0.12)
-                            Behavior on color { ColorAnimation { duration: 140 } }
-
-                            Rectangle {
-                                width: 16; height: 16
-                                radius: 8
-                                anchors.verticalCenter: parent.verticalCenter
-                                x: btOverlayRoot.btPowered ? (powerSwitch.width - width - 3) : 3
-                                color: btOverlayRoot.btPowered ? btOverlayRoot.colOnPrimary : Atelier.subtext
-                                Behavior on x { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: btOverlayRoot.togglePower()
-                            }
-                        }
+                        ToggleSwitch { id: powerSwitch; on: btOverlayRoot.btPowered; onToggled: btOverlayRoot.togglePower() }
                     }
 
                     // Toggle 2: Discovering
@@ -290,33 +265,12 @@ get_devices()
                         Text {
                             text: "Discovering"
                             font.family: btOverlayRoot.fontMono
-                            font.pixelSize: 13
+                            font.pixelSize: Atelier.fsLg
                             color: btOverlayRoot.colText
                             Layout.fillWidth: true
                         }
 
-                        Rectangle {
-                            id: scanSwitch
-                            width: 40; height: 22
-                            radius: 11
-                            color: btOverlayRoot.isScanning ? btOverlayRoot.colPrimary : Qt.rgba(1, 1, 1, 0.12)
-                            Behavior on color { ColorAnimation { duration: 140 } }
-
-                            Rectangle {
-                                width: 16; height: 16
-                                radius: 8
-                                anchors.verticalCenter: parent.verticalCenter
-                                x: btOverlayRoot.isScanning ? (scanSwitch.width - width - 3) : 3
-                                color: btOverlayRoot.isScanning ? btOverlayRoot.colOnPrimary : Atelier.subtext
-                                Behavior on x { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: btOverlayRoot.toggleScan()
-                            }
-                        }
+                        ToggleSwitch { id: scanSwitch; on: btOverlayRoot.isScanning; onToggled: btOverlayRoot.toggleScan() }
                     }
 
                     // Subtitle: X devices available (Y connected)
@@ -332,7 +286,7 @@ get_devices()
                             ? btOverlayRoot.deviceList.length + " devices (" + connCount + " connected)"
                             : btOverlayRoot.deviceList.length + " devices available"
                         font.family: btOverlayRoot.fontMono
-                        font.pixelSize: 11
+                        font.pixelSize: Atelier.fsSm
                         color: btOverlayRoot.colSubtext
                     }
 
@@ -364,7 +318,7 @@ get_devices()
 
                             Rectangle {
                                 anchors.fill: parent
-                                radius: 10
+                                radius: Atelier.radiusSm
                                 color: devRowMa.containsMouse ? btOverlayRoot.colContainer : "transparent"
                                 Behavior on color { ColorAnimation { duration: 100 } }
                             }
@@ -387,7 +341,7 @@ get_devices()
                                 Text {
                                     text: modelData.name
                                     font.family: btOverlayRoot.fontMono
-                                    font.pixelSize: 12
+                                    font.pixelSize: Atelier.fsMd
                                     font.bold: modelData.connected
                                     color: modelData.connected ? btOverlayRoot.colPrimary : btOverlayRoot.colText
                                     Layout.fillWidth: true
@@ -397,18 +351,18 @@ get_devices()
                                 // Action Button (link / link_off pill button)
                                 Rectangle {
                                     width: 28; height: 28
-                                    radius: 14
+                                    radius: Atelier.radiusMd
                                     color: modelData.connected
                                         ? btOverlayRoot.colPrimary
-                                        : (actionBtnMa.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : "transparent")
-                                    border.color: modelData.connected ? "transparent" : Qt.rgba(1, 1, 1, 0.12)
+                                        : (actionBtnMa.containsMouse ? Qt.alpha(Atelier.text, 0.12) : "transparent")
+                                    border.color: modelData.connected ? "transparent" : Qt.alpha(Atelier.text, 0.12)
                                     border.width: 1
 
                                     Text {
                                         anchors.centerIn: parent
                                         text: modelData.connected ? "󰌺" : "󰌹"
                                         font.family: btOverlayRoot.fontMono
-                                        font.pixelSize: 12
+                                        font.pixelSize: Atelier.fsMd
                                         color: modelData.connected ? btOverlayRoot.colOnPrimary : btOverlayRoot.colText
                                     }
 
@@ -436,7 +390,7 @@ get_devices()
                     Rectangle {
                         Layout.fillWidth: true
                         height: 36
-                        radius: 12
+                        radius: Atelier.radiusMd
                         color: btSettingsMa.containsMouse
                             ? Qt.alpha(Atelier.accent, 0.22)
                             : Qt.alpha(Atelier.accent, 0.14)
@@ -450,17 +404,17 @@ get_devices()
                             Text {
                                 text: "󰒓"
                                 font.family: btOverlayRoot.fontMono
-                                font.pixelSize: 13
-                                color: isLight ? Atelier.accent : Atelier.accent
+                                font.pixelSize: Atelier.fsLg
+                                color: Atelier.accent
                                 anchors.verticalCenter: parent.verticalCenter
                             }
 
                             Text {
                                 text: "Open settings"
                                 font.family: btOverlayRoot.fontMono
-                                font.pixelSize: 12
+                                font.pixelSize: Atelier.fsMd
                                 font.bold: true
-                                color: isLight ? Atelier.accent : Atelier.accent
+                                color: Atelier.accent
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                         }

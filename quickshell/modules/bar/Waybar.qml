@@ -215,7 +215,7 @@ Item {
                 y: bar.vertical ? along : (parent.height - height) / 2
                 width: 28
                 height: 28
-                radius: 10
+                radius: Atelier.radiusSm
                 color: Atelier.accentFill
                 Behavior on x { enabled: !bar.vertical; NumberAnimation { duration: 340; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
                 Behavior on y { enabled: bar.vertical; NumberAnimation { duration: 340; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
@@ -246,10 +246,10 @@ Item {
                             anchors.centerIn: parent
                             width: 28
                             height: 28
-                            radius: 10
+                            radius: Atelier.radiusSm
                             color: Atelier.containerHigh
                             opacity: wsMa.containsMouse && !wsCell.isActive ? 1 : 0
-                            Behavior on opacity { NumberAnimation { duration: 120 } }
+                            Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
                         }
 
                         IconImage {
@@ -266,7 +266,7 @@ Item {
                             visible: wsCell.icon === "" && (wsCell.isActive || wsCell.isOccupied)
                             text: wsCell.wsId
                             font.family: Atelier.font
-                            font.pixelSize: 11
+                            font.pixelSize: Atelier.fsSm
                             font.bold: true
                             color: wsCell.isActive ? Atelier.onFill : Atelier.text
                         }
@@ -362,7 +362,7 @@ Item {
                     id: flatApp
                     anchors.verticalCenter: parent.verticalCenter
                     text: titleSlot.appName
-                    font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.DemiBold
                     color: Atelier.text
                 }
                 Text {
@@ -370,7 +370,7 @@ Item {
                     width: Math.max(0, parent.width - x)
                     visible: Settings.bar.showTitle && titleSlot.title !== "" && titleSlot.title !== titleSlot.appName
                     text: titleSlot.title
-                    font.family: Atelier.fontUi; font.pixelSize: 12
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd
                     color: Atelier.subtext
                     elide: Text.ElideRight
                 }
@@ -384,11 +384,11 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
                 text: titleSlot.title
                 font.family: Atelier.font
-                font.pixelSize: 11
+                font.pixelSize: Atelier.fsSm
                 color: Atelier.subtext
                 elide: Text.ElideRight
                 opacity: text ? 0.9 : 0
-                Behavior on opacity { NumberAnimation { duration: 200 } }
+                Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
             }
             Text {
                 visible: !bar.vertical && !Atelier.flatBar
@@ -397,11 +397,11 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
                 text: titleSlot.title
                 font.family: Atelier.font
-                font.pixelSize: 11
+                font.pixelSize: Atelier.fsSm
                 color: Atelier.subtext
                 elide: Text.ElideRight
                 opacity: text ? 0.9 : 0
-                Behavior on opacity { NumberAnimation { duration: 200 } }
+                Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
             }
         }
 
@@ -423,7 +423,7 @@ Item {
                     height: 24
                     Rectangle {
                         anchors.fill: parent
-                        radius: 12
+                        radius: Atelier.radiusMd
                         color: trayMa.containsMouse ? Atelier.containerHigh : "transparent"
                     }
                     IconImage {
@@ -532,7 +532,7 @@ Item {
                 visible: Atelier.flatBar
                 text: Qt.formatDate(bar.now, "ddd d MMM") + "    "
                     + (Atelier.clock24 ? Qt.formatTime(bar.now, "HH:mm") : Qt.formatTime(bar.now, "h:mm AP"))
-                font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium
+                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.Medium
                 font.features: { "tnum": 1 }
                 color: Atelier.text
             }
@@ -635,7 +635,7 @@ Item {
                             : bar.batPct > 0.9 ? "󰁹" : bar.batPct > 0.7 ? "󰂁" : bar.batPct > 0.5 ? "󰁿"
                             : bar.batPct > 0.3 ? "󰁽" : bar.batPct > 0.15 ? "󰁻" : "󰂃"
                         font.family: Atelier.font
-                        font.pixelSize: 15
+                        font.pixelSize: Atelier.fsXl
                         color: bar.charging ? Atelier.green : bar.batPct <= 0.15 ? Atelier.red : Atelier.text
                     }
                     Text {
@@ -694,7 +694,7 @@ Item {
         implicitHeight: bar.vertical ? grid.implicitHeight + 2 * pad : bar.pillWidth
         radius: bar.pillWidth / 2
         color: highlighted ? Qt.alpha(Atelier.accent, 0.18) : Atelier.flatBar ? "transparent" : Atelier.container
-        Behavior on color { ColorAnimation { duration: 150 } }
+        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
 
         MouseArea {
             anchors.fill: parent
@@ -730,7 +730,7 @@ Item {
             anchors.fill: parent
             radius: width / 2
             color: bi.active ? Qt.alpha(Atelier.accent, 0.25) : (biMa.containsMouse ? Atelier.containerHigh : "transparent")
-            Behavior on color { ColorAnimation { duration: 150 } }
+            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
         }
         Text {
             anchors.centerIn: parent
@@ -739,7 +739,7 @@ Item {
             font.pixelSize: bi.size
             color: bi.iconColor
             scale: biMa.pressed ? 0.85 : (biMa.containsMouse ? 1.15 : 1)
-            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
+            Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
         }
         MouseArea {
             id: biMa

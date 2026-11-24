@@ -176,11 +176,11 @@ PanelWindow {
                 Layout.fillWidth: true
                 spacing: 10
                 Text { text: "󰌌"; font.family: Atelier.font; font.pixelSize: 16; color: Atelier.accent }
-                Text { text: "On-screen keyboard"; font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold; color: Atelier.text }
+                Text { text: "On-screen keyboard"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.DemiBold; color: Atelier.text }
                 Text {
                     visible: root.hasWtype
                     text: "types into the focused window  ·  Super+/ to close"
-                    font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
                 }
                 Chip {
                     visible: !root.hasWtype

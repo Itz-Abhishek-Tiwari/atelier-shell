@@ -47,15 +47,12 @@ Scope {
             "sh", path, thumbFile, seconds >= 2 ? "1" : "0"];
         thumbProc.running = true;
     }
-    function _human(b) {
-        return b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : b >= 1e6 ? Math.round(b / 1e6) + " MB" : Math.max(1, Math.round(b / 1e3)) + " KB";
-    }
     Process {
         id: thumbProc
         stdout: StdioCollector {
             onStreamFinished: {
                 const b = Number(text.trim());
-                root.previewSize = b > 0 ? root._human(b) : "";
+                root.previewSize = b > 0 ? Fmt.bytes(b) : "";
                 // the same cache path every time: a query string makes the Image reload it
                 root.previewThumb = "file://" + root.thumbFile + "?" + Date.now();
                 preview.show();
@@ -296,7 +293,7 @@ Scope {
             y: below ? picker.sy + picker.sh + 8 : picker.sy - height - 8
             implicitWidth: sizeLabel.implicitWidth + 18
             implicitHeight: 24
-            radius: 12
+            radius: Atelier.radiusMd
             color: Atelier.surface
             Text {
                 id: sizeLabel
@@ -304,7 +301,7 @@ Scope {
                 text: Math.round(picker.sw * picker.scaleFactor) + " × " + Math.round(picker.sh * picker.scaleFactor)
                       + (root.mode === "window" && picker.hovered ? "   " + (picker.hovered.class || "") : "")
                 font.family: Atelier.font
-                font.pixelSize: 11
+                font.pixelSize: Atelier.fsSm
                 font.bold: true
                 color: Atelier.text
             }
@@ -397,8 +394,8 @@ Scope {
                             id: modeRow
                             anchors.centerIn: parent
                             spacing: 6
-                            Text { text: modelData.icon; font.family: Atelier.font; font.pixelSize: 15; color: parent.parent.on ? Atelier.onFill : Atelier.text }
-                            Text { text: modelData.label; font.family: Atelier.font; font.pixelSize: 11; font.bold: true; color: parent.parent.on ? Atelier.onFill : Atelier.text }
+                            Text { text: modelData.icon; font.family: Atelier.font; font.pixelSize: Atelier.fsXl; color: parent.parent.on ? Atelier.onFill : Atelier.text }
+                            Text { text: modelData.label; font.family: Atelier.font; font.pixelSize: Atelier.fsSm; font.bold: true; color: parent.parent.on ? Atelier.onFill : Atelier.text }
                         }
                         MouseArea { id: modeMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.mode = modelData.id }
                     }
@@ -420,7 +417,7 @@ Scope {
                         anchors.centerIn: parent
                         spacing: 6
                         Text { text: "󰑋"; font.family: Atelier.font; font.pixelSize: 14; color: root.recordMode ? Atelier.red : Atelier.text }
-                        Text { text: "Record"; font.family: Atelier.font; font.pixelSize: 11; font.bold: true; color: root.recordMode ? Atelier.red : Atelier.text }
+                        Text { text: "Record"; font.family: Atelier.font; font.pixelSize: Atelier.fsSm; font.bold: true; color: root.recordMode ? Atelier.red : Atelier.text }
                     }
                     MouseArea { id: recMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.recordMode = !root.recordMode }
                 }
@@ -439,7 +436,7 @@ Scope {
                         anchors.centerIn: parent
                         spacing: 6
                         Text { text: "󰏫"; font.family: Atelier.font; font.pixelSize: 14; color: root.editAfter ? Atelier.yellow : Atelier.text }
-                        Text { text: "Edit"; font.family: Atelier.font; font.pixelSize: 11; font.bold: true; color: root.editAfter ? Atelier.yellow : Atelier.text }
+                        Text { text: "Edit"; font.family: Atelier.font; font.pixelSize: Atelier.fsSm; font.bold: true; color: root.editAfter ? Atelier.yellow : Atelier.text }
                     }
                     MouseArea { id: editMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.editAfter = !root.editAfter }
                 }
@@ -460,7 +457,7 @@ Scope {
                     implicitHeight: 38
                     radius: 19
                     color: xMa.containsMouse ? Qt.alpha(Atelier.red, 0.25) : Atelier.container
-                    Text { anchors.centerIn: parent; text: "󰅖"; font.family: Atelier.font; font.pixelSize: 15; color: xMa.containsMouse ? Atelier.red : Atelier.text }
+                    Text { anchors.centerIn: parent; text: "󰅖"; font.family: Atelier.font; font.pixelSize: Atelier.fsXl; color: xMa.containsMouse ? Atelier.red : Atelier.text }
                     MouseArea { id: xMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.cancel() }
                 }
             }
@@ -473,7 +470,7 @@ Scope {
             visible: root.picking && !picker.dragging && !picker.hasSel
             implicitWidth: hint.implicitWidth + 28
             implicitHeight: 32
-            radius: 16
+            radius: Atelier.radiusMd
             color: Atelier.surface
             Text {
                 id: hint
@@ -483,7 +480,7 @@ Scope {
                     : root.mode === "window" ? "Hover a window and click  ·  Esc to cancel"
                     : "Click or press Enter to " + (root.recordMode ? "record" : "capture") + " the screen")
                 font.family: Atelier.font
-                font.pixelSize: 11
+                font.pixelSize: Atelier.fsSm
                 color: Atelier.text
             }
         }
@@ -526,7 +523,7 @@ Scope {
                 ClippingRectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 150
-                    radius: 14
+                    radius: Atelier.radiusMd
                     color: Atelier.container
                     Image {
                         id: thumb
@@ -551,7 +548,7 @@ Scope {
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 6
-                    Text { text: "󰄬"; font.family: Atelier.font; font.pixelSize: 13; color: Atelier.green }
+                    Text { text: "󰄬"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: Atelier.green }
                     Text {
                         Layout.fillWidth: true
                         text: root.previewVideo
@@ -560,7 +557,7 @@ Scope {
                               : "Copied & saved"
                         elide: Text.ElideRight
                         font.family: Atelier.font
-                        font.pixelSize: 12
+                        font.pixelSize: Atelier.fsMd
                         font.bold: true
                         color: Atelier.text
                     }
@@ -588,7 +585,7 @@ Scope {
         signal clicked()
         implicitWidth: 32
         implicitHeight: 32
-        radius: 16
+        radius: Atelier.radiusMd
         color: pbMa.containsMouse ? Qt.alpha(tint, 0.25) : Atelier.container
         Text { anchors.centerIn: parent; text: pb.icon; font.family: Atelier.font; font.pixelSize: 14; color: pbMa.containsMouse ? pb.tint : Atelier.text }
         MouseArea { id: pbMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: pb.clicked() }

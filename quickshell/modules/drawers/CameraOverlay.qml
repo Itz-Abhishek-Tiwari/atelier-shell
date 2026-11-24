@@ -407,8 +407,8 @@ Item {
                                 fillMode: VideoOutput.PreserveAspectCrop
                                 opacity: win.showing ? 1 : 0
                                 scale: win.zoom
-                                Behavior on opacity { NumberAnimation { duration: 260 } }
-                                Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                                Behavior on opacity { NumberAnimation { duration: Atelier.durMedium } }
+                                Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
                                 transform: Scale { origin.x: preview.width / 2; xScale: win.mirror ? -1 : 1 }
                             }
 
@@ -508,14 +508,14 @@ Item {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     width: Math.min(460, implicitWidth); horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
                                     text: waitBox.title
-                                    font.family: Atelier.fontUi; font.pixelSize: 15; font.weight: Font.Medium; color: "white"
+                                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl; font.weight: Font.Medium; color: "white"
                                 }
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     visible: text !== ""
                                     width: Math.min(460, implicitWidth); horizontalAlignment: Text.AlignHCenter; wrapMode: Text.WordWrap
                                     text: waitBox.hint
-                                    font.family: Atelier.fontUi; font.pixelSize: 12; color: Qt.rgba(1, 1, 1, 0.6)
+                                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Qt.rgba(1, 1, 1, 0.6)
                                 }
                                 Item { width: 1; height: 2 }
                                 Rectangle {
@@ -524,16 +524,16 @@ Item {
                                     width: cbRow.implicitWidth + 36; height: 38; radius: 19
                                     color: cbMa.containsMouse ? Qt.lighter(Atelier.accentFill, 1.1) : Atelier.accentFill
                                     scale: cbMa.pressed ? 0.94 : 1
-                                    Behavior on scale { NumberAnimation { duration: 110 } }
+                                    Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
                                     Row {
                                         id: cbRow
                                         anchors.centerIn: parent
                                         spacing: 8
                                         Text { anchors.verticalCenter: parent.verticalCenter; text: waitBox.failed ? "\u{F0450}" : "󰄜"
-                                            font.family: Atelier.font; font.pixelSize: 15; color: Atelier.onFill }
+                                            font.family: Atelier.font; font.pixelSize: Atelier.fsXl; color: Atelier.onFill }
                                         Text { anchors.verticalCenter: parent.verticalCenter
                                             text: waitBox.failed ? "Try again" : "Connect iPhone"
-                                            font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold; color: Atelier.onFill }
+                                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.DemiBold; color: Atelier.onFill }
                                     }
                                     MouseArea { id: cbMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                         onClicked: waitBox.failed ? win.retry() : PhoneCam.start("drawer") }
@@ -542,7 +542,7 @@ Item {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     visible: waitBox.iph && !win.recording
                                     text: "or use the laptop camera"
-                                    font.family: Atelier.fontUi; font.pixelSize: 12; font.underline: lcMa.containsMouse
+                                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.underline: lcMa.containsMouse
                                     color: Qt.rgba(1, 1, 1, 0.7)
                                     MouseArea { id: lcMa; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor; onClicked: win.pickSource("laptop") }
@@ -557,7 +557,7 @@ Item {
                                 Text {
                                     anchors.centerIn: parent
                                     text: win.countdown
-                                    font.family: "Inter Display"; font.pixelSize: 120; font.weight: Font.Bold
+                                    font.family: Atelier.fontDisplay; font.pixelSize: 120; font.weight: Font.Bold
                                     color: "white"
                                     scale: 1
                                     SequentialAnimation on scale {
@@ -585,13 +585,13 @@ Item {
                                 Rectangle {
                                     id: seg
                                     anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
-                                    width: segRow.implicitWidth + 8; height: 36; radius: 18
+                                    width: segRow.implicitWidth + 8; height: 36; radius: Atelier.radiusLg
                                     color: Qt.rgba(0, 0, 0, 0.42)
                                     border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.12)
                                     opacity: win.recording ? 0.45 : 1
                                     // sliding highlight
                                     Rectangle {
-                                        y: 4; height: 28; radius: 14; color: "white"
+                                        y: 4; height: 28; radius: Atelier.radiusMd; color: "white"
                                         x: 4 + (win.source === "iphone" ? lapSeg.width : 0)
                                         width: win.source === "iphone" ? iphSeg.width : lapSeg.width
                                         Behavior on x { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
@@ -620,13 +620,13 @@ Item {
                                             ? f.resolution.width + "×" + f.resolution.height + " · " + Math.round(f.maxFrameRate) + " fps"
                                               + (win.zoom > 1.01 ? " · " + win.zoom.toFixed(1) + "×" : "")
                                             : ""
-                                        font.family: Atelier.font; font.pixelSize: 11; color: Qt.rgba(1, 1, 1, 0.85)
+                                        font.family: Atelier.font; font.pixelSize: Atelier.fsSm; color: Qt.rgba(1, 1, 1, 0.85)
                                     }
                                 }
                                 Rectangle {
                                     anchors.centerIn: parent
                                     visible: win.recording
-                                    width: recRow.implicitWidth + 24; height: 32; radius: 16
+                                    width: recRow.implicitWidth + 24; height: 32; radius: Atelier.radiusLg
                                     color: Atelier.red
                                     Row {
                                         id: recRow
@@ -669,15 +669,15 @@ Item {
                                 anchors.rightMargin: 14; anchors.topMargin: 10
                                 width: 300
                                 height: adjCol.implicitHeight + 28
-                                radius: 18
+                                radius: Atelier.radiusLg
                                 color: Qt.rgba(0, 0, 0, 0.62)
                                 border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.12)
                                 visible: opacity > 0
                                 opacity: win.showAdjust ? 1 : 0
                                 scale: win.showAdjust ? 1 : 0.94
                                 transformOrigin: Item.TopRight
-                                Behavior on opacity { NumberAnimation { duration: 160 } }
-                                Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                                Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                                Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
                                 MouseArea { anchors.fill: parent }     // don't let clicks reach the picture
 
                                 Column {
@@ -688,7 +688,7 @@ Item {
 
                                     Text {
                                         text: win.source === "iphone" ? "iPhone camera" : "Laptop camera"
-                                        font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold; color: "white"
+                                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.DemiBold; color: "white"
                                     }
 
                                     // brightness
@@ -700,11 +700,11 @@ Item {
                                             width: parent.width
                                             Text { text: "\u{F00DF}"; font.family: Atelier.font; font.pixelSize: 14; color: Atelier.yellow }
                                             Text { text: "Brightness"; Layout.fillWidth: true
-                                                font.family: Atelier.fontUi; font.pixelSize: 12; color: Qt.rgba(1, 1, 1, 0.85) }
+                                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Qt.rgba(1, 1, 1, 0.85) }
                                             Text {
                                                 visible: win.brVal !== win.brDef
                                                 text: "Reset"
-                                                font.family: Atelier.fontUi; font.pixelSize: 11; font.underline: rsMa.containsMouse; color: Qt.rgba(1, 1, 1, 0.65)
+                                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.underline: rsMa.containsMouse; color: Qt.rgba(1, 1, 1, 0.65)
                                                 MouseArea { id: rsMa; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true
                                                     cursorShape: Qt.PointingHandCursor; onClicked: win.setBrightness(win.brDef) }
                                             }
@@ -727,11 +727,11 @@ Item {
                                                 }
                                             }
                                             Rectangle {
-                                                width: 16; height: 16; radius: 8; color: "white"
+                                                width: 16; height: 16; radius: Atelier.radiusSm; color: "white"
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 x: (parent.width - width) * brTrack.frac
                                                 scale: brMa.pressed ? 1.2 : 1
-                                                Behavior on scale { NumberAnimation { duration: 110 } }
+                                                Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
                                             }
                                             MouseArea {
                                                 id: brMa
@@ -749,7 +749,7 @@ Item {
                                         width: parent.width
                                         spacing: 8
                                         visible: win.source === "laptop" && win.sizes.length > 1
-                                        Text { text: "Resolution"; font.family: Atelier.fontUi; font.pixelSize: 12; color: Qt.rgba(1, 1, 1, 0.85) }
+                                        Text { text: "Resolution"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Qt.rgba(1, 1, 1, 0.85) }
                                         Flow {
                                             width: parent.width
                                             spacing: 6
@@ -757,13 +757,13 @@ Item {
                                                 model: win.sizes
                                                 Rectangle {
                                                     readonly property bool on: (camRoot.laptopWidth === 0 && index === 0) || camRoot.laptopWidth === modelData.w
-                                                    width: rsText.implicitWidth + 20; height: 28; radius: 14
+                                                    width: rsText.implicitWidth + 20; height: 28; radius: Atelier.radiusMd
                                                     color: on ? "white" : (rsChip.containsMouse ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(1, 1, 1, 0.08))
                                                     border.width: on ? 0 : 1; border.color: Qt.rgba(1, 1, 1, 0.14)
-                                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                                                     Text { id: rsText; anchors.centerIn: parent
                                                         text: modelData.h + "p" + (modelData.fps !== 30 ? " " + modelData.fps : "")
-                                                        font.family: Atelier.font; font.pixelSize: 11; color: parent.on ? "#141414" : "white" }
+                                                        font.family: Atelier.font; font.pixelSize: Atelier.fsSm; color: parent.on ? "#141414" : "white" }
                                                     MouseArea { id: rsChip; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                                         enabled: !win.recording
                                                         onClicked: camRoot.laptopWidth = index === 0 ? 0 : modelData.w }
@@ -777,13 +777,13 @@ Item {
                                         visible: win.source === "iphone"
                                         text: "Lens, resolution, focus and exposure are set in the DroidCam app on the iPhone."
                                             + (PhoneCam.live ? "\nConnected over " + PhoneCam.linkLabel + "." : "")
-                                        font.family: Atelier.fontUi; font.pixelSize: 12; lineHeight: 1.15; color: Qt.rgba(1, 1, 1, 0.75)
+                                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; lineHeight: 1.15; color: Qt.rgba(1, 1, 1, 0.75)
                                     }
                                     Text {
                                         width: parent.width; wrapMode: Text.WordWrap
                                         visible: win.source === "laptop" && win.brVal < 0 && win.sizes.length <= 1
                                         text: "This camera has no adjustable settings."
-                                        font.family: Atelier.fontUi; font.pixelSize: 12; color: Qt.rgba(1, 1, 1, 0.75)
+                                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Qt.rgba(1, 1, 1, 0.75)
                                     }
                                 }
                             }
@@ -793,7 +793,7 @@ Item {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.top: parent.top; anchors.topMargin: 62
                                 visible: win.status !== "" && !camRoot.gallery
-                                width: stRow.implicitWidth + 26; height: 34; radius: 17
+                                width: stRow.implicitWidth + 26; height: 34; radius: Atelier.radiusLg
                                 color: Qt.rgba(0, 0, 0, 0.6)
                                 border.width: 1; border.color: win.statusBad ? Qt.alpha(Atelier.red, 0.6) : Qt.rgba(1, 1, 1, 0.12)
                                 Row {
@@ -802,7 +802,7 @@ Item {
                                     spacing: 8
                                     Text { anchors.verticalCenter: parent.verticalCenter; text: win.statusBad ? "󰀦" : "󰄬"; font.family: Atelier.font; font.pixelSize: 14
                                         color: win.statusBad ? Atelier.red : Atelier.green }
-                                    Text { anchors.verticalCenter: parent.verticalCenter; text: win.status; font.family: Atelier.fontUi; font.pixelSize: 13; color: "white" }
+                                    Text { anchors.verticalCenter: parent.verticalCenter; text: win.status; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; color: "white" }
                                 }
                             }
 
@@ -819,8 +819,8 @@ Item {
                                     anchors.bottom: parent.top; anchors.bottomMargin: 4
                                     visible: opacity > 0
                                     opacity: win.canZoom && win.showing ? 1 : 0
-                                    Behavior on opacity { NumberAnimation { duration: 180 } }
-                                    width: zRow.implicitWidth + 8; height: 34; radius: 17
+                                    Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                                    width: zRow.implicitWidth + 8; height: 34; radius: Atelier.radiusLg
                                     color: Qt.rgba(0, 0, 0, 0.38)
                                     Row {
                                         id: zRow
@@ -831,9 +831,9 @@ Item {
                                             Rectangle {
                                                 // the pill nearest the current zoom shows the exact value
                                                 readonly property bool near: modelData === (win.zoom < 1.5 ? 1 : win.zoom < 2.5 ? 2 : 3)
-                                                width: near ? 40 : 28; height: 28; radius: 14
+                                                width: near ? 40 : 28; height: 28; radius: Atelier.radiusMd
                                                 color: near ? Qt.rgba(0, 0, 0, 0.55) : "transparent"
-                                                Behavior on width { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+                                                Behavior on width { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
                                                 Text {
                                                     anchors.centerIn: parent
                                                     text: parent.near ? (Math.abs(win.zoom - Math.round(win.zoom)) < 0.05 ? Math.round(win.zoom) : win.zoom.toFixed(1)) + "×" : modelData
@@ -852,12 +852,12 @@ Item {
                                     anchors.top: parent.top
                                     spacing: 22
                                     opacity: win.recording ? 0 : 1
-                                    Behavior on opacity { NumberAnimation { duration: 180 } }
+                                    Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
                                     Repeater {
                                         model: [{ id: "photo", label: "PHOTO" }, { id: "video", label: "VIDEO" }]
                                         Text {
                                             text: modelData.label
-                                            font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold; font.letterSpacing: 1.6
+                                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; font.letterSpacing: 1.6
                                             color: win.mode === modelData.id ? Atelier.yellow : Qt.rgba(1, 1, 1, 0.75)
                                             MouseArea { anchors.fill: parent; anchors.margins: -8; cursorShape: Qt.PointingHandCursor
                                                 enabled: !win.recording; onClicked: win.mode = modelData.id }
@@ -873,10 +873,10 @@ Item {
                                     visible: camRoot.lastShot !== ""
                                     opacity: win.recording ? 0.4 : 1
                                     scale: thMa.pressed ? 0.9 : (thMa.containsMouse ? 1.06 : 1)
-                                    Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                                    Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
                                     ClippingRectangle {
                                         anchors.fill: parent
-                                        radius: 12
+                                        radius: Atelier.radiusMd
                                         color: Qt.rgba(1, 1, 1, 0.1)
                                         border.width: 2; border.color: Qt.rgba(1, 1, 1, 0.85)
                                         Image {
@@ -894,7 +894,7 @@ Item {
                                     SequentialAnimation on scale {
                                         id: thumbPop; running: false
                                         NumberAnimation { from: 0.6; to: 1.08; duration: 220; easing.type: Easing.OutCubic }
-                                        NumberAnimation { to: 1; duration: 140 }
+                                        NumberAnimation { to: 1; duration: Atelier.durFast }
                                     }
                                     MouseArea { id: thMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                         onClicked: win.openGallery(0) }
@@ -916,10 +916,10 @@ Item {
                                         radius: win.recording ? 7 : width / 2
                                         color: win.mode === "video" ? Atelier.red : "white"
                                         scale: shMa.pressed ? 0.86 : (shMa.containsMouse ? 0.96 : 1)
-                                        Behavior on width { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
-                                        Behavior on radius { NumberAnimation { duration: 200 } }
-                                        Behavior on color { ColorAnimation { duration: 200 } }
-                                        Behavior on scale { NumberAnimation { duration: 110 } }
+                                        Behavior on width { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
+                                        Behavior on radius { NumberAnimation { duration: Atelier.durFast } }
+                                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                                        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
                                     }
                                     MouseArea { id: shMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: win.shutter() }
                                 }
@@ -950,7 +950,7 @@ Item {
                                 visible: opacity > 0
                                 opacity: win.showHelp ? 1 : 0
                                 scale: win.showHelp ? 1 : 0.95
-                                Behavior on opacity { NumberAnimation { duration: 160 } }
+                                Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
                                 Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
                                 MouseArea { anchors.fill: parent; onClicked: win.showHelp = false }
                                 Column {
@@ -978,10 +978,10 @@ Item {
                                                     width: Math.max(28, kText.implicitWidth + 14); height: 22; radius: 6
                                                     color: Qt.rgba(1, 1, 1, 0.1); border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.18)
                                                     Text { id: kText; anchors.centerIn: parent; text: modelData[0]
-                                                        font.family: Atelier.font; font.pixelSize: 11; color: "white" }
+                                                        font.family: Atelier.font; font.pixelSize: Atelier.fsSm; color: "white" }
                                                 }
                                                 Text { anchors.verticalCenter: parent.verticalCenter; text: modelData[1]
-                                                    font.family: Atelier.fontUi; font.pixelSize: 12; color: Qt.rgba(1, 1, 1, 0.8) }
+                                                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Qt.rgba(1, 1, 1, 0.8) }
                                             }
                                         }
                                     }
@@ -1011,7 +1011,7 @@ Item {
                                     asynchronous: true
                                     sourceSize.width: 1920; sourceSize.height: 1920
                                     opacity: status === Image.Ready ? 1 : 0
-                                    Behavior on opacity { NumberAnimation { duration: 180 } }
+                                    Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
                                     MouseArea { anchors.fill: parent; onDoubleClicked: Quickshell.execDetached(["xdg-open", win.shot.path]) }
                                 }
                             }
@@ -1077,17 +1077,17 @@ Item {
 
                                 Rectangle {
                                     anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
-                                    width: backRow.implicitWidth + 26; height: 36; radius: 18
+                                    width: backRow.implicitWidth + 26; height: 36; radius: Atelier.radiusLg
                                     color: backMa.containsMouse ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(1, 1, 1, 0.08)
                                     border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.14)
-                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                                     Row {
                                         id: backRow
                                         anchors.centerIn: parent
                                         spacing: 7
-                                        Text { anchors.verticalCenter: parent.verticalCenter; text: "\u{F004D}"; font.family: Atelier.font; font.pixelSize: 15; color: "white" }
+                                        Text { anchors.verticalCenter: parent.verticalCenter; text: "\u{F004D}"; font.family: Atelier.font; font.pixelSize: Atelier.fsXl; color: "white" }
                                         Text { anchors.verticalCenter: parent.verticalCenter; text: "Camera"
-                                            font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold; color: "white" }
+                                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; color: "white" }
                                     }
                                     MouseArea { id: backMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: win.closeGallery() }
                                 }
@@ -1098,7 +1098,7 @@ Item {
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: win.shots.length ? (win.shotIndex + 1) + " of " + win.shots.length : "No photos yet"
-                                        font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold; color: "white"
+                                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.DemiBold; color: "white"
                                     }
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
@@ -1111,7 +1111,7 @@ Item {
                                             const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
                                             return Qt.formatDateTime(d, Atelier.clock24 ? "d MMM yyyy · H:mm" : "d MMM yyyy · h:mm AP");
                                         }
-                                        font.family: Atelier.font; font.pixelSize: 10; color: Qt.rgba(1, 1, 1, 0.6)
+                                        font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; color: Qt.rgba(1, 1, 1, 0.6)
                                     }
                                 }
 
@@ -1146,11 +1146,11 @@ Item {
                                     readonly property bool cur: index === win.shotIndex
                                     scale: cur ? 1 : (tMa.containsMouse ? 0.96 : 0.9)
                                     opacity: cur ? 1 : 0.7
-                                    Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
-                                    Behavior on opacity { NumberAnimation { duration: 160 } }
+                                    Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
+                                    Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
                                     ClippingRectangle {
                                         anchors.fill: parent
-                                        radius: 12
+                                        radius: Atelier.radiusMd
                                         color: Qt.rgba(1, 1, 1, 0.08)
                                         border.width: parent.cur ? 2 : 0; border.color: "white"
                                         Image {
@@ -1175,10 +1175,10 @@ Item {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.top: parent.top; anchors.topMargin: 62
                                 visible: win.status !== ""
-                                width: gsText.implicitWidth + 26; height: 34; radius: 17
+                                width: gsText.implicitWidth + 26; height: 34; radius: Atelier.radiusLg
                                 color: Qt.rgba(0, 0, 0, 0.6)
                                 border.width: 1; border.color: win.statusBad ? Qt.alpha(Atelier.red, 0.6) : Qt.rgba(1, 1, 1, 0.12)
-                                Text { id: gsText; anchors.centerIn: parent; text: win.status; font.family: Atelier.fontUi; font.pixelSize: 13; color: "white" }
+                                Text { id: gsText; anchors.centerIn: parent; text: win.status; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; color: "white" }
                             }
                         }
                     }
@@ -1197,7 +1197,7 @@ Item {
                             spacing: 7
                             Text { anchors.verticalCenter: parent.verticalCenter; text: sb.glyph; font.family: Atelier.font; font.pixelSize: 14
                                 color: sb.on ? "#141414" : "white" }
-                            Text { anchors.verticalCenter: parent.verticalCenter; text: sb.label; font.family: Atelier.fontUi; font.pixelSize: 12
+                            Text { anchors.verticalCenter: parent.verticalCenter; text: sb.label; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd
                                 font.weight: Font.DemiBold; color: sb.on ? "#141414" : "white" }
                         }
                         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: win.pickSource(sb.key) }
@@ -1210,22 +1210,22 @@ Item {
                         property string badge: ""
                         property string tip: ""
                         signal clicked()
-                        width: badge ? tbRow.implicitWidth + 24 : 36; height: 36; radius: 18
+                        width: badge ? tbRow.implicitWidth + 24 : 36; height: 36; radius: Atelier.radiusLg
                         color: on ? Qt.rgba(1, 1, 1, 0.9)
                              : tbMa.containsMouse ? (danger ? Qt.alpha(Atelier.red, 0.55) : Qt.rgba(0, 0, 0, 0.6))
                              : Qt.rgba(0, 0, 0, 0.42)
                         border.width: on ? 0 : 1; border.color: Qt.rgba(1, 1, 1, 0.12)
                         scale: tbMa.pressed ? 0.9 : 1
-                        Behavior on color { ColorAnimation { duration: 150 } }
-                        Behavior on scale { NumberAnimation { duration: 110 } }
+                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
                         Row {
                             id: tbRow
                             anchors.centerIn: parent
                             spacing: 5
-                            Text { anchors.verticalCenter: parent.verticalCenter; text: tb.glyph; font.family: Atelier.font; font.pixelSize: 15
+                            Text { anchors.verticalCenter: parent.verticalCenter; text: tb.glyph; font.family: Atelier.font; font.pixelSize: Atelier.fsXl
                                 color: tb.on ? "#141414" : "white" }
                             Text { anchors.verticalCenter: parent.verticalCenter; visible: tb.badge !== ""; text: tb.badge
-                                font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold; color: tb.on ? "#141414" : "white" }
+                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; color: tb.on ? "#141414" : "white" }
                         }
                         // tooltip under the button
                         Rectangle {
@@ -1235,7 +1235,7 @@ Item {
                             width: tipText.implicitWidth + 14; height: 22; radius: 11
                             color: Qt.rgba(0, 0, 0, 0.75)
                             z: 10
-                            Text { id: tipText; anchors.centerIn: parent; text: tb.tip; font.family: Atelier.fontUi; font.pixelSize: 11; color: "white" }
+                            Text { id: tipText; anchors.centerIn: parent; text: tb.tip; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: "white" }
                         }
                         Timer { id: tipDelay; property bool shown: false; interval: 550; running: tbMa.containsMouse && !shown
                             onTriggered: shown = true }
