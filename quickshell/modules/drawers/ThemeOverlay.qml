@@ -211,7 +211,7 @@ Item {
                     id: seg
                     Layout.fillWidth: true
                     implicitHeight: 32
-                    radius: 16
+                    radius: Atelier.radiusMd
                     color: Atelier.container
                     border.width: 1
                     border.color: Atelier.outline
@@ -241,11 +241,11 @@ Item {
                                 Row {
                                     anchors.centerIn: parent
                                     spacing: 5
-                                    Text { anchors.verticalCenter: parent.verticalCenter; text: modelData.icon; font.family: Atelier.font; font.pixelSize: 11; color: parent.parent.on ? Atelier.accent : Atelier.subtext }
+                                    Text { anchors.verticalCenter: parent.verticalCenter; text: modelData.icon; font.family: Atelier.font; font.pixelSize: Atelier.fsSm; color: parent.parent.on ? Atelier.accent : Atelier.subtext }
                                     Text {
                                         anchors.verticalCenter: parent.verticalCenter
                                         text: modelData.label
-                                        font.family: Atelier.fontUi; font.pixelSize: 11; font.weight: Font.DemiBold
+                                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.DemiBold
                                         color: parent.parent.on ? Atelier.accent : Atelier.text
                                         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                                     }
@@ -277,7 +277,7 @@ Item {
 
                         width: list.width
                         height: 52
-                        radius: 14
+                        radius: Atelier.radiusMd
                         // selection only tints; the border is always there, so nothing shifts
                         color: isSel ? Qt.alpha(Atelier.accent, 0.12) : (rowMa.containsMouse ? Atelier.container : "transparent")
                         border.width: 1
@@ -297,7 +297,7 @@ Item {
                             border.color: Qt.alpha(row.s.text, 0.16)
                             Rectangle {
                                 anchors.centerIn: parent
-                                width: 16; height: 16; radius: 8
+                                width: 16; height: 16; radius: Atelier.radiusSm
                                 color: row.s.accent
                             }
                         }
@@ -315,7 +315,7 @@ Item {
                                 Text {
                                     Layout.fillWidth: true
                                     text: row.modelData.name
-                                    font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold
+                                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.DemiBold
                                     color: Atelier.text
                                     elide: Text.ElideRight
                                 }
@@ -346,7 +346,7 @@ Item {
                                 visible: !row.isCurrent
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: row.modelData.variant === "light" ? "󰖙" : "󰖔"
-                                font.family: Atelier.font; font.pixelSize: 12
+                                font.family: Atelier.font; font.pixelSize: Atelier.fsMd
                                 color: Atelier.subtext
                                 opacity: 0.6
                             }
@@ -405,8 +405,8 @@ Item {
                             anchors.bottom: parent.bottom
                             anchors.bottomMargin: 12
                             spacing: 7
-                            Text { anchors.horizontalCenter: parent.horizontalCenter; text: "12"; font.family: Atelier.font; font.pixelSize: 10; font.bold: true; color: pv.text }
-                            Text { anchors.horizontalCenter: parent.horizontalCenter; text: "47"; font.family: Atelier.font; font.pixelSize: 10; font.bold: true; color: pv.text }
+                            Text { anchors.horizontalCenter: parent.horizontalCenter; text: "12"; font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; font.bold: true; color: pv.text }
+                            Text { anchors.horizontalCenter: parent.horizontalCenter; text: "47"; font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; font.bold: true; color: pv.text }
                             Item { width: 1; height: 2 }
                             Repeater {
                                 model: [pv.sapphire, pv.blue, pv.green]
@@ -422,7 +422,7 @@ Item {
                         x: stage.bar; y: stage.fr
                         width: stage.width - stage.bar - stage.fr
                         height: stage.height - 2 * stage.fr
-                        radius: 14
+                        radius: Atelier.radiusMd
                         color: pv.base
                         Image {
                             anchors.fill: parent
@@ -448,15 +448,15 @@ Item {
                                 spacing: 8
                                 Row {
                                     spacing: 6
-                                    Text { text: "󰣇"; font.family: Atelier.font; font.pixelSize: 11; color: pv.accent }
-                                    Text { text: "~/atelier"; font.family: Atelier.font; font.pixelSize: 10; font.bold: true; color: pv.blue }
-                                    Text { text: "on"; font.family: Atelier.font; font.pixelSize: 10; color: pv.subtext }
-                                    Text { text: " main"; font.family: Atelier.font; font.pixelSize: 10; color: pv.mauve }
+                                    Text { text: "󰣇"; font.family: Atelier.font; font.pixelSize: Atelier.fsSm; color: pv.accent }
+                                    Text { text: "~/atelier"; font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; font.bold: true; color: pv.blue }
+                                    Text { text: "on"; font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; color: pv.subtext }
+                                    Text { text: " main"; font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; color: pv.mauve }
                                 }
                                 Row {
                                     spacing: 6
-                                    Text { text: "❯"; font.family: Atelier.font; font.pixelSize: 10; color: pv.green }
-                                    Text { text: "atelier-theme apply"; font.family: Atelier.font; font.pixelSize: 10; color: pv.text }
+                                    Text { text: "❯"; font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; color: pv.green }
+                                    Text { text: "atelier-theme apply"; font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; color: pv.text }
                                 }
                                 Repeater {
                                     model: [[0.55, pv.green], [0.8, pv.subtext], [0.66, pv.subtext], [0.42, pv.yellow], [0.72, pv.subtext]]
@@ -468,7 +468,7 @@ Item {
                                 }
                                 Row {
                                     spacing: 6
-                                    Text { text: "❯"; font.family: Atelier.font; font.pixelSize: 10; color: pv.green }
+                                    Text { text: "❯"; font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; color: pv.green }
                                     Rectangle { width: 6; height: 11; color: pv.accent }
                                 }
                             }
@@ -503,7 +503,7 @@ Item {
                                 anchors.margins: 11
                                 spacing: 4
                                 Rectangle {
-                                    implicitWidth: chipRow.implicitWidth + 14; implicitHeight: 16; radius: 8
+                                    implicitWidth: chipRow.implicitWidth + 14; implicitHeight: 16; radius: Atelier.radiusSm
                                     color: Qt.alpha(pv.mauve, 0.14); border.width: 1; border.color: Qt.alpha(pv.mauve, 0.35)
                                     Row { id: chipRow; anchors.centerIn: parent; spacing: 4
                                         Text { text: "󰌾"; font.family: Atelier.font; font.pixelSize: 8; color: pv.mauve }
@@ -535,7 +535,7 @@ Item {
                     Rectangle {
                         anchors.centerIn: desk
                         visible: root.applying !== ""
-                        width: busyRow.implicitWidth + 26; height: 34; radius: 17
+                        width: busyRow.implicitWidth + 26; height: 34; radius: Atelier.radiusLg
                         color: Atelier.surface
                         border.width: 1
                         border.color: Qt.alpha(Atelier.accent, 0.4)
@@ -547,7 +547,7 @@ Item {
                                 text: "󰑐"; font.family: Atelier.font; font.pixelSize: 14; color: Atelier.accent
                                 RotationAnimation on rotation { running: root.applying !== "" && root.visible; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
                             }
-                            Text { text: "Applying…"; font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold; color: Atelier.text }
+                            Text { text: "Applying…"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; color: Atelier.text }
                         }
                     }
                 }
@@ -577,7 +577,7 @@ Item {
                         Text {
                             Layout.fillWidth: true
                             text: root.sel ? root.sel.description : ""
-                            font.family: Atelier.fontUi; font.pixelSize: 12
+                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd
                             color: Atelier.subtext
                             elide: Text.ElideRight
                         }
@@ -593,7 +593,7 @@ Item {
                         border.color: inUse ? Qt.alpha(Atelier.green, 0.4) : Qt.alpha(Atelier.accent, 0.5)
                         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                         scale: applyMa.pressed && !inUse ? 0.95 : 1
-                        Behavior on scale { NumberAnimation { duration: 120 } }
+                        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
                         Row {
                             id: applyRow
                             anchors.centerIn: parent
@@ -602,7 +602,7 @@ Item {
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: applyBtn.inUse ? "In use" : "Apply"
-                                font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold
+                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.DemiBold
                                 color: applyBtn.inUse ? Atelier.green : Atelier.accent
                             }
                             Rectangle {
@@ -610,7 +610,7 @@ Item {
                                 anchors.verticalCenter: parent.verticalCenter
                                 width: 20; height: 18; radius: 5
                                 color: Qt.alpha(Atelier.accent, 0.18)
-                                Text { anchors.centerIn: parent; text: "↵"; font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.accent }
+                                Text { anchors.centerIn: parent; text: "↵"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.accent }
                             }
                         }
                         MouseArea {
@@ -632,7 +632,7 @@ Item {
         id: mw
         property bool focused: false
         default property alias content: inner.data
-        radius: 8
+        radius: Atelier.radiusSm
         gradient: Gradient {
             orientation: Gradient.Horizontal
             GradientStop { position: 0; color: mw.focused ? pv.mauve : Qt.alpha(pv.surface2, 0.67) }

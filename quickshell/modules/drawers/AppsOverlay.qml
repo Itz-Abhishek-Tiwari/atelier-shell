@@ -169,7 +169,7 @@ Item {
                 Text {
                     text: root.shown.length
                     font.family: Atelier.font
-                    font.pixelSize: 11
+                    font.pixelSize: Atelier.fsSm
                     color: Atelier.subtext
                     opacity: 0.7
                 }
@@ -177,7 +177,7 @@ Item {
                 Rectangle {
                     Layout.preferredWidth: 220
                     Layout.preferredHeight: 34
-                    radius: 17
+                    radius: Atelier.radiusLg
                     color: Atelier.containerHigh
                     Text {
                         anchors.left: parent.left
@@ -198,7 +198,7 @@ Item {
                         placeholderTextColor: Qt.alpha(Atelier.subtext, 0.6)
                         color: Atelier.text
                         font.family: Atelier.fontUi
-                        font.pixelSize: 13
+                        font.pixelSize: Atelier.fsLg
                         verticalAlignment: TextInput.AlignVCenter
 
                         Keys.onPressed: (e) => {
@@ -233,15 +233,15 @@ Item {
                         readonly property bool on: root.tab === modelData.id && !root.query
                         width: tabLabel.implicitWidth + 26
                         height: 30
-                        radius: 15
+                        radius: Atelier.radiusMd
                         color: on ? Qt.alpha(modelData.tint, 0.18) : (tabMa.containsMouse ? Atelier.container : "transparent")
-                        Behavior on color { ColorAnimation { duration: 120 } }
+                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                         Text {
                             id: tabLabel
                             anchors.centerIn: parent
                             text: parent.modelData.label
                             font.family: Atelier.fontUi
-                            font.pixelSize: 12
+                            font.pixelSize: Atelier.fsMd
                             font.weight: parent.on ? Font.DemiBold : Font.Normal
                             color: parent.on ? parent.modelData.tint : Atelier.subtext
                         }
@@ -275,7 +275,7 @@ Item {
                         y: 0
                         text: "FREQUENT"
                         font.family: Atelier.fontUi
-                        font.pixelSize: 10
+                        font.pixelSize: Atelier.fsMicro
                         font.letterSpacing: 1.6
                         color: Atelier.subtext
                         opacity: 0.7
@@ -302,7 +302,7 @@ Item {
                     visible: root.shown.length === 0
                     text: "Nothing matches “" + filter.text + "”"
                     font.family: Atelier.fontUi
-                    font.pixelSize: 13
+                    font.pixelSize: Atelier.fsLg
                     color: Atelier.subtext
                 }
             }
@@ -319,7 +319,7 @@ Item {
         Rectangle {
             anchors.fill: parent
             anchors.margins: 3
-            radius: 16
+            radius: Atelier.radiusMd
             color: cell.current ? Atelier.containerHigh : (cellMa.containsMouse ? Atelier.container : "transparent")
             Behavior on color { ColorAnimation { duration: 100 } }
         }
@@ -331,7 +331,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             y: 12
             scale: cellMa.pressed ? 0.9 : 1
-            Behavior on scale { NumberAnimation { duration: 120 } }
+            Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
             readonly property string src: cell.app ? root.iconFor(cell.app) : ""
             IconImage { anchors.fill: parent; visible: iconBox.src !== ""; source: iconBox.src; asynchronous: true }
             Rectangle {   // letter tile when the theme lacks the icon
@@ -358,7 +358,7 @@ Item {
             horizontalAlignment: Text.AlignHCenter
             text: cell.app ? cell.app.name : ""
             font.family: Atelier.fontUi
-            font.pixelSize: 11
+            font.pixelSize: Atelier.fsSm
             color: cell.current ? Atelier.text : Atelier.subtext
             wrapMode: Text.Wrap
             maximumLineCount: 2

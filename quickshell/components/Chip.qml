@@ -31,14 +31,14 @@ Rectangle {
             visible: chip.icon !== ""
             text: chip.icon
             font.family: Atelier.font
-            font.pixelSize: 12
+            font.pixelSize: Atelier.fsMd
             color: chip.tint
         }
         Text {
             visible: chip.text !== ""
             text: chip.text
             font.family: chip.mono ? Atelier.font : Atelier.fontUi
-            font.pixelSize: 11
+            font.pixelSize: Atelier.fsSm
             font.weight: Font.DemiBold
             color: chip.tint
         }

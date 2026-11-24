@@ -292,7 +292,7 @@ Item {
             border.width: 1
             border.color: Atelier.outline
             Text { id: tip; anchors.centerIn: parent; text: win.hoveredSlot ? win.hoveredSlot.label : ""
-                   font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.Medium; color: Atelier.text }
+                   font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.Medium; color: Atelier.text }
         }
 
         // ── right-click menu ─────────────────────────────────────────────────
@@ -335,7 +335,7 @@ Item {
                     leftPadding: 8; topPadding: 4; bottomPadding: 6
                     text: menu.trash ? "Trash" : menu.app ? root.nameOf(menu.app) : ""
                     elide: Text.ElideRight
-                    font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold; color: Atelier.text
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; color: Atelier.text
                 }
                 // the app's windows: click one to bring it forward (macOS "Show All Windows")
                 Repeater {
@@ -384,7 +384,7 @@ Item {
         function bounce() { bounceAnim.restart(); }
         SequentialAnimation {
             id: bounceAnim
-            NumberAnimation { target: sl; property: "lift"; to: -14; duration: 200; easing.type: Easing.OutQuad }
+            NumberAnimation { target: sl; property: "lift"; to: -14; duration: Atelier.durFast; easing.type: Easing.OutQuad }
             NumberAnimation { target: sl; property: "lift"; to: 0; duration: 420; easing.type: Easing.OutBounce }
         }
 
@@ -395,7 +395,7 @@ Item {
             anchors.bottom: parent.bottom
             anchors.bottomMargin: -sl.lift
             scale: ma.pressed ? 0.9 : 1
-            Behavior on scale { NumberAnimation { duration: 120 } }
+            Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
 
             IconImage {
                 visible: sl.glyph === ""
@@ -464,8 +464,8 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             x: 8
             spacing: 10
-            Text { text: mr.icon; font.family: Atelier.font; font.pixelSize: 13; color: mr.tint; anchors.verticalCenter: parent.verticalCenter }
-            Text { text: mr.text; font.family: Atelier.fontUi; font.pixelSize: 12; color: mr.tint; anchors.verticalCenter: parent.verticalCenter
+            Text { text: mr.icon; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: mr.tint; anchors.verticalCenter: parent.verticalCenter }
+            Text { text: mr.text; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: mr.tint; anchors.verticalCenter: parent.verticalCenter
                    width: Math.min(implicitWidth, mr.width - 44); elide: Text.ElideRight }
         }
         MouseArea { id: mrMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: mr.clicked() }

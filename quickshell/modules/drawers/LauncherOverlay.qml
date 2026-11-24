@@ -29,13 +29,13 @@ Item {
     signal toastRequested(string msg, string icon, string color)
 
     // Space Mono Typography & Catppuccin colors
-    readonly property string fontMono: "SpaceMono Nerd Font Propo"
-    readonly property color colText: isLight ? Atelier.text : Atelier.text
-    readonly property color colSubtext: isLight ? Atelier.subtext : Atelier.subtext
-    readonly property color colMauve: isLight ? Atelier.accent : Atelier.accent
-    readonly property color colDivider: isLight ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.08)
-    readonly property color colRowActive: isLight ? Qt.rgba(0, 0, 0, 0.08) : Qt.rgba(1, 1, 1, 0.10)
-    readonly property color colRowHover: isLight ? Qt.rgba(0, 0, 0, 0.04) : Qt.rgba(1, 1, 1, 0.05)
+    readonly property string fontMono: Atelier.font
+    readonly property color colText: Atelier.text
+    readonly property color colSubtext: Atelier.subtext
+    readonly property color colMauve: Atelier.accent
+    readonly property color colDivider: Atelier.outline
+    readonly property color colRowActive: Atelier.pressed
+    readonly property color colRowHover: Atelier.hover
 
     readonly property int rowHeight: 50
     readonly property int rowSpacing: 3
@@ -325,7 +325,7 @@ Item {
         bodyHeight: launchRoot.cardHeight
 
         Behavior on bodyHeight {
-            NumberAnimation { duration: 200; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard }
+            NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard }
         }
 
         ColumnLayout {
@@ -356,7 +356,7 @@ Item {
 
                     Rectangle {
                         anchors.fill: parent
-                        radius: 14
+                        radius: Atelier.radiusMd
                         color: row.isCurrent ? launchRoot.colRowActive : (rowMa.containsMouse ? launchRoot.colRowHover : "transparent")
                         Behavior on color { ColorAnimation { duration: 100 } }
                     }
@@ -416,7 +416,7 @@ Item {
                                 visible: text.length > 0
                                 text: row.modelData.subtitle || ""
                                 font.family: launchRoot.fontMono
-                                font.pixelSize: 10
+                                font.pixelSize: Atelier.fsMicro
                                 color: launchRoot.colSubtext
                                 opacity: 0.8
                                 elide: Text.ElideRight
@@ -427,7 +427,7 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                             text: row.isCurrent ? row.modelData.tag + "  ↵" : row.modelData.tag
                             font.family: launchRoot.fontMono
-                            font.pixelSize: 10
+                            font.pixelSize: Atelier.fsMicro
                             color: row.isCurrent ? launchRoot.colMauve : launchRoot.colSubtext
                             opacity: row.isCurrent ? 1 : 0.6
                         }
@@ -453,7 +453,7 @@ Item {
                     visible: launchRoot.results.length === 0
                     text: launchRoot.query.trim().length > 1 ? "No results" : "Type a command, sum, or app"
                     font.family: launchRoot.fontMono
-                    font.pixelSize: 12
+                    font.pixelSize: Atelier.fsMd
                     color: launchRoot.colSubtext
                     opacity: 0.7
                 }
@@ -498,7 +498,7 @@ Item {
                         visible: !searchInput.text
                         text: "Search apps, actions, or calculate…"
                         font.family: launchRoot.fontMono
-                        font.pixelSize: 13
+                        font.pixelSize: Atelier.fsLg
                         color: launchRoot.colSubtext
                         opacity: 0.6
                     }
@@ -519,7 +519,7 @@ Item {
                     Layout.alignment: Qt.AlignVCenter
                     text: "= calc   ? web   > actions   $ run"
                     font.family: launchRoot.fontMono
-                    font.pixelSize: 10
+                    font.pixelSize: Atelier.fsMicro
                     color: launchRoot.colSubtext
                     opacity: 0.55
                 }
@@ -528,7 +528,7 @@ Item {
                     visible: searchInput.text.length > 0
                     implicitWidth: 24
                     implicitHeight: 24
-                    radius: 12
+                    radius: Atelier.radiusMd
                     color: clearMa.containsMouse ? launchRoot.colRowActive : "transparent"
                     Layout.alignment: Qt.AlignVCenter
 
@@ -536,7 +536,7 @@ Item {
                         anchors.centerIn: parent
                         text: "󰅖"
                         font.family: launchRoot.fontMono
-                        font.pixelSize: 12
+                        font.pixelSize: Atelier.fsMd
                         color: launchRoot.colSubtext
                     }
 

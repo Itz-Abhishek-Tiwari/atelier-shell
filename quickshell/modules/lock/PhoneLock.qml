@@ -157,7 +157,7 @@ Item {
         anchors.rightMargin: 40 * p.u; anchors.topMargin: 32 * p.u
         spacing: 22 * p.u
         opacity: p.leaving ? 0 : 0.95
-        Behavior on opacity { NumberAnimation { duration: 260 } }
+        Behavior on opacity { NumberAnimation { duration: Atelier.durMedium } }
         readonly property string fam: p.variant === "dot" ? Atelier.font : p.display
         Text {
             anchors.verticalCenter: parent.verticalCenter
@@ -179,7 +179,7 @@ Item {
         id: faceWrap
         anchors.fill: parent
         opacity: p.auth || p.leaving ? 0 : 1
-        Behavior on opacity { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
         transform: Translate {
             y: p.auth || p.leaving ? -60 * p.u : 0
             Behavior on y { NumberAnimation { duration: 380; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard } }
@@ -513,7 +513,7 @@ Item {
                         width: 96 * p.u; height: 96 * p.u; radius: width / 2
                         color: shelf.parent.hot
                         scale: unlockMa.pressed ? 0.92 : unlockMa.containsMouse ? 1.05 : 1
-                        Behavior on scale { NumberAnimation { duration: 120 } }
+                        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
                         Text { anchors.centerIn: parent; text: "󰌾"; font.family: Atelier.font; font.pixelSize: 40 * p.u; color: "white" }
                         MouseArea { id: unlockMa; anchors.fill: parent; enabled: !p.thumb; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                             onClicked: { p.lockRoot.authMode = true; p.forceActiveFocus(); } }
@@ -686,7 +686,7 @@ Item {
         anchors.fill: parent
         visible: opacity > 0
         opacity: p.auth && !p.leaving ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
         readonly property bool dotLook: p.variant === "dot"
         // per style: field corners, mono type
         readonly property real fieldRadius: dotLook ? 0 : p.variant === "material" ? 22 * p.u : 32 * p.u
@@ -731,7 +731,7 @@ Item {
                     color: authView.dotLook ? Qt.rgba(0, 0, 0, 0.35) : Qt.rgba(1, 1, 1, 0.16)
                     border.width: Math.max(1, 1.5 * p.u)
                     border.color: p.lockRoot.message ? Qt.alpha(Atelier.red, 0.85) : Qt.rgba(1, 1, 1, 0.35)
-                    Behavior on border.color { ColorAnimation { duration: 200 } }
+                    Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
                 }
                 Text {
                     anchors.left: parent.left; anchors.leftMargin: 26 * p.u
@@ -754,7 +754,7 @@ Item {
                             color: "white"
                             scale: 0
                             Component.onCompleted: scale = 1
-                            Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutBack } }
+                            Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack } }
                         }
                     }
                 }
@@ -810,7 +810,7 @@ Item {
                         width: 58 * p.u; height: 58 * p.u
                         radius: p.variant === "dot" ? 0 : p.variant === "material" ? 20 * p.u : width / 2
                         color: Qt.rgba(1, 1, 1, pwMa.containsMouse ? 0.3 : 0.16)
-                        Behavior on color { ColorAnimation { duration: 120 } }
+                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                         Text { anchors.centerIn: parent; text: pw.modelData.icon; font.family: Atelier.font; font.pixelSize: 24 * p.u; color: "white" }
                         MouseArea {
                             id: pwMa
@@ -961,7 +961,7 @@ Item {
         width: 64 * p.u; height: 64 * p.u; radius: width / 2
         color: Qt.rgba(1, 1, 1, rbMa.containsMouse ? 0.3 : 0.18)
         scale: rbMa.pressed ? 0.9 : 1
-        Behavior on scale { NumberAnimation { duration: 110 } }
+        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
         Text { anchors.centerIn: parent; text: rb.icon; font.family: Atelier.font; font.pixelSize: 26 * p.u; color: "white" }
         MouseArea { id: rbMa; anchors.fill: parent; enabled: !p.thumb; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: rb.clicked() }
     }

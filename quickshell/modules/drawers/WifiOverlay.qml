@@ -44,18 +44,14 @@ Item {
     }
 
     // Space Mono Typography & Caelestia M3 Colors
-    readonly property string fontMono: "SpaceMono Nerd Font Propo"
-    readonly property color colSurface: isLight
-        ? Qt.rgba(240/255, 242/255, 246/255, 0.96)
-        : Qt.rgba(18/255, 16/255, 22/255, 0.94)
-    readonly property color colBorder: isLight
-        ? Qt.rgba(0, 0, 0, 0.08)
-        : Qt.rgba(1, 1, 1, 0.08)
+    readonly property string fontMono: Atelier.font
+    readonly property color colSurface: Atelier.surface
+    readonly property color colBorder: Atelier.outline
     readonly property color colPrimary: isLight ? Atelier.accent : Atelier.sky
-    readonly property color colOnPrimary: isLight ? "#ffffff" : Atelier.crust
-    readonly property color colText: isLight ? Atelier.text : Atelier.text
-    readonly property color colSubtext: isLight ? Atelier.subtext : Atelier.subtext
-    readonly property color colContainer: isLight ? Qt.rgba(0, 0, 0, 0.05) : Qt.rgba(1, 1, 1, 0.06)
+    readonly property color colOnPrimary: Atelier.onFill
+    readonly property color colText: Atelier.text
+    readonly property color colSubtext: Atelier.subtext
+    readonly property color colContainer: Atelier.container
 
     signal toastRequested(string msg, string icon, color clr)
     signal closedSignal()
@@ -354,7 +350,7 @@ Item {
                     Text {
                         text: "Password for " + wifiOverlayRoot.selectedSsid
                         font.family: wifiOverlayRoot.fontMono
-                        font.pixelSize: 13
+                        font.pixelSize: Atelier.fsLg
                         font.bold: true
                         color: wifiOverlayRoot.colText
                         Layout.fillWidth: true
@@ -365,7 +361,7 @@ Item {
                         visible: wifiOverlayRoot.errorText !== ""
                         text: wifiOverlayRoot.errorText
                         font.family: wifiOverlayRoot.fontMono
-                        font.pixelSize: 11
+                        font.pixelSize: Atelier.fsSm
                         color: Atelier.red
                         Layout.fillWidth: true
                     }
@@ -373,7 +369,7 @@ Item {
                     Rectangle {
                         Layout.fillWidth: true
                         height: 40
-                        radius: 12
+                        radius: Atelier.radiusMd
                         color: wifiOverlayRoot.colContainer
                         border.color: wifiOverlayRoot.colBorder
                         border.width: 1
@@ -385,7 +381,7 @@ Item {
                             anchors.rightMargin: 40
                             verticalAlignment: TextInput.AlignVCenter
                             font.family: wifiOverlayRoot.fontMono
-                            font.pixelSize: 13
+                            font.pixelSize: Atelier.fsLg
                             color: wifiOverlayRoot.colText
                             echoMode: wifiOverlayRoot.showPassword ? TextInput.Normal : TextInput.Password
                             clip: true
@@ -394,7 +390,7 @@ Item {
                             Text {
                                 text: "Enter Wi-Fi password..."
                                 font.family: wifiOverlayRoot.fontMono
-                                font.pixelSize: 12
+                                font.pixelSize: Atelier.fsMd
                                 color: wifiOverlayRoot.colSubtext
                                 opacity: 0.6
                                 visible: !passInput.text
@@ -408,20 +404,20 @@ Item {
                         // show / hide password
                         Rectangle {
                             width: 28; height: 28
-                            radius: 14
+                            radius: Atelier.radiusMd
                             anchors.right: parent.right
                             anchors.rightMargin: 6
                             anchors.verticalCenter: parent.verticalCenter
                             color: eyeMa.containsMouse ? wifiOverlayRoot.colContainer : "transparent"
-                            Behavior on color { ColorAnimation { duration: 150 } }
+                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                             scale: eyeMa.pressed ? 0.86 : (eyeMa.containsMouse ? 1.18 : 1.0)
-                            Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+                            Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
 
                             Text {
                                 anchors.centerIn: parent
                                 text: wifiOverlayRoot.showPassword ? "\u{F06D1}" : "\u{F0208}"   // eye-off / eye
                                 font.family: wifiOverlayRoot.fontMono
-                                font.pixelSize: 15
+                                font.pixelSize: Atelier.fsXl
                                 color: wifiOverlayRoot.showPassword ? wifiOverlayRoot.colPrimary : wifiOverlayRoot.colSubtext
                             }
 
@@ -445,14 +441,14 @@ Item {
                         Rectangle {
                             Layout.fillWidth: true
                             height: 34
-                            radius: 12
-                            color: cancelMa.containsMouse ? Qt.rgba(1, 1, 1, 0.08) : "transparent"
+                            radius: Atelier.radiusMd
+                            color: cancelMa.containsMouse ? Qt.alpha(Atelier.text, 0.08) : "transparent"
 
                             Text {
                                 anchors.centerIn: parent
                                 text: "Cancel"
                                 font.family: wifiOverlayRoot.fontMono
-                                font.pixelSize: 12
+                                font.pixelSize: Atelier.fsMd
                                 color: wifiOverlayRoot.colSubtext
                             }
 
@@ -468,14 +464,14 @@ Item {
                         Rectangle {
                             Layout.fillWidth: true
                             height: 34
-                            radius: 12
+                            radius: Atelier.radiusMd
                             color: wifiOverlayRoot.colPrimary
 
                             Text {
                                 anchors.centerIn: parent
                                 text: "Connect"
                                 font.family: wifiOverlayRoot.fontMono
-                                font.pixelSize: 12
+                                font.pixelSize: Atelier.fsMd
                                 font.bold: true
                                 color: wifiOverlayRoot.colOnPrimary
                             }
@@ -500,7 +496,7 @@ Item {
                     Text {
                         text: "Wireless"
                         font.family: wifiOverlayRoot.fontMono
-                        font.pixelSize: 15
+                        font.pixelSize: Atelier.fsXl
                         font.bold: true
                         color: wifiOverlayRoot.colText
                     }
@@ -513,34 +509,13 @@ Item {
                         Text {
                             text: "Enabled"
                             font.family: wifiOverlayRoot.fontMono
-                            font.pixelSize: 13
+                            font.pixelSize: Atelier.fsLg
                             color: wifiOverlayRoot.colText
                             Layout.fillWidth: true
                         }
 
                         // Sleek Pill Switch
-                        Rectangle {
-                            id: switchPill
-                            width: 40; height: 22
-                            radius: 11
-                            color: wifiOverlayRoot.wifiEnabled ? wifiOverlayRoot.colPrimary : Qt.rgba(1, 1, 1, 0.12)
-                            Behavior on color { ColorAnimation { duration: 140 } }
-
-                            Rectangle {
-                                width: 16; height: 16
-                                radius: 8
-                                anchors.verticalCenter: parent.verticalCenter
-                                x: wifiOverlayRoot.wifiEnabled ? (switchPill.width - width - 3) : 3
-                                color: wifiOverlayRoot.wifiEnabled ? wifiOverlayRoot.colOnPrimary : Atelier.subtext
-                                Behavior on x { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: wifiOverlayRoot.toggleWifi()
-                            }
-                        }
+                        ToggleSwitch { id: switchPill; on: wifiOverlayRoot.wifiEnabled; onToggled: wifiOverlayRoot.toggleWifi() }
                     }
 
                     // Subtitle: X networks available
@@ -550,7 +525,7 @@ Item {
                                 ? (wifiOverlayRoot.scanRetries >= 8 ? "No networks found" : "Scanning…")
                                 : wifiOverlayRoot.scannedNetworks.length + " networks available"
                         font.family: wifiOverlayRoot.fontMono
-                        font.pixelSize: 11
+                        font.pixelSize: Atelier.fsSm
                         color: wifiOverlayRoot.colSubtext
                     }
 
@@ -582,7 +557,7 @@ Item {
 
                             Rectangle {
                                 anchors.fill: parent
-                                radius: 10
+                                radius: Atelier.radiusSm
                                 color: netRowMa.containsMouse ? wifiOverlayRoot.colContainer : "transparent"
                                 Behavior on color { ColorAnimation { duration: 100 } }
                             }
@@ -606,7 +581,7 @@ Item {
                                     visible: Boolean(modelData.security && modelData.security.length > 0)
                                     text: "󰌾"
                                     font.family: wifiOverlayRoot.fontMono
-                                    font.pixelSize: 10
+                                    font.pixelSize: Atelier.fsMicro
                                     color: wifiOverlayRoot.colSubtext
                                 }
 
@@ -614,7 +589,7 @@ Item {
                                 Text {
                                     text: modelData.ssid + (wifiOverlayRoot.busySsid === modelData.ssid ? "  · connecting…" : "")
                                     font.family: wifiOverlayRoot.fontMono
-                                    font.pixelSize: 12
+                                    font.pixelSize: Atelier.fsMd
                                     font.bold: modelData.inUse
                                     color: modelData.inUse ? wifiOverlayRoot.colPrimary : wifiOverlayRoot.colText
                                     Layout.fillWidth: true
@@ -624,18 +599,18 @@ Item {
                                 // Action Button (link / link_off pill button)
                                 Rectangle {
                                     width: 28; height: 28
-                                    radius: 14
+                                    radius: Atelier.radiusMd
                                     color: modelData.inUse
                                         ? wifiOverlayRoot.colPrimary
-                                        : (actionMa.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : "transparent")
-                                    border.color: modelData.inUse ? "transparent" : Qt.rgba(1, 1, 1, 0.12)
+                                        : (actionMa.containsMouse ? Qt.alpha(Atelier.text, 0.12) : "transparent")
+                                    border.color: modelData.inUse ? "transparent" : Qt.alpha(Atelier.text, 0.12)
                                     border.width: 1
 
                                     Text {
                                         anchors.centerIn: parent
                                         text: modelData.inUse ? "󰌺" : "󰌹"
                                         font.family: wifiOverlayRoot.fontMono
-                                        font.pixelSize: 12
+                                        font.pixelSize: Atelier.fsMd
                                         color: modelData.inUse ? wifiOverlayRoot.colOnPrimary : wifiOverlayRoot.colText
                                     }
 
@@ -675,7 +650,7 @@ Item {
                     Rectangle {
                         Layout.fillWidth: true
                         height: 36
-                        radius: 12
+                        radius: Atelier.radiusMd
                         color: settingsMa.containsMouse
                             ? Qt.alpha(Atelier.accent, 0.22)
                             : Qt.alpha(Atelier.accent, 0.14)
@@ -689,17 +664,17 @@ Item {
                             Text {
                                 text: "󰒓"
                                 font.family: wifiOverlayRoot.fontMono
-                                font.pixelSize: 13
-                                color: isLight ? Atelier.accent : Atelier.accent
+                                font.pixelSize: Atelier.fsLg
+                                color: Atelier.accent
                                 anchors.verticalCenter: parent.verticalCenter
                             }
 
                             Text {
                                 text: "Open settings"
                                 font.family: wifiOverlayRoot.fontMono
-                                font.pixelSize: 12
+                                font.pixelSize: Atelier.fsMd
                                 font.bold: true
-                                color: isLight ? Atelier.accent : Atelier.accent
+                                color: Atelier.accent
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                         }

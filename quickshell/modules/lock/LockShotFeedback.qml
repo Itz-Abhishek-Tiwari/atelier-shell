@@ -33,7 +33,7 @@ Item {
         y: 28
         width: row.implicitWidth + 26
         height: 36
-        radius: 18
+        radius: Atelier.radiusLg
         opacity: 0
         visible: opacity > 0
         readonly property color tint: fb.ok ? Atelier.green : Atelier.red
@@ -44,12 +44,12 @@ Item {
             id: row
             anchors.centerIn: parent
             spacing: 8
-            Text { anchors.verticalCenter: parent.verticalCenter; text: fb.ok ? "󰄀" : "󰀦"; font.family: Atelier.font; font.pixelSize: 15; color: pill.tint }
-            Text { anchors.verticalCenter: parent.verticalCenter; text: fb.text; font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium; color: Atelier.text }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: fb.ok ? "󰄀" : "󰀦"; font.family: Atelier.font; font.pixelSize: Atelier.fsXl; color: pill.tint }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: fb.text; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.Medium; color: Atelier.text }
         }
         SequentialAnimation {
             id: pillAnim
-            NumberAnimation { target: pill; property: "opacity"; to: 1; duration: 160 }
+            NumberAnimation { target: pill; property: "opacity"; to: 1; duration: Atelier.durFast }
             PauseAnimation { duration: 2200 }
             NumberAnimation { target: pill; property: "opacity"; to: 0; duration: 300 }
         }

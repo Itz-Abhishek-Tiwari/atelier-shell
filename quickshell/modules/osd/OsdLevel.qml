@@ -21,8 +21,8 @@ Item {
     implicitWidth: focused ? 46 : 38
     implicitHeight: 210
     opacity: focused || hovered ? 1 : 0.6
-    Behavior on implicitWidth { NumberAnimation { duration: 260; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
-    Behavior on opacity { NumberAnimation { duration: 180 } }
+    Behavior on implicitWidth { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
+    Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
 
     readonly property real shown: Math.max(0, Math.min(1, value))
     readonly property color fillColor: dimmed ? Atelier.overlay0 : Atelier.fill(tint)
@@ -42,7 +42,7 @@ Item {
                 GradientStop { position: 0; color: Qt.lighter(lvl.fillColor, 1.12) }
                 GradientStop { position: 1; color: lvl.fillColor }
             }
-            Behavior on height { enabled: !input.pressed; NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+            Behavior on height { enabled: !input.pressed; NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
         }
     }
 
@@ -53,7 +53,7 @@ Item {
         anchors.topMargin: 12
         text: lvl.dimmed ? "off" : lvl.valueText
         font.family: Atelier.font
-        font.pixelSize: 11
+        font.pixelSize: Atelier.fsSm
         font.bold: true
         color: lvl.shown > 0.92 ? Atelier.onFill : Atelier.text
     }

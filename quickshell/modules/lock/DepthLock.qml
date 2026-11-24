@@ -69,7 +69,7 @@ Item {
         NumberAnimation { target: c; property: "fade"; to: 1; duration: 380; easing.type: Easing.OutCubic }
         NumberAnimation { target: c; property: "settle"; to: 1; duration: 1100; easing.type: Easing.OutQuint }
         SequentialAnimation {
-            PauseAnimation { duration: 140 }
+            PauseAnimation { duration: Atelier.durFast }
             NumberAnimation { target: c; property: "rise"; to: 1; duration: 700; easing.type: Easing.OutQuint }
         }
         SequentialAnimation {
@@ -79,7 +79,7 @@ Item {
     }
     // typing (password view) and unlocking, as 0..1 so they combine with the entrance values
     property real authT: auth ? 1 : 0
-    Behavior on authT { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+    Behavior on authT { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
     property real out: lockRoot.unlocking ? 1 : 0
     Behavior on out { NumberAnimation { duration: 380; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveClose } }
 
@@ -574,13 +574,13 @@ Item {
         Text {
             anchors.verticalCenter: parent.verticalCenter
             text: c.charging ? "󰂄" : "󰁹"
-            font.family: Atelier.font; font.pixelSize: 15
+            font.family: Atelier.font; font.pixelSize: Atelier.fsXl
             color: c.battery && c.battery.percentage <= 0.15 && !c.charging ? Atelier.red : Atelier.text
         }
         Text {
             anchors.verticalCenter: parent.verticalCenter
             text: c.battery ? Math.round(c.battery.percentage * 100) + "%" : ""
-            font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium
+            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.Medium
             color: Atelier.text
         }
     }
@@ -618,13 +618,13 @@ Item {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: Qt.formatDate(c.now, "dddd, d MMMM")
-                font.family: Atelier.fontUi; font.pixelSize: 15; font.weight: Font.Medium
+                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl; font.weight: Font.Medium
                 color: Atelier.subtext1
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: (Atelier.lockClock24 ? Atelier.lockHour(c.now) : Atelier.lockHour(c.now).replace(/^0/, "")) + ":" + Qt.formatTime(c.now, "mm")
-                font.family: "Inter Display"; font.pixelSize: 68; font.weight: Font.DemiBold
+                font.family: Atelier.fontDisplay; font.pixelSize: 68; font.weight: Font.DemiBold
                 font.features: { "tnum": 1 }
                 font.letterSpacing: -1.5
                 color: Atelier.text
@@ -649,7 +649,7 @@ Item {
                     color: "transparent"
                     border.width: 2
                     border.color: c.lockRoot.message ? Qt.alpha(Atelier.red, 0.8) : Qt.alpha(Atelier.text, 0.35)
-                    Behavior on border.color { ColorAnimation { duration: 200 } }
+                    Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
                     // breathes while PAM checks
                     property real pulse: 1
                     opacity: c.lockRoot.checking ? pulse : 1
@@ -699,7 +699,7 @@ Item {
                 text: c.lockRoot.failCount > 0
                     ? c.lockRoot.failCount + (c.lockRoot.failCount === 1 ? " failed attempt" : " failed attempts")
                     : "Enter your password to unlock"
-                font.family: Atelier.fontUi; font.pixelSize: 13
+                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg
                 color: c.lockRoot.failCount > 0 ? Atelier.text : Atelier.subtext1
             }
 
@@ -716,7 +716,7 @@ Item {
                     color: Qt.alpha(Atelier.crust, 0.5)
                     border.width: c.lockRoot.message ? 1.5 : 1
                     border.color: c.lockRoot.message ? Qt.alpha(Atelier.red, 0.8) : Qt.alpha(Atelier.text, 0.22)
-                    Behavior on border.color { ColorAnimation { duration: 200 } }
+                    Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
                 }
 
                 // show / hide what's typed
@@ -727,7 +727,7 @@ Item {
                     width: 40; height: 40; radius: 20
                     color: eyeMa.containsMouse ? Qt.alpha(Atelier.text, 0.1) : "transparent"
                     opacity: c.lockRoot.buffer.length > 0 ? 1 : 0
-                    Behavior on opacity { NumberAnimation { duration: 150 } }
+                    Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
                     Text { anchors.centerIn: parent; text: c.reveal ? "󰈉" : "󰈈"; font.family: Atelier.font; font.pixelSize: 17; color: Atelier.subtext1 }
                     MouseArea { id: eyeMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         enabled: c.lockRoot.buffer.length > 0; onClicked: { c.reveal = !c.reveal; c.forceActiveFocus(); } }
@@ -758,7 +758,7 @@ Item {
                                 color: Atelier.text
                                 scale: 0
                                 Component.onCompleted: scale = 1
-                                Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
+                                Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
                             }
                         }
                         Text {
@@ -791,9 +791,9 @@ Item {
                     color: c.lockRoot.buffer.length > 0 || c.lockRoot.checking
                         ? (goMa.containsMouse ? Qt.lighter(Atelier.accentFill, 1.12) : Atelier.accentFill)
                         : Qt.alpha(Atelier.text, 0.1)
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                     scale: goMa.pressed ? 0.9 : 1
-                    Behavior on scale { NumberAnimation { duration: 120 } }
+                    Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
                     Text {
                         anchors.centerIn: parent
                         text: c.lockRoot.checking ? "󰑐" : "󰁔"
@@ -814,7 +814,7 @@ Item {
                 Rectangle {
                     anchors.centerIn: parent
                     visible: !!c.lockRoot.message || c.capsOn
-                    width: statusRow.implicitWidth + 22; height: 28; radius: 14
+                    width: statusRow.implicitWidth + 22; height: 28; radius: Atelier.radiusMd
                     readonly property color tint: c.lockRoot.message ? Atelier.red : Atelier.yellow
                     color: Qt.alpha(tint, 0.16)
                     border.width: 1; border.color: Qt.alpha(tint, 0.4)
@@ -822,16 +822,16 @@ Item {
                         id: statusRow
                         anchors.centerIn: parent
                         spacing: 7
-                        Text { anchors.verticalCenter: parent.verticalCenter; text: c.lockRoot.message ? "󰀦" : "󰘲"; font.family: Atelier.font; font.pixelSize: 13; color: parent.parent.tint }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: c.lockRoot.message ? "󰀦" : "󰘲"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: parent.parent.tint }
                         Text { anchors.verticalCenter: parent.verticalCenter; text: c.lockRoot.message || "Caps Lock is on"
-                            font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.Medium; color: Atelier.text }
+                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.Medium; color: Atelier.text }
                     }
                 }
                 Text {
                     anchors.centerIn: parent
                     visible: !c.lockRoot.message && !c.capsOn
                     text: c.isPreview ? "Preview · Esc twice to close" : "Esc to go back"
-                    font.family: Atelier.fontUi; font.pixelSize: 11
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm
                     color: Atelier.subtext
                 }
             }
@@ -865,7 +865,7 @@ Item {
                 Rectangle {
                     // no `required` on purpose (see LockContent: a dead notification object can crash Qt)
                     readonly property string src: Notifs.iconFor(modelData)
-                    width: 34; height: 34; radius: 17
+                    width: 34; height: 34; radius: Atelier.radiusLg
                     color: Qt.alpha(Atelier.crust, 0.45)
                     border.width: 1; border.color: Qt.alpha(Atelier.text, 0.14)
                     IconImage { anchors.centerIn: parent; implicitSize: 18; visible: parent.src !== ""; source: parent.src; asynchronous: true }
@@ -889,7 +889,7 @@ Item {
                 anchors.leftMargin: 8; anchors.rightMargin: 8
                 spacing: 10
                 ClippingRectangle {
-                    implicitWidth: 36; implicitHeight: 36; radius: 18
+                    implicitWidth: 36; implicitHeight: 36; radius: Atelier.radiusLg
                     color: Qt.alpha(Atelier.pink, 0.2)
                     Image {
                         anchors.fill: parent
@@ -903,8 +903,8 @@ Item {
                     Layout.fillWidth: true
                     Layout.maximumWidth: 280
                     spacing: 0
-                    Text { Layout.fillWidth: true; text: c.player ? c.player.trackTitle : ""; font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold; color: Atelier.text; elide: Text.ElideRight }
-                    Text { Layout.fillWidth: true; text: c.player ? (c.player.trackArtist || c.player.identity) : ""; font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext1; elide: Text.ElideRight }
+                    Text { Layout.fillWidth: true; text: c.player ? c.player.trackTitle : ""; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.DemiBold; color: Atelier.text; elide: Text.ElideRight }
+                    Text { Layout.fillWidth: true; text: c.player ? (c.player.trackArtist || c.player.identity) : ""; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext1; elide: Text.ElideRight }
                 }
                 RoundButton { icon: "󰒮"; onClicked: c.player.previous() }
                 RoundButton { icon: c.player && c.player.isPlaying ? "󰏤" : "󰐊"; onClicked: c.player.togglePlaying() }
@@ -915,7 +915,7 @@ Item {
         Text {
             Layout.alignment: Qt.AlignHCenter
             text: "󰌾   " + (c.isPreview ? "Preview · type to try · Esc to close" : "Type to unlock")
-            font.family: Atelier.fontUi; font.pixelSize: 12; font.letterSpacing: 0.4
+            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.letterSpacing: 0.4
             color: Atelier.text
             opacity: 0.8
         }
@@ -962,7 +962,7 @@ Item {
         color: Qt.alpha(Atelier.crust, rbMa.containsMouse ? 0.6 : 0.4)
         border.width: 1; border.color: Qt.alpha(Atelier.text, 0.14)
         scale: rbMa.pressed ? 0.9 : 1
-        Behavior on scale { NumberAnimation { duration: 120 } }
+        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
         Text { anchors.centerIn: parent; text: rb.icon; font.family: Atelier.font; font.pixelSize: rb.size * 0.42; color: rb.tint }
         MouseArea { id: rbMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: rb.clicked() }
@@ -1001,7 +1001,7 @@ Item {
         x: clockGroup.x + clockGroup.width / 2 - width / 2
         y: Math.max(4, clockGroup.y - 40)
         text: c.dragging ? "Release to place" : (c.custom ? "Drag to move · double-click to centre" : "Drag the clock to place it yourself")
-        font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.Medium
+        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.Medium
         color: "white"
         style: Text.Raised; styleColor: Qt.rgba(0, 0, 0, 0.5)
     }

@@ -157,7 +157,7 @@ Item {
                 Rectangle {
                     implicitWidth: 240
                     implicitHeight: 32
-                    radius: 16
+                    radius: Atelier.radiusMd
                     color: Atelier.container
                     border.width: 1
                     border.color: search.activeFocus ? Qt.alpha(Atelier.accent, 0.5) : Atelier.outline
@@ -166,12 +166,12 @@ Item {
                         anchors.leftMargin: 12
                         anchors.rightMargin: 10
                         spacing: 8
-                        Text { text: "󰍉"; font.family: Atelier.font; font.pixelSize: 13; color: Atelier.subtext }
+                        Text { text: "󰍉"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: Atelier.subtext }
                         TextInput {
                             id: search
                             Layout.fillWidth: true
                             font.family: Atelier.fontUi
-                            font.pixelSize: 12
+                            font.pixelSize: Atelier.fsMd
                             color: Atelier.text
                             clip: true
                             selectByMouse: true
@@ -187,7 +187,7 @@ Item {
                                 visible: !search.text
                                 text: "Search shortcuts…"
                                 font.family: Atelier.fontUi
-                                font.pixelSize: 12
+                                font.pixelSize: Atelier.fsMd
                                 color: Atelier.subtext
                                 opacity: 0.6
                             }
@@ -233,7 +233,7 @@ Item {
                                         Text {
                                             text: sec.modelData.name.toUpperCase()
                                             font.family: Atelier.fontUi
-                                            font.pixelSize: 10
+                                            font.pixelSize: Atelier.fsMicro
                                             font.weight: Font.DemiBold
                                             font.letterSpacing: 1.2
                                             color: sec.tint
@@ -253,7 +253,7 @@ Item {
                                                 topPadding: 3
                                                 text: row.modelData.desc
                                                 font.family: Atelier.fontUi
-                                                font.pixelSize: 12
+                                                font.pixelSize: Atelier.fsMd
                                                 color: Atelier.subtext1
                                                 elide: Text.ElideRight
                                             }
@@ -282,7 +282,7 @@ Item {
                                                                     anchors.centerIn: parent
                                                                     text: parent.modelData
                                                                     font.family: Atelier.fontUi
-                                                                    font.pixelSize: 11
+                                                                    font.pixelSize: Atelier.fsSm
                                                                     font.weight: Font.Medium
                                                                     color: Atelier.text
                                                                 }
@@ -305,7 +305,7 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 text: "No shortcut matches “" + search.text + "”"
                 font.family: Atelier.fontUi
-                font.pixelSize: 12
+                font.pixelSize: Atelier.fsMd
                 color: Atelier.subtext
             }
         }

@@ -19,7 +19,7 @@ Rectangle {
     color: active ? Qt.alpha(Atelier.accent, 0.16) : (ibMa.containsMouse ? Atelier.containerHigh : "transparent")
     scale: ibMa.pressed ? 0.88 : 1
     Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-    Behavior on scale { NumberAnimation { duration: 110 } }
+    Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
     Text {
         anchors.centerIn: parent
         text: ib.icon

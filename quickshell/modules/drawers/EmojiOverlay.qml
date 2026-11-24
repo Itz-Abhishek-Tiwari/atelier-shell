@@ -248,7 +248,7 @@ Item {
                 Rectangle {           // segmented tabs
                     implicitWidth: tabRow.implicitWidth + 8
                     implicitHeight: 34
-                    radius: 17
+                    radius: Atelier.radiusLg
                     color: Atelier.container
                     border.width: 1
                     border.color: Atelier.outline
@@ -271,8 +271,8 @@ Item {
                                     id: tRow
                                     anchors.centerIn: parent
                                     spacing: 6
-                                    Text { text: modelData.icon; font.family: Atelier.font; font.pixelSize: 13; color: parent.parent.on ? modelData.tint : Atelier.subtext }
-                                    Text { text: modelData.label; font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold; color: parent.parent.on ? Atelier.text : Atelier.subtext }
+                                    Text { text: modelData.icon; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: parent.parent.on ? modelData.tint : Atelier.subtext }
+                                    Text { text: modelData.label; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; color: parent.parent.on ? Atelier.text : Atelier.subtext }
                                 }
                                 MouseArea { id: tMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.setTab(modelData.id) }
                             }
@@ -283,7 +283,7 @@ Item {
                 Rectangle {           // search
                     Layout.fillWidth: true
                     implicitHeight: 34
-                    radius: 17
+                    radius: Atelier.radiusLg
                     color: Atelier.container
                     border.width: 1
                     border.color: search.activeFocus ? Qt.alpha(Atelier.accent, 0.5) : Atelier.outline
@@ -292,12 +292,12 @@ Item {
                         anchors.leftMargin: 12
                         anchors.rightMargin: 10
                         spacing: 8
-                        Text { text: "󰍉"; font.family: Atelier.font; font.pixelSize: 13; color: Atelier.subtext }
+                        Text { text: "󰍉"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: Atelier.subtext }
                         TextInput {
                             id: search
                             Layout.fillWidth: true
                             font.family: Atelier.fontUi
-                            font.pixelSize: 12
+                            font.pixelSize: Atelier.fsMd
                             color: Atelier.text
                             clip: true
                             selectByMouse: true
@@ -327,7 +327,7 @@ Item {
                                 text: root.tab === "emoji" ? "Search emoji…  try “party” or “lol”"
                                     : Settings.emoji.gifProvider === "tenor" ? "Search Tenor…" : "Search GIPHY…"
                                 font.family: Atelier.fontUi
-                                font.pixelSize: 12
+                                font.pixelSize: Atelier.fsMd
                                 color: Atelier.subtext
                                 opacity: 0.6
                             }
@@ -337,11 +337,11 @@ Item {
 
                 Rectangle {           // skin tone (emoji) — click cycles
                     visible: root.tab === "emoji"
-                    implicitWidth: 34; implicitHeight: 34; radius: 17
+                    implicitWidth: 34; implicitHeight: 34; radius: Atelier.radiusLg
                     color: toneMa.containsMouse ? Atelier.containerHigh : Atelier.container
                     border.width: 1
                     border.color: Atelier.outline
-                    Text { anchors.centerIn: parent; text: root.toneSwatches[Settings.emoji.tone] || "✋"; font.family: "Noto Color Emoji"; font.pixelSize: 17 }
+                    Text { anchors.centerIn: parent; text: root.toneSwatches[Settings.emoji.tone] || "✋"; font.family: Atelier.fontEmoji; font.pixelSize: 17 }
                     MouseArea {
                         id: toneMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         onClicked: Settings.emoji.tone = (Settings.emoji.tone + 1) % 6
@@ -349,7 +349,7 @@ Item {
                 }
                 Rectangle {           // API key (GIFs)
                     visible: root.tab === "gifs" && root.hasKey
-                    implicitWidth: 34; implicitHeight: 34; radius: 17
+                    implicitWidth: 34; implicitHeight: 34; radius: Atelier.radiusLg
                     color: keyMa.containsMouse || root.editingKey ? Atelier.containerHigh : Atelier.container
                     border.width: 1
                     border.color: Atelier.outline
@@ -370,7 +370,7 @@ Item {
                         readonly property bool on: root.group === modelData.g
                         Layout.fillWidth: true
                         implicitHeight: 32
-                        radius: 10
+                        radius: Atelier.radiusSm
                         color: on ? Qt.alpha(Atelier.yellow, 0.16) : (cMa.containsMouse ? Atelier.containerHigh : "transparent")
                         border.width: on ? 1 : 0
                         border.color: Qt.alpha(Atelier.yellow, 0.4)
@@ -416,16 +416,16 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         anchors.margins: 2
-                        radius: 10
+                        radius: Atelier.radiusSm
                         color: ec.current ? Qt.alpha(Atelier.yellow, 0.18) : (eMa.containsMouse ? Atelier.containerHigh : "transparent")
                     }
                     Text {
                         anchors.centerIn: parent
                         text: root.glyph(ec.modelData)
-                        font.family: "Noto Color Emoji"
+                        font.family: Atelier.fontEmoji
                         font.pixelSize: 26
                         scale: eMa.pressed ? 0.86 : (eMa.containsMouse ? 1.15 : 1)
-                        Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+                        Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
                     }
                     MouseArea {
                         id: eMa
@@ -446,7 +446,7 @@ Item {
                         : root.query ? "No emoji for “" + search.text.trim() + "”"
                         : "Emoji you pick show up here"
                     font.family: Atelier.fontUi
-                    font.pixelSize: 12
+                    font.pixelSize: Atelier.fsMd
                     color: Atelier.subtext
                 }
             }
@@ -471,7 +471,7 @@ Item {
                 Item { Layout.fillWidth: true }
                 Text {
                     text: "Powered by " + (Settings.emoji.gifProvider === "tenor" ? "Tenor" : "GIPHY")
-                    font.family: Atelier.fontUi; font.pixelSize: 10; color: Atelier.subtext; opacity: 0.7
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMicro; color: Atelier.subtext; opacity: 0.7
                 }
             }
 
@@ -498,7 +498,7 @@ Item {
                     ClippingRectangle {
                         anchors.fill: parent
                         anchors.margins: 3
-                        radius: 12
+                        radius: Atelier.radiusMd
                         color: Atelier.container
                         Image {             // still frame: cheap, the grid never animates as a whole
                             anchors.fill: parent
@@ -522,7 +522,7 @@ Item {
                     Rectangle {             // selection ring (outside the clip, so the picture never shifts)
                         anchors.fill: parent
                         anchors.margins: 3
-                        radius: 12
+                        radius: Atelier.radiusMd
                         color: "transparent"
                         border.width: 2
                         border.color: Atelier.pink
@@ -550,7 +550,7 @@ Item {
                         : root.gifMode === "recent" && root.query === "" ? "GIFs you pick show up here"
                         : "No GIFs found"
                     font.family: Atelier.fontUi
-                    font.pixelSize: 12
+                    font.pixelSize: Atelier.fsMd
                     color: Atelier.subtext
                 }
             }
@@ -573,7 +573,7 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
                     text: "GIF search needs a free API key from GIPHY or Tenor. Get one, paste it here, and it stays on this computer (in ~/.config/atelier/settings.json)."
-                    font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext
                 }
                 RowLayout {
                     Layout.alignment: Qt.AlignHCenter
@@ -595,7 +595,7 @@ Item {
                     Layout.alignment: Qt.AlignHCenter
                     implicitWidth: 440
                     implicitHeight: 34
-                    radius: 17
+                    radius: Atelier.radiusLg
                     color: Atelier.container
                     border.width: 1
                     border.color: keyIn.activeFocus ? Qt.alpha(Atelier.pink, 0.6) : Atelier.outline
@@ -604,12 +604,12 @@ Item {
                         anchors.leftMargin: 12
                         anchors.rightMargin: 4
                         spacing: 8
-                        Text { text: "󰌆"; font.family: Atelier.font; font.pixelSize: 13; color: Atelier.subtext }
+                        Text { text: "󰌆"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: Atelier.subtext }
                         TextInput {
                             id: keyIn
                             Layout.fillWidth: true
                             text: Settings.emoji.gifKey
-                            font.family: Atelier.font; font.pixelSize: 11
+                            font.family: Atelier.font; font.pixelSize: Atelier.fsSm
                             color: Atelier.text
                             clip: true
                             selectByMouse: true
@@ -620,7 +620,7 @@ Item {
                                 anchors.verticalCenter: parent.verticalCenter
                                 visible: !keyIn.text
                                 text: "Paste your API key"
-                                font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext; opacity: 0.6
+                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext; opacity: 0.6
                             }
                         }
                         Chip {
@@ -648,20 +648,20 @@ Item {
                 Text {
                     visible: !!parent.cur
                     text: root.glyph(parent.cur)
-                    font.family: "Noto Color Emoji"; font.pixelSize: 20
+                    font.family: Atelier.fontEmoji; font.pixelSize: 20
                 }
                 Text {
                     Layout.fillWidth: true
                     text: parent.cur ? parent.cur.n : root.tab === "gifs" && root.hasKey && !root.editingKey
                         ? (gifGrid.currentIndex >= 0 && root.shownGifs[gifGrid.currentIndex] ? root.shownGifs[gifGrid.currentIndex].title : "") : ""
                     elide: Text.ElideRight
-                    font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.text
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.text
                 }
                 Text {
                     text: root.tab === "emoji"
                         ? (Settings.emoji.typeOnPick && root.hasWtype ? "Enter type it" : "Enter copy") + "  ·  ⇧ copy, keep open  ·  Tab GIFs"
                         : "Click copy link  ·  Right-click copy GIF  ·  Tab emoji"
-                    font.family: Atelier.fontUi; font.pixelSize: 10; color: Atelier.subtext; opacity: 0.6
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMicro; color: Atelier.subtext; opacity: 0.6
                 }
             }
         }

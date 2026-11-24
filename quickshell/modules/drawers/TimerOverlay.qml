@@ -86,7 +86,7 @@ Item {
         implicitHeight: 52
         Rectangle { visible: !r2.first; anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right
                     anchors.leftMargin: 14; anchors.rightMargin: 14; height: 1; color: Atelier.outline }
-        Rectangle { anchors.fill: parent; anchors.margins: 3; radius: 12; color: Atelier.containerHigh
+        Rectangle { anchors.fill: parent; anchors.margins: 3; radius: Atelier.radiusMd; color: Atelier.containerHigh
                     opacity: r2Ma.containsMouse ? 0.6 : 0; Behavior on opacity { NumberAnimation { duration: Atelier.durFast } } }
         MouseArea { id: r2Ma; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
         RowLayout { id: r2Box; anchors.fill: parent; anchors.leftMargin: 12; anchors.rightMargin: 8; spacing: 10 }
@@ -154,7 +154,7 @@ Item {
                         Rectangle {
                             Layout.fillWidth: true
                             implicitHeight: 36
-                            radius: 18
+                            radius: Atelier.radiusLg
                             color: Atelier.container
                             border.width: 1
                             border.color: entry.activeFocus ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
@@ -163,11 +163,11 @@ Item {
                                 anchors.fill: parent
                                 anchors.leftMargin: 14; anchors.rightMargin: 4
                                 spacing: 8
-                                Text { text: "󰥔"; font.family: Atelier.font; font.pixelSize: 13; color: Atelier.subtext }
+                                Text { text: "󰥔"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: Atelier.subtext }
                                 TextInput {
                                     id: entry
                                     Layout.fillWidth: true
-                                    font.family: Atelier.fontUi; font.pixelSize: 13; color: Atelier.text
+                                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; color: Atelier.text
                                     clip: true; selectByMouse: true
                                     Keys.onPressed: (e) => {
                                         if (e.isAutoRepeat && Date.now() - root.openedAt < 350) { e.accepted = true; return; }
@@ -211,7 +211,7 @@ Item {
                             Text {
                                 visible: Timers.timers.some(t => t.done)
                                 text: "Clear finished"
-                                font.family: Atelier.fontUi; font.pixelSize: 11
+                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm
                                 color: cfMa.containsMouse ? Atelier.text : Atelier.subtext
                                 MouseArea { id: cfMa; anchors.fill: parent; anchors.margins: -4; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Timers.clearFinished() }
                             }
@@ -247,7 +247,7 @@ Item {
                                                 Arc { anchors.fill: parent; lineWidth: 3.5; tint: card.hue
                                                       fraction: card.modelData.done ? 1 : card.remain / card.modelData.total; opacity: card.modelData.running || card.modelData.done ? 1 : 0.5 }
                                                 Text { anchors.centerIn: parent; text: card.modelData.done ? "󰄬" : card.modelData.running ? "" : "󰏤"
-                                                       font.family: Atelier.font; font.pixelSize: 12; color: card.hue }
+                                                       font.family: Atelier.font; font.pixelSize: Atelier.fsMd; color: card.hue }
                                             }
                                             ColumnLayout {
                                                 Layout.fillWidth: true
@@ -258,7 +258,7 @@ Item {
                                                        color: card.modelData.done ? Atelier.green : card.modelData.running ? Atelier.text : Atelier.subtext1 }
                                                 Text { Layout.fillWidth: true; elide: Text.ElideRight
                                                        text: (card.modelData.label ? card.modelData.label + "  ·  " : "") + Timers.fmt(card.modelData.total, false)
-                                                       font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
+                                                       font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
                                             }
                                             IconButton { icon: card.modelData.done ? "󰑐" : card.modelData.running ? "󰏤" : "󰐊"
                                                          onClicked: Timers.toggle(card.modelData.id) }
@@ -329,11 +329,11 @@ Item {
                                             required property int index
                                             first: index === 0
                                             implicitHeight: 40
-                                            Text { text: "Lap " + (Timers.laps.length - index); font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext }
+                                            Text { text: "Lap " + (Timers.laps.length - index); font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext }
                                             Item { Layout.fillWidth: true }
                                             Text { text: "+" + Timers.fmt(modelData - (index + 1 < Timers.laps.length ? Timers.laps[index + 1] : 0), true)
-                                                   font.family: Atelier.font; font.pixelSize: 11; color: Atelier.accent }
-                                            Text { Layout.rightMargin: 6; text: Timers.fmt(modelData, true); font.family: Atelier.font; font.pixelSize: 12; color: Atelier.text }
+                                                   font.family: Atelier.font; font.pixelSize: Atelier.fsSm; color: Atelier.accent }
+                                            Text { Layout.rightMargin: 6; text: Timers.fmt(modelData, true); font.family: Atelier.font; font.pixelSize: Atelier.fsMd; color: Atelier.text }
                                         }
                                     }
                                 }
@@ -365,7 +365,7 @@ Item {
                                 Text { anchors.horizontalCenter: parent.horizontalCenter
                                        text: Timers.pomoRunning ? (Timers.phase === "focus" ? "Focusing" : "On a break")
                                            : Timers.pomoPaused >= 0 ? "Paused" : "Ready"
-                                       font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.Medium; color: root.phaseTint }
+                                       font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.Medium; color: root.phaseTint }
                             }
                         }
                     }
@@ -405,7 +405,7 @@ Item {
                                     }
                                 }
                                 Text { text: "Round " + (Timers.rounds % root.every + 1) + " of " + root.every
-                                       font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
+                                       font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
                             }
                         }
                         SmallCaps { text: "Lengths"; Layout.leftMargin: 4; Layout.topMargin: 6 }
@@ -427,11 +427,11 @@ Item {
                                         first: index === 0
                                         implicitHeight: 38
                                         Text { Layout.fillWidth: true; Layout.leftMargin: 2; text: len.modelData[1]
-                                               font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.text }
+                                               font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.text }
                                         IconButton { icon: "󰍴"; size: 26; glyphSize: 12
                                                      onClicked: Settings.behavior[len.key] = Math.max(len.modelData[2], Settings.behavior[len.key] - len.modelData[4]) }
                                         Text { Layout.preferredWidth: 54; horizontalAlignment: Text.AlignHCenter
-                                               text: Settings.behavior[len.key] + " min"; font.family: Atelier.font; font.pixelSize: 11; color: Atelier.text }
+                                               text: Settings.behavior[len.key] + " min"; font.family: Atelier.font; font.pixelSize: Atelier.fsSm; color: Atelier.text }
                                         IconButton { icon: "󰐕"; size: 26; glyphSize: 12
                                                      onClicked: Settings.behavior[len.key] = Math.min(len.modelData[3], Settings.behavior[len.key] + len.modelData[4]) }
                                     }

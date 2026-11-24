@@ -52,13 +52,13 @@ Rectangle {
     readonly property bool hovered: hover.hovered
 
     implicitHeight: body.implicitHeight + 28
-    radius: 18
+    radius: Atelier.radiusLg
     // pop-ups float on their own: the shell's surface + a hairline; in the control center list
     // they sit on its panel: a faint card, no border
     color: popup ? Atelier.surface : (hovered ? Atelier.containerHigh : Atelier.container)
     border.width: critical || popup ? 1 : 0
     border.color: critical ? Qt.alpha(Atelier.red, 0.6) : Atelier.outline
-    Behavior on color { ColorAnimation { duration: 140 } }
+    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
     // hover on a pop-up: a faint wash (its surface colour itself stays put)
     Rectangle {
         visible: root.popup
@@ -66,7 +66,7 @@ Rectangle {
         radius: parent.radius
         color: Atelier.text
         opacity: root.hovered ? 0.04 : 0
-        Behavior on opacity { NumberAnimation { duration: 140 } }
+        Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
     }
 
     // the stack: two thin strips peeking out underneath
@@ -130,21 +130,21 @@ Rectangle {
             implicitHeight: 36
             ClippingRectangle {
                 anchors.fill: parent
-                radius: 10
+                radius: Atelier.radiusSm
                 visible: root.icon !== ""
                 color: "transparent"
                 IconImage { anchors.fill: parent; source: root.icon; asynchronous: true }
             }
             Rectangle {
                 anchors.fill: parent
-                radius: 10
+                radius: Atelier.radiusSm
                 visible: root.icon === ""
                 color: Qt.alpha(root.critical ? Atelier.red : Atelier.accent, 0.16)
                 Text {
                     anchors.centerIn: parent
                     text: root.critical ? "󰀦" : root.fromPhone ? "󰄜" : "󰂚"
                     font.family: Atelier.font
-                    font.pixelSize: 15
+                    font.pixelSize: Atelier.fsXl
                     color: root.critical ? Atelier.red : Atelier.accent
                 }
             }
@@ -175,7 +175,7 @@ Rectangle {
                     visible: root.stacked
                     implicitWidth: stackText.implicitWidth + 10
                     implicitHeight: 16
-                    radius: 8
+                    radius: Atelier.radiusSm
                     color: Qt.alpha(Atelier.accent, 0.16)
                     Text {
                         id: stackText
@@ -190,7 +190,7 @@ Rectangle {
                 Text {
                     text: root.notif ? Notifs.timeAgo(Notifs.receivedAt(root.notif)) : ""
                     font.family: Atelier.font
-                    font.pixelSize: 10
+                    font.pixelSize: Atelier.fsMicro
                     color: Atelier.subtext
                     opacity: 0.8
                 }
@@ -209,7 +209,7 @@ Rectangle {
                     text: root.notif ? root.notif.body : ""
                     textFormat: Text.StyledText
                     font.family: Atelier.fontUi
-                    font.pixelSize: 13
+                    font.pixelSize: Atelier.fsLg
                     lineHeight: 1.1
                     color: Atelier.text
                     opacity: 0.8
@@ -224,7 +224,7 @@ Rectangle {
                     Layout.alignment: Qt.AlignTop
                     implicitWidth: 40
                     implicitHeight: 40
-                    radius: 8
+                    radius: Atelier.radiusSm
                     color: Atelier.containerHigh
                     Image {
                         anchors.fill: parent
@@ -249,9 +249,9 @@ Rectangle {
                         required property var modelData
                         Layout.fillWidth: true
                         implicitHeight: oldRow.implicitHeight + 10
-                        radius: 8
+                        radius: Atelier.radiusSm
                         color: oldMa.containsMouse ? Atelier.containerHigh : "transparent"
-                        Behavior on color { ColorAnimation { duration: 120 } }
+                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                         RowLayout {
                             id: oldRow
                             anchors.left: parent.left; anchors.right: parent.right
@@ -262,7 +262,7 @@ Rectangle {
                                 Layout.fillWidth: true
                                 text: Settings.notifications.showBody ? (modelData.body || modelData.summary) : modelData.summary
                                 textFormat: Text.StyledText
-                                font.family: Atelier.fontUi; font.pixelSize: 12
+                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd
                                 color: Atelier.text; opacity: 0.75
                                 elide: Text.ElideRight; maximumLineCount: 1
                             }
@@ -280,7 +280,7 @@ Rectangle {
                     Layout.leftMargin: 6
                     Layout.topMargin: 2
                     text: "Show less"
-                    font.family: Atelier.fontUi; font.pixelSize: 11; font.weight: Font.DemiBold
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.DemiBold
                     color: lessMa.containsMouse ? Atelier.accent : Atelier.subtext
                     MouseArea { id: lessMa; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor; onClicked: root.expanded = false }
@@ -293,7 +293,7 @@ Rectangle {
                 Layout.topMargin: 6
                 visible: root.replyOpen
                 implicitHeight: 34
-                radius: 17
+                radius: Atelier.radiusLg
                 color: Atelier.surface
                 border.width: 1
                 border.color: replyField.activeFocus ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
@@ -307,7 +307,7 @@ Rectangle {
                         Layout.fillWidth: true
                         clip: true
                         font.family: Atelier.fontUi
-                        font.pixelSize: 12
+                        font.pixelSize: Atelier.fsMd
                         color: Atelier.text
                         selectionColor: Qt.alpha(Atelier.accent, 0.35)
                         Text {
@@ -332,12 +332,12 @@ Rectangle {
                         implicitHeight: 26
                         radius: 13
                         color: replyField.text.trim() ? Qt.alpha(Atelier.accent, 0.22) : Atelier.containerHigh
-                        Behavior on color { ColorAnimation { duration: 120 } }
+                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                         Text {
                             anchors.centerIn: parent
                             text: "󰒊"
                             font.family: Atelier.font
-                            font.pixelSize: 12
+                            font.pixelSize: Atelier.fsMd
                             color: replyField.text.trim() ? Atelier.accent : Atelier.subtext
                         }
                         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: replyField.send() }
@@ -365,7 +365,7 @@ Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         text: root.appLabel
                         font.family: Atelier.fontUi
-                        font.pixelSize: 10
+                        font.pixelSize: Atelier.fsMicro
                         font.weight: Font.Medium
                         color: Atelier.subtext
                         opacity: 0.85
@@ -375,7 +375,7 @@ Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "· 󰄜 iPhone"
                         font.family: Atelier.fontUi
-                        font.pixelSize: 10
+                        font.pixelSize: Atelier.fsMicro
                         color: Atelier.subtext
                         opacity: 0.7
                     }
@@ -407,7 +407,7 @@ Rectangle {
                         anchors.centerIn: parent
                         text: "󰅖"
                         font.family: Atelier.font
-                        font.pixelSize: 12
+                        font.pixelSize: Atelier.fsMd
                         color: xMa.containsMouse ? Atelier.red : Atelier.subtext
                     }
                     MouseArea { id: xMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Notifs.dismissGroup(root.notif) }
@@ -428,7 +428,7 @@ Rectangle {
         radius: 11
         color: accent ? Qt.alpha(Atelier.accent, (Atelier.isLight ? 0.14 : 0.2) + (tbMa.containsMouse ? 0.06 : 0))
              : (tbMa.containsMouse ? Atelier.containerHigh : "transparent")
-        Behavior on color { ColorAnimation { duration: 120 } }
+        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
         Row {
             id: tbRow
             anchors.centerIn: parent
@@ -438,14 +438,14 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 text: tb.glyph
                 font.family: Atelier.font
-                font.pixelSize: 11
+                font.pixelSize: Atelier.fsSm
                 color: tb.accent ? Atelier.accent : Atelier.subtext
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: tb.label
                 font.family: Atelier.fontUi
-                font.pixelSize: 11
+                font.pixelSize: Atelier.fsSm
                 font.weight: Font.DemiBold
                 color: tb.accent ? Atelier.accent : Atelier.subtext
                 elide: Text.ElideRight

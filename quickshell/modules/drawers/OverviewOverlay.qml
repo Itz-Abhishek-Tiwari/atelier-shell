@@ -161,7 +161,7 @@ Item {
                 Text {
                     text: "Click to switch  ·  drag windows between desktops  ·  Esc"
                     font.family: Atelier.fontUi
-                    font.pixelSize: 11
+                    font.pixelSize: Atelier.fsSm
                     color: Atelier.subtext
                 }
             }
@@ -192,7 +192,7 @@ Item {
             property string iconSrc: ""
             visible: active
             width: 120; height: 76
-            radius: 12
+            radius: Atelier.radiusMd
             color: Qt.alpha(Atelier.accent, 0.22)
             border.width: 2
             border.color: Atelier.accent
@@ -225,7 +225,7 @@ Item {
 
         ClippingRectangle {
             anchors.fill: parent
-            radius: 14
+            radius: Atelier.radiusMd
             color: Atelier.container
 
             // the desktop: wallpaper, a touch dimmed
@@ -329,14 +329,14 @@ Item {
                 visible: card.wins.length === 0
                 spacing: 2
                 Text { anchors.horizontalCenter: parent.horizontalCenter; text: "󰐕"; font.family: Atelier.font; font.pixelSize: 20; color: Qt.alpha(Atelier.text, hover.hovered ? 0.8 : 0.45) }
-                Text { anchors.horizontalCenter: parent.horizontalCenter; text: "Empty"; font.family: Atelier.fontUi; font.pixelSize: 10; color: Qt.alpha(Atelier.text, hover.hovered ? 0.8 : 0.45) }
+                Text { anchors.horizontalCenter: parent.horizontalCenter; text: "Empty"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMicro; color: Qt.alpha(Atelier.text, hover.hovered ? 0.8 : 0.45) }
             }
         }
 
         // frame: accent for the current desktop, the selection, or a drop target
         Rectangle {
             anchors.fill: parent
-            radius: 14
+            radius: Atelier.radiusMd
             color: card.dropTarget ? Qt.alpha(Atelier.accent, 0.16) : "transparent"
             border.width: card.current || card.dropTarget || ov.selected === card.wsId ? 2 : 1
             border.color: card.dropTarget ? Atelier.accent
@@ -351,13 +351,13 @@ Item {
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.margins: 7
-            width: 24; height: 20; radius: 10
+            width: 24; height: 20; radius: Atelier.radiusSm
             color: card.current ? Atelier.accentFill : Qt.alpha(Atelier.crust, 0.6)
             Text {
                 anchors.centerIn: parent
                 text: card.wsId === 10 ? "0" : card.wsId
                 font.family: Atelier.font
-                font.pixelSize: 11
+                font.pixelSize: Atelier.fsSm
                 font.bold: true
                 color: card.current ? Atelier.onFill : Atelier.text
             }

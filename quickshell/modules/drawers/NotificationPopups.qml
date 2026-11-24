@@ -62,25 +62,25 @@ Item {
             id: clearPill
             visible: opacity > 0
             opacity: root.showClear ? 1 : 0
-            Behavior on opacity { NumberAnimation { duration: 160 } }
+            Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
             z: 5
             // right-aligned (left on the left side), just past the last card
             x: root.atLeft ? 0 : root.atCenter ? (parent.width - width) / 2 : parent.width - width
             y: root.atBottom ? parent.height - root.cardsHeight - height - 4 : root.cardsHeight + 4
             width: clearRow.implicitWidth + 24
             height: 30
-            radius: 15
+            radius: Atelier.radiusMd
             color: clearMa.containsMouse ? Qt.alpha(Atelier.red, 0.16) : Atelier.surface
             border.width: 1
             border.color: clearMa.containsMouse ? Qt.alpha(Atelier.red, 0.45) : Atelier.outline
-            Behavior on color { ColorAnimation { duration: 120 } }
+            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
             Row {
                 id: clearRow
                 anchors.centerIn: parent
                 spacing: 6
-                Text { anchors.verticalCenter: parent.verticalCenter; text: "󰎟"; font.family: Atelier.font; font.pixelSize: 12
+                Text { anchors.verticalCenter: parent.verticalCenter; text: "󰎟"; font.family: Atelier.font; font.pixelSize: Atelier.fsMd
                     color: clearMa.containsMouse ? Atelier.red : Atelier.subtext }
-                Text { anchors.verticalCenter: parent.verticalCenter; text: "Clear all"; font.family: Atelier.fontUi; font.pixelSize: 11; font.weight: Font.DemiBold
+                Text { anchors.verticalCenter: parent.verticalCenter; text: "Clear all"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.DemiBold
                     color: clearMa.containsMouse ? Atelier.red : Atelier.text }
             }
             MouseArea { id: clearMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Notifs.dismissPopups() }
@@ -141,12 +141,12 @@ Item {
             // leave (or replaced by a newer message of its stack): slide back out to the right
             remove: Transition {
                 ParallelAnimation {
-                    NumberAnimation { property: "opacity"; to: 0; duration: 180; easing.type: Easing.InCubic }
-                    NumberAnimation { property: "x"; to: root.slideX * 1.25; duration: 200; easing.type: Easing.InCubic }
+                    NumberAnimation { property: "opacity"; to: 0; duration: Atelier.durFast; easing.type: Easing.InCubic }
+                    NumberAnimation { property: "x"; to: root.slideX * 1.25; duration: Atelier.durFast; easing.type: Easing.InCubic }
                 }
             }
             displaced: Transition {
-                NumberAnimation { properties: "y"; duration: 260; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard }
+                NumberAnimation { properties: "y"; duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard }
             }
         }
     }

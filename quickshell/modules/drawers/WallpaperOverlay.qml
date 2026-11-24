@@ -270,7 +270,7 @@ Item {
                 Rectangle {
                     implicitWidth: 230
                     implicitHeight: 36
-                    radius: 18
+                    radius: Atelier.radiusLg
                     color: Atelier.container
                     Row {
                         id: tabRow
@@ -290,8 +290,8 @@ Item {
                                 Row {
                                     anchors.centerIn: parent
                                     spacing: 6
-                                    Text { text: modelData.icon; font.family: Atelier.font; font.pixelSize: 13; color: parent.parent.on ? Atelier.onFill : Atelier.subtext; anchors.verticalCenter: parent.verticalCenter }
-                                    Text { text: modelData.label; font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold; color: parent.parent.on ? Atelier.onFill : Atelier.text; anchors.verticalCenter: parent.verticalCenter }
+                                    Text { text: modelData.icon; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: parent.parent.on ? Atelier.onFill : Atelier.subtext; anchors.verticalCenter: parent.verticalCenter }
+                                    Text { text: modelData.label; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; color: parent.parent.on ? Atelier.onFill : Atelier.text; anchors.verticalCenter: parent.verticalCenter }
                                 }
                                 MouseArea { id: tabMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: wallRoot.setTab(modelData.id) }
                             }
@@ -303,7 +303,7 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     implicitHeight: 36
-                    radius: 18
+                    radius: Atelier.radiusLg
                     color: Atelier.container
                     border.width: 1
                     border.color: searchField.activeFocus ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
@@ -312,12 +312,12 @@ Item {
                         anchors.leftMargin: 14
                         anchors.rightMargin: 12
                         spacing: 8
-                        Text { text: "󰍉"; font.family: Atelier.font; font.pixelSize: 13; color: Atelier.subtext }
+                        Text { text: "󰍉"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: Atelier.subtext }
                         TextInput {
                             id: searchField
                             Layout.fillWidth: true
                             font.family: Atelier.fontUi
-                            font.pixelSize: 13
+                            font.pixelSize: Atelier.fsLg
                             color: Atelier.text
                             clip: true
                             selectByMouse: true
@@ -347,14 +347,14 @@ Item {
                     visible: wallRoot.activeTab === "wallhaven"
                     implicitWidth: sfwRow.implicitWidth + 18
                     implicitHeight: 28
-                    radius: 14
+                    radius: Atelier.radiusMd
                     color: Atelier.container
                     Row {
                         id: sfwRow
                         anchors.centerIn: parent
                         spacing: 5
-                        Text { text: "󰕥"; font.family: Atelier.font; font.pixelSize: 12; color: Atelier.green; anchors.verticalCenter: parent.verticalCenter }
-                        Text { text: "Safe for work"; font.family: Atelier.fontUi; font.pixelSize: 11; font.weight: Font.Medium; color: Atelier.subtext1; anchors.verticalCenter: parent.verticalCenter }
+                        Text { text: "󰕥"; font.family: Atelier.font; font.pixelSize: Atelier.fsMd; color: Atelier.green; anchors.verticalCenter: parent.verticalCenter }
+                        Text { text: "Safe for work"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.Medium; color: Atelier.subtext1; anchors.verticalCenter: parent.verticalCenter }
                     }
                 }
 
@@ -423,7 +423,7 @@ Item {
                                 color: "#" + sw.modelData
                                 border.width: sw.on ? 2 : 1
                                 border.color: sw.on ? Atelier.accent : Qt.alpha(Atelier.text, 0.2)
-                                Behavior on width { NumberAnimation { duration: 120 } }
+                                Behavior on width { NumberAnimation { duration: Atelier.durFast } }
                             }
                             MouseArea {
                                 anchors.fill: parent
@@ -466,7 +466,7 @@ Item {
                         scrollAnim.to = Math.max(0, Math.min(target, Math.max(0, contentHeight - height)));
                         scrollAnim.restart();
                     }
-                    NumberAnimation { id: scrollAnim; target: grid; property: "contentY"; duration: 180; easing.type: Easing.OutCubic }
+                    NumberAnimation { id: scrollAnim; target: grid; property: "contentY"; duration: Atelier.durFast; easing.type: Easing.OutCubic }
                     Keys.onLeftPressed: go(currentIndex - 1)
                     Keys.onRightPressed: go(currentIndex + 1)
                     Keys.onUpPressed: (e) => { if (currentIndex < cols) { searchField.forceActiveFocus(); } else go(currentIndex - cols); }
@@ -505,11 +505,11 @@ Item {
                             anchors.fill: parent
                             anchors.margins: 6
                             scale: tileMa.pressed ? 0.97 : 1
-                            Behavior on scale { NumberAnimation { duration: 120 } }
+                            Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
 
                             RoundImage {
                                 anchors.fill: parent
-                                radius: 14
+                                radius: Atelier.radiusMd
                                 source: wallRoot.thumbSrc(tile.modelData)
                             }
 
@@ -517,7 +517,7 @@ Item {
                             Rectangle {
                                 anchors.fill: parent
                                 anchors.margins: -4
-                                radius: 18
+                                radius: Atelier.radiusLg
                                 color: "transparent"
                                 border.width: 2
                                 border.color: Atelier.accent
@@ -529,9 +529,9 @@ Item {
                                 visible: tile.active
                                 anchors.top: parent.top; anchors.right: parent.right
                                 anchors.margins: 8
-                                width: 24; height: 24; radius: 12
+                                width: 24; height: 24; radius: Atelier.radiusMd
                                 color: Atelier.accentFill
-                                Text { anchors.centerIn: parent; text: "󰄬"; font.family: Atelier.font; font.pixelSize: 13; color: Atelier.onFill }
+                                Text { anchors.centerIn: parent; text: "󰄬"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: Atelier.onFill }
                             }
 
                             // Wallhaven: already saved
@@ -539,9 +539,9 @@ Item {
                                 visible: tile.wh && !!tile.modelData.owned && !tile.busy
                                 anchors.top: parent.top; anchors.right: parent.right
                                 anchors.margins: 8
-                                width: 24; height: 24; radius: 12
+                                width: 24; height: 24; radius: Atelier.radiusMd
                                 color: Qt.rgba(0, 0, 0, 0.5)
-                                Text { anchors.centerIn: parent; text: "󰄬"; font.family: Atelier.font; font.pixelSize: 12; color: "white" }
+                                Text { anchors.centerIn: parent; text: "󰄬"; font.family: Atelier.font; font.pixelSize: Atelier.fsMd; color: "white" }
                             }
 
                             // Wallhaven info, on hover only
@@ -557,7 +557,7 @@ Item {
                                     id: infoT
                                     anchors.centerIn: parent
                                     text: [wallRoot.resBadge(tile.modelData.resolution), "󰋑 " + (tile.modelData.favorites || 0)].filter(x => x).join("   ")
-                                    font.family: Atelier.font; font.pixelSize: 10
+                                    font.family: Atelier.font; font.pixelSize: Atelier.fsMicro
                                     color: "white"
                                 }
                             }
@@ -566,7 +566,7 @@ Item {
                             Item {
                                 anchors.fill: parent
                                 visible: tile.busy
-                                Rectangle { anchors.fill: parent; radius: 14; color: Qt.rgba(0, 0, 0, 0.45) }
+                                Rectangle { anchors.fill: parent; radius: Atelier.radiusMd; color: Qt.rgba(0, 0, 0, 0.45) }
                                 Item {
                                     anchors.centerIn: parent
                                     width: 44; height: 44
@@ -574,7 +574,7 @@ Item {
                                         anchors.fill: parent
                                         preferredRendererType: Shape.CurveRenderer
                                         ShapePath {
-                                            strokeColor: Qt.rgba(1, 1, 1, 0.25); strokeWidth: 4; fillColor: "transparent"; capStyle: ShapePath.RoundCap
+                                            strokeColor: Qt.alpha(Atelier.text, 0.25); strokeWidth: 4; fillColor: "transparent"; capStyle: ShapePath.RoundCap
                                             PathAngleArc { centerX: 22; centerY: 22; radiusX: 19; radiusY: 19; startAngle: 0; sweepAngle: 360 }
                                         }
                                         ShapePath {
@@ -585,7 +585,7 @@ Item {
                                     Text {
                                         anchors.centerIn: parent
                                         text: tile.prog >= 0 ? Math.round(tile.prog * 100) + "%" : "…"
-                                        font.family: Atelier.font; font.pixelSize: 10; font.bold: true
+                                        font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; font.bold: true
                                         color: "white"
                                     }
                                 }
@@ -617,7 +617,7 @@ Item {
                         model: 12
                         Item {
                             width: grid.cellWidth; height: grid.cellHeight
-                            Rectangle { anchors.fill: parent; anchors.margins: 6; radius: 14; color: Atelier.container; opacity: parent.parent.pulse }
+                            Rectangle { anchors.fill: parent; anchors.margins: 6; radius: Atelier.radiusMd; color: Atelier.container; opacity: parent.parent.pulse }
                         }
                     }
                 }
@@ -638,15 +638,15 @@ Item {
                         text: wallRoot.activeTab !== "wallhaven" ? (searchField.text ? "No wallpapers match" : "No wallpapers yet. Add some to the folder.")
                             : wallRoot.whError ? wallRoot.whError + "."
                             : "Nothing for that. Try another topic or colour."
-                        font.family: Atelier.fontUi; font.pixelSize: 13
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg
                         color: Atelier.subtext
                     }
                     Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         visible: wallRoot.activeTab === "wallhaven" && wallRoot.whError !== ""
-                        implicitWidth: retryT.implicitWidth + 28; implicitHeight: 30; radius: 15
+                        implicitWidth: retryT.implicitWidth + 28; implicitHeight: 30; radius: Atelier.radiusLg
                         color: retryMa.containsMouse ? Atelier.containerHigh : Atelier.container
-                        Text { id: retryT; anchors.centerIn: parent; text: "Try again"; font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold; color: Atelier.text }
+                        Text { id: retryT; anchors.centerIn: parent; text: "Try again"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; color: Atelier.text }
                         MouseArea { id: retryMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: wallRoot.searchWallhaven(true) }
                     }
                 }
@@ -661,7 +661,7 @@ Item {
                     : (wallRoot.whLoading ? "Searching Wallhaven… (it can take a few seconds)"
                        : wallRoot.items.length + (wallRoot.whPage < wallRoot.whLastPage ? "+" : "") + " " + wallRoot.whLabel.toLowerCase() + " wallpapers"
                          + (wallRoot.whMore ? "  ·  loading more…" : "  ·  click to download and apply"))
-                font.family: Atelier.fontUi; font.pixelSize: 11
+                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm
                 color: Atelier.subtext
             }
         }
@@ -672,10 +672,10 @@ Item {
         id: rb
         property string icon
         signal clicked()
-        implicitWidth: 36; implicitHeight: 36; radius: 18
+        implicitWidth: 36; implicitHeight: 36; radius: Atelier.radiusLg
         color: rbMa.containsMouse ? Atelier.containerHigh : Atelier.container
         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-        Text { anchors.centerIn: parent; text: rb.icon; font.family: Atelier.font; font.pixelSize: 15; color: rbMa.containsMouse ? Atelier.text : Atelier.subtext1 }
+        Text { anchors.centerIn: parent; text: rb.icon; font.family: Atelier.font; font.pixelSize: Atelier.fsXl; color: rbMa.containsMouse ? Atelier.text : Atelier.subtext1 }
         MouseArea { id: rbMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: rb.clicked() }
     }
     component Chip: Rectangle {
@@ -686,15 +686,15 @@ Item {
         signal clicked()
         implicitWidth: chRow.implicitWidth + 22
         implicitHeight: 30
-        radius: 15
+        radius: Atelier.radiusMd
         color: on ? Atelier.accentFill : (chMa.containsMouse ? Atelier.containerHigh : Atelier.container)
         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
         Row {
             id: chRow
             anchors.centerIn: parent
             spacing: 6
-            Text { visible: ch.icon !== ""; text: ch.icon; font.family: Atelier.font; font.pixelSize: 12; color: ch.on ? Atelier.onFill : Atelier.subtext; anchors.verticalCenter: parent.verticalCenter }
-            Text { text: ch.label; font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold; color: ch.on ? Atelier.onFill : Atelier.text; anchors.verticalCenter: parent.verticalCenter }
+            Text { visible: ch.icon !== ""; text: ch.icon; font.family: Atelier.font; font.pixelSize: Atelier.fsMd; color: ch.on ? Atelier.onFill : Atelier.subtext; anchors.verticalCenter: parent.verticalCenter }
+            Text { text: ch.label; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; color: ch.on ? Atelier.onFill : Atelier.text; anchors.verticalCenter: parent.verticalCenter }
         }
         MouseArea { id: chMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ch.clicked() }
     }
@@ -703,7 +703,7 @@ Item {
     component RoundImage: Item {
         id: ri
         property alias source: riImg.source
-        property real radius: 12
+        property real radius: Atelier.radiusMd
         readonly property bool ready: riImg.status === Image.Ready
         Rectangle { anchors.fill: parent; radius: ri.radius; color: Atelier.container; visible: !ri.ready }
         Image {

@@ -106,15 +106,15 @@ Item {
                     Layout.fillWidth: true
                     spacing: 12
                     Rectangle {
-                        implicitWidth: 36; implicitHeight: 36; radius: 12
+                        implicitWidth: 36; implicitHeight: 36; radius: Atelier.radiusMd
                         color: Qt.alpha(Atelier.accent, 0.14)
                         border.width: 1; border.color: Qt.alpha(Atelier.accent, 0.35)
                         Text { anchors.centerIn: parent; text: "󰌾"; font.family: Atelier.font; font.pixelSize: 17; color: Atelier.accent }
                     }
                     ColumnLayout {
                         spacing: 0
-                        Text { text: "Customise the lock screen"; font.family: Atelier.fontUi; font.pixelSize: 15; font.weight: Font.DemiBold; color: Atelier.text }
-                        Text { text: "Changes show on the clock as you pick"; font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
+                        Text { text: "Customise the lock screen"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl; font.weight: Font.DemiBold; color: Atelier.text }
+                        Text { text: "Changes show on the clock as you pick"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
                     }
                     Item { Layout.fillWidth: true }
                     ChoicePill { label: "Reset"; icon: "󰑙"; onClicked: ed.reset() }
@@ -208,10 +208,10 @@ Item {
                                         color: "transparent"; border.width: 2; border.color: Atelier.text
                                     }
                                     scale: swMa.containsMouse && !sw.on ? 1.12 : 1
-                                    Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+                                    Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
                                 }
                                 Text { id: swLabel; visible: !!sw.modelData.label; anchors.left: dot.right; anchors.leftMargin: 8; anchors.verticalCenter: parent.verticalCenter
-                                       text: sw.modelData.label || ""; font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.Medium
+                                       text: sw.modelData.label || ""; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.Medium
                                        color: sw.on ? Atelier.text : Atelier.subtext1 }
                                 MouseArea { id: swMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                             onClicked: ed.set("depthColor", sw.modelData.id) }
@@ -220,16 +220,16 @@ Item {
                     }
                     RowLayout {
                         spacing: 10
-                        Text { text: "Your own"; font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext1 }
+                        Text { text: "Your own"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext1 }
                         Rectangle {
-                            implicitWidth: 150; implicitHeight: 34; radius: 17
+                            implicitWidth: 150; implicitHeight: 34; radius: Atelier.radiusLg
                             color: Atelier.container
                             border.width: 1
                             border.color: hexIn.activeFocus || Settings.lock.depthColor.startsWith("#") ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
                             Row {
                                 anchors.fill: parent; anchors.leftMargin: 10
                                 spacing: 8
-                                Rectangle { anchors.verticalCenter: parent.verticalCenter; width: 16; height: 16; radius: 8
+                                Rectangle { anchors.verticalCenter: parent.verticalCenter; width: 16; height: 16; radius: Atelier.radiusSm
                                             color: Settings.lock.depthColor.startsWith("#") ? Settings.lock.depthColor : "transparent"
                                             border.width: 1; border.color: Atelier.outline }
                                 TextInput {
@@ -237,7 +237,7 @@ Item {
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: 100
                                     text: Settings.lock.depthColor.startsWith("#") ? Settings.lock.depthColor : ""
-                                    font.family: Atelier.font; font.pixelSize: 12; color: Atelier.text
+                                    font.family: Atelier.font; font.pixelSize: Atelier.fsMd; color: Atelier.text
                                     maximumLength: 7; selectByMouse: true
                                     onAccepted: {
                                         let v = text.trim();
@@ -250,7 +250,7 @@ Item {
                             }
                         }
                         Text { text: "Enter applies · Auto picks a tone from the picture that reads on it"
-                               font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
+                               font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
                     }
                 }
 
@@ -277,7 +277,7 @@ Item {
                     }
                     RowLayout {
                         spacing: 8
-                        Text { text: "Weight"; font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext1; Layout.rightMargin: 6 }
+                        Text { text: "Weight"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext1; Layout.rightMargin: 6 }
                         Repeater {
                             model: [{ id: "light", label: "Light" }, { id: "regular", label: "Regular" }, { id: "bold", label: "Bold" }, { id: "black", label: "Black" }]
                             ChoicePill {
@@ -364,8 +364,8 @@ Item {
                 id: oText
                 Layout.fillWidth: true
                 spacing: 1
-                Text { Layout.fillWidth: true; text: orow.label; font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium; color: Atelier.text; elide: Text.ElideRight }
-                Text { Layout.fillWidth: true; visible: orow.sub !== ""; text: orow.sub; font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext; wrapMode: Text.WordWrap }
+                Text { Layout.fillWidth: true; text: orow.label; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.Medium; color: Atelier.text; elide: Text.ElideRight }
+                Text { Layout.fillWidth: true; visible: orow.sub !== ""; text: orow.sub; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext; wrapMode: Text.WordWrap }
             }
             Item { id: oSlot; implicitWidth: childrenRect.width; implicitHeight: childrenRect.height }
         }
@@ -400,7 +400,7 @@ Item {
                 color: Atelier.onFill
                 border.width: 3; border.color: Atelier.accentFill
                 scale: slMa.pressed ? 1.15 : 1
-                Behavior on scale { NumberAnimation { duration: 120 } }
+                Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
             }
             MouseArea {
                 id: slMa
@@ -419,7 +419,7 @@ Item {
             Layout.preferredWidth: 44
             horizontalAlignment: Text.AlignRight
             text: Math.round(sl.value * sl.scaleShown) + sl.suffix
-            font.family: Atelier.font; font.pixelSize: 11; color: Atelier.subtext1
+            font.family: Atelier.font; font.pixelSize: Atelier.fsSm; color: Atelier.subtext1
         }
     }
 
@@ -430,7 +430,7 @@ Item {
         property int weight: Font.Bold
         property bool on: false
         signal clicked()
-        implicitHeight: 96; radius: 16
+        implicitHeight: 96; radius: Atelier.radiusMd
         color: on ? Qt.alpha(Atelier.accent, 0.12) : (ftMa.containsMouse ? Atelier.containerHigh : Atelier.container)
         border.width: on ? 2 : 1
         border.color: on ? Atelier.accent : Atelier.outline
@@ -438,7 +438,7 @@ Item {
         Text { anchors.horizontalCenter: parent.horizontalCenter; y: 10; text: "12:45"; font.family: ft.fam; font.pixelSize: 38; font.weight: ft.weight
             font.features: { "tnum": 1 }; color: Atelier.text }
         Text { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 10; text: ft.label
-            font.family: Atelier.fontUi; font.pixelSize: 11; font.weight: ft.on ? Font.DemiBold : Font.Normal; color: ft.on ? Atelier.text : Atelier.subtext }
+            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: ft.on ? Font.DemiBold : Font.Normal; color: ft.on ? Atelier.text : Atelier.subtext }
         MouseArea { id: ftMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ft.clicked() }
     }
 
@@ -451,7 +451,7 @@ Item {
         Layout.preferredWidth: 220
         Layout.alignment: Qt.AlignTop
         implicitHeight: 172
-        radius: 18
+        radius: Atelier.radiusLg
         color: on ? Qt.alpha(Atelier.accent, 0.12) : (stMa.containsMouse ? Atelier.containerHigh : Atelier.container)
         border.width: on ? 2 : 1
         border.color: on ? Atelier.accent : Atelier.outline
@@ -461,7 +461,7 @@ Item {
             id: sample
             anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top
             anchors.margins: 10
-            height: 96; radius: 12
+            height: 96; radius: Atelier.radiusMd
             gradient: Gradient {
                 GradientStop { position: 0; color: Atelier.sapphire }
                 GradientStop { position: 1; color: Atelier.mauve }
@@ -469,7 +469,7 @@ Item {
             Text {
                 anchors.centerIn: parent
                 text: "12:45"
-                font.family: "Inter Display"; font.pixelSize: 44; font.weight: Font.Bold
+                font.family: Atelier.fontDisplay; font.pixelSize: 44; font.weight: Font.Bold
                 font.features: { "tnum": 1 }
                 color: st.kind === "glass" ? Qt.rgba(1, 1, 1, 0.3) : "white"
                 style: st.kind === "glass" ? Text.Outline : Text.Normal
@@ -480,8 +480,8 @@ Item {
             anchors.left: parent.left; anchors.right: parent.right; anchors.top: sample.bottom
             anchors.margins: 12; anchors.topMargin: 10
             spacing: 2
-            Text { text: st.label; font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold; color: Atelier.text }
-            Text { width: parent.width; text: st.sub; wrapMode: Text.WordWrap; font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
+            Text { text: st.label; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.DemiBold; color: Atelier.text }
+            Text { width: parent.width; text: st.sub; wrapMode: Text.WordWrap; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
         }
         MouseArea { id: stMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ed.set("depthStyle", st.kind) }
     }

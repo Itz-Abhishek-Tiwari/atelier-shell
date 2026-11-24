@@ -66,10 +66,6 @@ Singleton {
         if (vid) return n === 1 ? "a video" : n + " videos";
         return n === 1 ? "a file" : n + " items";
     }
-    function sizeText(b) {
-        return b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : b >= 1e6 ? (b / 1e6).toFixed(1) + " MB"
-             : b >= 1e3 ? Math.round(b / 1e3) + " KB" : b + " B";
-    }
     readonly property int secondsLeft: phase === "receiving"
         ? Math.max(1, Math.round(totalBytes * (1 - progress) / rate)) : 0
 

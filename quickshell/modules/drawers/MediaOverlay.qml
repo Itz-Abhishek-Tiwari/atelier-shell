@@ -60,24 +60,10 @@ Item {
         running: root.visible && root.playing
         onTriggered: root.player.positionChanged()
     }
-    function fmt(s) {
-        s = Math.max(0, Math.floor(s || 0));
-        const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = String(s % 60).padStart(2, "0");
-        return h > 0 ? h + ":" + String(m).padStart(2, "0") + ":" + ss : m + ":" + ss;
-    }
     function appIcon(p) {
         if (!p) return "";
         const e = (p.desktopEntry && DesktopEntries.heuristicLookup(p.desktopEntry)) || DesktopEntries.heuristicLookup(p.identity);
         return e && e.icon ? Quickshell.iconPath(e.icon, true) : "";
-    }
-    function ago(ms) {
-        const m = Math.round((Date.now() - ms) / 60000);
-        if (m < 1) return "just now";
-        if (m < 60) return m + " min ago";
-        const h = Math.round(m / 60);
-        if (h < 24) return h + " h ago";
-        const d = Math.round(h / 24);
-        return d === 1 ? "yesterday" : d + " days ago";
     }
 
     // ══ Lyrics ═══════════════════════════════════════════════════════════════
@@ -241,7 +227,7 @@ Item {
                 RoundImage {
                     id: cover
                     implicitWidth: 84; implicitHeight: 84
-                    radius: 16
+                    radius: Atelier.radiusMd
                     decode: 168
                     source: root.hasPlayer ? (root.player.trackArtUrl || "") : ""
                     placeholder: root.hasPlayer ? "󰎆" : "󰝛"
@@ -260,7 +246,7 @@ Item {
                         }
                         Text {
                             text: root.hasPlayer ? root.player.identity : "Music"
-                            font.family: Atelier.fontUi; font.pixelSize: 11; font.weight: Font.Medium
+                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.Medium
                             color: Atelier.subtext
                         }
                     }
@@ -275,7 +261,7 @@ Item {
                         Layout.fillWidth: true
                         text: root.hasPlayer ? root.artist : "Start music in any app and it shows up here"
                         visible: text !== ""
-                        font.family: Atelier.fontUi; font.pixelSize: 13
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg
                         color: Atelier.subtext
                         elide: Text.ElideRight
                     }
@@ -338,9 +324,9 @@ Item {
                 }
                 RowLayout {
                     Layout.fillWidth: true
-                    Text { text: root.fmt(seek.frac * seek.len); font.family: Atelier.font; font.pixelSize: 10; color: Atelier.subtext }
+                    Text { text: Fmt.clock(seek.frac * seek.len); font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; color: Atelier.subtext }
                     Item { Layout.fillWidth: true }
-                    Text { text: root.fmt(seek.len); font.family: Atelier.font; font.pixelSize: 10; color: Atelier.subtext }
+                    Text { text: Fmt.clock(seek.len); font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; color: Atelier.subtext }
                 }
             }
 
@@ -364,7 +350,7 @@ Item {
                     implicitWidth: 50; implicitHeight: 50; radius: 25
                     color: Atelier.accentFill
                     scale: playMa.pressed ? 0.9 : (playMa.containsMouse ? 1.06 : 1)
-                    Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+                    Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
                     Text {
                         anchors.centerIn: parent
                         anchors.horizontalCenterOffset: root.playing ? 0 : 2
@@ -401,7 +387,7 @@ Item {
                         readonly property bool on: root.player === modelData
                         implicitWidth: chipRow.implicitWidth + 20
                         implicitHeight: 28
-                        radius: 14
+                        radius: Atelier.radiusMd
                         color: on ? Atelier.accentFill : (chipMa.containsMouse ? Atelier.containerHigh : Atelier.container)
                         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                         Row {
@@ -418,7 +404,7 @@ Item {
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: modelData.identity
-                                font.family: Atelier.fontUi; font.pixelSize: 11; font.weight: Font.DemiBold
+                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.DemiBold
                                 color: parent.parent.on ? Atelier.onFill : Atelier.text
                             }
                         }
@@ -431,7 +417,7 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 implicitHeight: 36
-                radius: 18
+                radius: Atelier.radiusLg
                 color: Atelier.container
                 Row {
                     id: tabsRow
@@ -456,11 +442,11 @@ Item {
                             Row {
                                 anchors.centerIn: parent
                                 spacing: 6
-                                Text { text: modelData.icon; font.family: Atelier.font; font.pixelSize: 13; color: parent.parent.on ? Atelier.onFill : Atelier.subtext; anchors.verticalCenter: parent.verticalCenter }
+                                Text { text: modelData.icon; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: parent.parent.on ? Atelier.onFill : Atelier.subtext; anchors.verticalCenter: parent.verticalCenter }
                                 Text {
-                                    text: modelData.id === "timer" && root.sleepAt > 0 ? root.fmt(root.sleepLeft) : modelData.label
+                                    text: modelData.id === "timer" && root.sleepAt > 0 ? Fmt.clock(root.sleepLeft) : modelData.label
                                     font.family: modelData.id === "timer" && root.sleepAt > 0 ? Atelier.font : Atelier.fontUi
-                                    font.pixelSize: 12; font.weight: Font.DemiBold
+                                    font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold
                                     color: parent.parent.on ? Atelier.onFill : Atelier.text
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
@@ -475,7 +461,7 @@ Item {
             Rectangle {
                 Layout.fillWidth: true
                 implicitHeight: 236
-                radius: 18
+                radius: Atelier.radiusLg
                 color: Atelier.container
                 border.width: 1
                 border.color: Atelier.outline
@@ -584,7 +570,7 @@ Item {
                         readonly property bool on: Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.id === modelData.id
                         width: outView.width
                         height: 50
-                        radius: 14
+                        radius: Atelier.radiusMd
                         color: odMa.containsMouse ? Atelier.containerHigh : "transparent"
                         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                         RowLayout {
@@ -593,14 +579,14 @@ Item {
                             anchors.rightMargin: 14
                             spacing: 12
                             Rectangle {
-                                implicitWidth: 32; implicitHeight: 32; radius: 16
+                                implicitWidth: 32; implicitHeight: 32; radius: Atelier.radiusLg
                                 color: od.on ? Atelier.accentFill : Atelier.containerHigh
-                                Text { anchors.centerIn: parent; text: root.sinkIcon(od.modelData); font.family: Atelier.font; font.pixelSize: 15; color: od.on ? Atelier.onFill : Atelier.text }
+                                Text { anchors.centerIn: parent; text: root.sinkIcon(od.modelData); font.family: Atelier.font; font.pixelSize: Atelier.fsXl; color: od.on ? Atelier.onFill : Atelier.text }
                             }
                             Text {
                                 Layout.fillWidth: true
                                 text: root.sinkName(od.modelData)
-                                font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: od.on ? Font.DemiBold : Font.Normal
+                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: od.on ? Font.DemiBold : Font.Normal
                                 color: Atelier.text
                                 elide: Text.ElideRight
                             }
@@ -631,7 +617,7 @@ Item {
                         required property var modelData
                         width: recentView.width
                         height: 52
-                        radius: 14
+                        radius: Atelier.radiusMd
                         color: rdMa.containsMouse ? Atelier.containerHigh : "transparent"
                         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                         RowLayout {
@@ -641,7 +627,7 @@ Item {
                             spacing: 12
                             RoundImage {
                                 implicitWidth: 38; implicitHeight: 38
-                                radius: 10
+                                radius: Atelier.radiusSm
                                 decode: 76
                                 tile: Atelier.containerHigh
                                 source: rd.modelData.art || ""
@@ -650,11 +636,11 @@ Item {
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 spacing: 1
-                                Text { Layout.fillWidth: true; text: rd.modelData.title; elide: Text.ElideRight; font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium; color: Atelier.text }
-                                Text { Layout.fillWidth: true; text: [rd.modelData.artist, rd.modelData.app].filter(x => x).join("  ·  "); elide: Text.ElideRight; font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
+                                Text { Layout.fillWidth: true; text: rd.modelData.title; elide: Text.ElideRight; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.Medium; color: Atelier.text }
+                                Text { Layout.fillWidth: true; text: [rd.modelData.artist, rd.modelData.app].filter(x => x).join("  ·  "); elide: Text.ElideRight; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
                             }
                             Text {
-                                text: rdMa.containsMouse ? "󰍉" : root.ago(rd.modelData.at)
+                                text: rdMa.containsMouse ? "󰍉" : Fmt.ago(rd.modelData.at)
                                 font.family: rdMa.containsMouse ? Atelier.font : Atelier.fontUi
                                 font.pixelSize: rdMa.containsMouse ? 15 : 11
                                 color: rdMa.containsMouse ? Atelier.accent : Atelier.subtext
@@ -672,12 +658,12 @@ Item {
                     visible: root.tab === "timer"
                     spacing: 10
 
-                    Text { text: "Sleep timer"; font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold; color: Atelier.text }
+                    Text { text: "Sleep timer"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.DemiBold; color: Atelier.text }
                     Text {
                         text: root.sleepEndOfTrack ? "Music pauses when this track ends"
-                            : root.sleepAt > 0 ? "Music pauses in " + root.fmt(root.sleepLeft)
+                            : root.sleepAt > 0 ? "Music pauses in " + Fmt.clock(root.sleepLeft)
                             : "Pause the music after a while"
-                        font.family: Atelier.fontUi; font.pixelSize: 11
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm
                         color: root.sleepAt > 0 || root.sleepEndOfTrack ? Atelier.accent : Atelier.subtext
                         Layout.topMargin: -6
                     }
@@ -702,11 +688,11 @@ Item {
 
                     Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Atelier.outline; Layout.topMargin: 4; Layout.bottomMargin: 2 }
 
-                    Text { text: "Playback speed"; font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold; color: Atelier.text }
+                    Text { text: "Playback speed"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.DemiBold; color: Atelier.text }
                     Text {
                         visible: !root.canRate
                         text: root.hasPlayer ? root.player.identity + " doesn't support changing the speed" : "Play something first"
-                        font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
                         Layout.topMargin: -6
                     }
                     Flow {
@@ -758,7 +744,7 @@ Item {
         signal clicked()
         implicitWidth: c2t.implicitWidth + 24
         implicitHeight: 30
-        radius: 15
+        radius: Atelier.radiusMd
         color: on ? Atelier.accentFill : (c2Ma.containsMouse ? Atelier.containerHigh : Atelier.container)
         border.width: on ? 0 : 1
         border.color: Atelier.outline
@@ -767,7 +753,7 @@ Item {
             id: c2t
             anchors.centerIn: parent
             text: c2.label
-            font.family: c2.mono ? Atelier.font : Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold
+            font.family: c2.mono ? Atelier.font : Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold
             color: c2.on ? Atelier.onFill : Atelier.text
         }
         MouseArea { id: c2Ma; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: c2.clicked() }
@@ -779,7 +765,7 @@ Item {
     component RoundImage: Item {
         id: ri
         property alias source: riImg.source
-        property real radius: 12
+        property real radius: Atelier.radiusMd
         property int decode: 128
         property string placeholder: "󰎆"
         property color tile: Atelier.container
@@ -831,6 +817,6 @@ Item {
         anchors.centerIn: parent
         spacing: 8
         Text { Layout.alignment: Qt.AlignHCenter; text: ph.icon; font.family: Atelier.font; font.pixelSize: 26; color: Atelier.overlay1 }
-        Text { Layout.alignment: Qt.AlignHCenter; text: ph.text; font.family: Atelier.fontUi; font.pixelSize: 13; color: Atelier.subtext }
+        Text { Layout.alignment: Qt.AlignHCenter; text: ph.text; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; color: Atelier.subtext }
     }
 }

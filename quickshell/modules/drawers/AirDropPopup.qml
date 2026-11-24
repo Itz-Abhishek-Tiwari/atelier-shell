@@ -43,7 +43,7 @@ Item {
         bodyWidth: 400
         bodyHeight: root.heldHeight
         Behavior on bodyHeight {
-            NumberAnimation { duration: 260; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard }
+            NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard }
         }
 
         ColumnLayout {
@@ -99,7 +99,7 @@ Item {
                     }
                     ClippingRectangle {
                         anchors.fill: parent
-                        radius: 14
+                        radius: Atelier.radiusMd
                         visible: root.thumb !== ""
                         color: Atelier.container
                         Image {
@@ -120,7 +120,7 @@ Item {
 
                     Text {   // small app line, like macOS
                         text: "AIRDROP"
-                        font.family: Atelier.fontUi; font.pixelSize: 10; font.weight: Font.DemiBold; font.letterSpacing: 1.4
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMicro; font.weight: Font.DemiBold; font.letterSpacing: 1.4
                         color: Atelier.subtext
                     }
                     Text {
@@ -148,15 +148,15 @@ Item {
                             ? (AirDrop.sendPhase === "failed" ? AirDrop.sendError
                                : (AirDrop.sendCount > 1 ? AirDrop.sendCount + " items" : AirDrop.sendName)
                                  + (AirDrop.sendPhase === "looking" ? " · keep it unlocked" : ""))
-                            : AirDrop.phase === "asking" ? "would like to share " + AirDrop.kindOf(AirDrop.files) + " · " + AirDrop.sizeText(AirDrop.totalBytes)
-                            : AirDrop.phase === "receiving" ? AirDrop.kindOf(AirDrop.files) + " · " + AirDrop.sizeText(AirDrop.totalBytes)
+                            : AirDrop.phase === "asking" ? "would like to share " + AirDrop.kindOf(AirDrop.files) + " · " + Fmt.bytes(AirDrop.totalBytes)
+                            : AirDrop.phase === "receiving" ? AirDrop.kindOf(AirDrop.files) + " · " + Fmt.bytes(AirDrop.totalBytes)
                                 + " · about " + (AirDrop.secondsLeft >= 60 ? Math.ceil(AirDrop.secondsLeft / 60) + " min" : AirDrop.secondsLeft + " s") + " left"
                             : AirDrop.phase === "done" ? (AirDrop.saved.length === 1 ? AirDrop.saved[0].split("/").pop() : AirDrop.saved.length + " items")
                                 + " · " + AirDrop.folder.replace(Quickshell.env("HOME"), "~")
                             : AirDrop.phase === "failed" ? (AirDrop.error || "Something went wrong")
                             : ""
                         visible: text !== ""
-                        font.family: Atelier.fontUi; font.pixelSize: 12
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd
                         color: AirDrop.phase === "failed" || (root.sendView && AirDrop.sendPhase === "failed") ? Atelier.red : Atelier.subtext
                     }
                 }
@@ -168,7 +168,7 @@ Item {
                     visible: AirDrop.phase !== "asking" && AirDrop.phase !== "receiving"
                     color: xMa.containsMouse ? Atelier.containerHigh : "transparent"
                     Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                    Text { anchors.centerIn: parent; text: "\u{F0156}"; font.family: Atelier.font; font.pixelSize: 13; color: Atelier.subtext }
+                    Text { anchors.centerIn: parent; text: "\u{F0156}"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: Atelier.subtext }
                     MouseArea { id: xMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: AirDrop.dismiss() }
                 }
             }
@@ -213,18 +213,18 @@ Item {
                         required property var modelData
                         Layout.fillWidth: true
                         implicitHeight: 52
-                        radius: 14
+                        radius: Atelier.radiusMd
                         color: dMa.containsMouse ? Atelier.containerHigh : Atelier.container
                         border.width: 1; border.color: Atelier.outline
                         scale: dMa.pressed ? 0.97 : 1
                         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                        Behavior on scale { NumberAnimation { duration: 110 } }
+                        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
                         RowLayout {
                             anchors.fill: parent
                             anchors.leftMargin: 10; anchors.rightMargin: 14
                             spacing: 12
                             Rectangle {
-                                implicitWidth: 34; implicitHeight: 34; radius: 17
+                                implicitWidth: 34; implicitHeight: 34; radius: Atelier.radiusLg
                                 color: Qt.alpha(Atelier.blue, 0.14)
                                 border.width: 1; border.color: Qt.alpha(Atelier.blue, 0.35)
                                 Text {
@@ -240,7 +240,7 @@ Item {
                                 Layout.fillWidth: true
                                 text: modelData.name
                                 elide: Text.ElideRight
-                                font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium
+                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.Medium
                                 color: Atelier.text
                             }
                             Text { text: "\u{F0142}"; font.family: Atelier.font; font.pixelSize: 16; color: Atelier.subtext }
@@ -259,7 +259,7 @@ Item {
                     text: AirDrop.browsing
                         ? "Searching for nearby devices… On the iPhone: unlocked, AirDrop set to Everyone for 10 minutes."
                         : "No one found. Unlock the iPhone, set AirDrop to Everyone for 10 minutes, then search again."
-                    font.family: Atelier.fontUi; font.pixelSize: 12; lineHeight: 1.15
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; lineHeight: 1.15
                     color: Atelier.subtext
                 }
 
@@ -270,7 +270,7 @@ Item {
                     Text {
                         visible: AirDrop.browsing && AirDrop.devices.length > 0
                         text: "Searching…"
-                        font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
                     }
                     Item { Layout.fillWidth: true }
                     Btn { label: "Search again"; visible: !AirDrop.browsing; onClicked: AirDrop.browse() }
@@ -296,12 +296,12 @@ Item {
                             color: root.always ? Atelier.accentFill : "transparent"
                             border.width: root.always ? 0 : 1.5; border.color: Atelier.overlay0
                             Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                            Text { anchors.centerIn: parent; visible: root.always; text: "\u{F012C}"; font.family: Atelier.font; font.pixelSize: 12; color: Atelier.onFill }
+                            Text { anchors.centerIn: parent; visible: root.always; text: "\u{F012C}"; font.family: Atelier.font; font.pixelSize: Atelier.fsMd; color: Atelier.onFill }
                         }
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             text: "Always accept"
-                            font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext
+                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext
                         }
                     }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.always = !root.always }
@@ -329,18 +329,18 @@ Item {
         signal clicked()
         implicitWidth: bt.implicitWidth + 32
         implicitHeight: 34
-        radius: 17
+        radius: Atelier.radiusLg
         color: primary ? (bMa.containsMouse ? Qt.lighter(Atelier.accentFill, 1.1) : Atelier.accentFill)
              : (bMa.containsMouse ? Atelier.containerHigh : Atelier.container)
         border.width: primary ? 0 : 1; border.color: Atelier.outline
         scale: bMa.pressed ? 0.94 : 1
         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-        Behavior on scale { NumberAnimation { duration: 110 } }
+        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
         Text {
             id: bt
             anchors.centerIn: parent
             text: b.label
-            font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold
+            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.DemiBold
             color: b.primary ? Atelier.onFill : Atelier.text
         }
         MouseArea { id: bMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: b.clicked() }

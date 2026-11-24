@@ -9,5 +9,5 @@ ColumnLayout {
     property string text: ""
     spacing: 8
     Text { Layout.alignment: Qt.AlignHCenter; text: es.icon; font.family: Atelier.font; font.pixelSize: 26; color: Atelier.overlay1 }
-    Text { Layout.alignment: Qt.AlignHCenter; text: es.text; font.family: Atelier.fontUi; font.pixelSize: 13; color: Atelier.subtext }
+    Text { Layout.alignment: Qt.AlignHCenter; text: es.text; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; color: Atelier.subtext }
 }
