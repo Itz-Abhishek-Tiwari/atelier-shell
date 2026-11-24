@@ -22,7 +22,7 @@ ColumnLayout {
         Layout.leftMargin: 4
         text: card.title
         font.family: Atelier.fontUi
-        font.pixelSize: 13
+        font.pixelSize: Atelier.fsLg
         font.weight: Font.DemiBold
         color: Atelier.text
     }
@@ -30,7 +30,7 @@ ColumnLayout {
     Rectangle {
         Layout.fillWidth: true
         implicitHeight: col.implicitHeight + 8
-        radius: 12
+        radius: Atelier.radiusMd
         color: Atelier.container
         border.width: card.highlighted ? 2 : 1
         border.color: card.highlighted ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline

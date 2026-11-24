@@ -76,7 +76,7 @@ SettingRow {
             horizontalAlignment: Text.AlignRight
             text: root.zeroText !== "" && root.value === 0 ? root.zeroText : root.value.toFixed(root.decimals) + root.suffix
             font.family: Atelier.font
-            font.pixelSize: 12
+            font.pixelSize: Atelier.fsMd
             color: Atelier.subtext1
         }
     }

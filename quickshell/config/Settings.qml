@@ -658,4 +658,16 @@ Singleton {
     }
     onHyprLuaChanged: applyTimer.restart()
     onReadyChanged: applyTimer.restart()
+
+    // The lock screens this shell ships (Settings → Lock screen, Settings → Login screen)
+    readonly property var lockStyles: [
+        { id: "atelier",   name: "Atelier",   note: "Glass panel, this shell's own" },
+        { id: "depth",     name: "Depth",     note: "Clock behind the subject, Samsung-style" },
+        { id: "cupertino", name: "Cupertino", note: "iOS-style" },
+        { id: "hyper",     name: "Hyper",     note: "Xiaomi HyperOS-style" },
+        { id: "harmony",   name: "Harmony",   note: "Huawei HarmonyOS-style" },
+        { id: "oxygen",    name: "Oxygen",    note: "OnePlus OxygenOS-style" },
+        { id: "material",  name: "Material",  note: "Pixel, Material You-style" },
+        { id: "dot",       name: "Dot",       note: "Nothing OS-style" }
+    ]
 }

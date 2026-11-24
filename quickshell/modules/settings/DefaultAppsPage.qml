@@ -108,7 +108,7 @@ ColumnLayout {
         Layout.leftMargin: 4
         wrapMode: Text.Wrap
         text: "Saved in ~/.config/mimeapps.list, which every app's \"Open with\" follows. Only installed apps that can open the type are listed."
-        font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
     }
 
     // one category: the current app on the right; tap to list the alternatives below
@@ -137,7 +137,7 @@ ColumnLayout {
             Rectangle {
                 implicitWidth: pill.implicitWidth + 20
                 implicitHeight: 32
-                radius: 16
+                radius: Atelier.radiusMd
                 color: pillMa.containsMouse || cr.open ? Atelier.containerHigh : "transparent"
                 border.width: 1
                 border.color: cr.open ? Qt.alpha(Atelier.accent, 0.5) : Atelier.outline
@@ -157,14 +157,14 @@ ColumnLayout {
                     Text {
                         text: !page.loaded ? "…" : cr.current ? cr.current.name
                             : (cr.c && cr.c.currentName ? cr.c.currentName : "Not set")
-                        font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.Medium
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.Medium
                         color: cr.current || (cr.c && cr.c.currentName) ? Atelier.text : Atelier.peach
                         Layout.maximumWidth: 200
                         elide: Text.ElideRight
                     }
                     Text {
                         text: cr.open ? "󰅃" : "󰅀"
-                        font.family: Atelier.font; font.pixelSize: 13; color: Atelier.subtext
+                        font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: Atelier.subtext
                     }
                 }
                 MouseArea {
@@ -188,7 +188,7 @@ ColumnLayout {
             Text {
                 visible: cr.c && cr.c.apps.length === 0
                 text: "No installed app can open these. Install one (see the README's app list)."
-                font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext
+                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext
             }
 
             Repeater {
@@ -199,7 +199,7 @@ ColumnLayout {
                     readonly property bool on: cr.c && modelData.id === cr.c.current && !cr.c.mixed
                     implicitWidth: optRow.implicitWidth + 22
                     implicitHeight: 34
-                    radius: 17
+                    radius: Atelier.radiusLg
                     color: on ? Atelier.accentFill : (optMa.containsMouse ? Atelier.containerHigh : Atelier.surface)
                     border.width: 1
                     border.color: on ? "transparent" : Atelier.outline
@@ -219,13 +219,13 @@ ColumnLayout {
                         }
                         Text {
                             text: opt.modelData.name
-                            font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.Medium
+                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.Medium
                             color: opt.on ? Atelier.onFill : Atelier.text
                         }
                         Text {
                             visible: opt.on
                             text: "󰄬"
-                            font.family: Atelier.font; font.pixelSize: 12; color: Atelier.onFill
+                            font.family: Atelier.font; font.pixelSize: Atelier.fsMd; color: Atelier.onFill
                         }
                     }
                     MouseArea {

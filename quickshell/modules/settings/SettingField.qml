@@ -13,7 +13,7 @@ SettingRow {
     Rectangle {
         implicitWidth: root.fieldWidth
         implicitHeight: 34
-        radius: 17
+        radius: Atelier.radiusLg
         color: Atelier.containerHigh
         border.width: 1
         border.color: input.activeFocus ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
@@ -26,7 +26,7 @@ SettingRow {
             anchors.rightMargin: 14
             verticalAlignment: Text.AlignVCenter
             font.family: Atelier.fontUi
-            font.pixelSize: 12
+            font.pixelSize: Atelier.fsMd
             color: Atelier.text
             clip: true
             selectByMouse: true
@@ -39,7 +39,7 @@ SettingRow {
                 visible: !input.text && !input.activeFocus
                 text: root.placeholder
                 font.family: Atelier.fontUi
-                font.pixelSize: 12
+                font.pixelSize: Atelier.fsMd
                 color: Atelier.subtext
                 opacity: 0.6
             }

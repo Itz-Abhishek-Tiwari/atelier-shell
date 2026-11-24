@@ -51,7 +51,7 @@ Item {
                 Layout.fillWidth: true
                 text: row.label.trim()
                 font.family: Atelier.fontUi
-                font.pixelSize: 13
+                font.pixelSize: Atelier.fsLg
                 font.weight: Font.Medium
                 color: Atelier.text
                 elide: Text.ElideRight
@@ -61,7 +61,7 @@ Item {
                 visible: text.length > 0
                 text: row.description
                 font.family: Atelier.fontUi
-                font.pixelSize: 11
+                font.pixelSize: Atelier.fsSm
                 color: Atelier.subtext
                 wrapMode: Text.Wrap
             }

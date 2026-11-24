@@ -78,7 +78,7 @@ ColumnLayout {
             visible: !page.source
             Layout.topMargin: 12; Layout.bottomMargin: 12
             text: "No microphone found"
-            font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext
+            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext
         }
         VolumeRow {
             visible: !!page.source
@@ -106,7 +106,7 @@ ColumnLayout {
             visible: page.playing.length + page.recording.length === 0
             Layout.topMargin: 14; Layout.bottomMargin: 14
             text: "Apps that play or record sound show up here"
-            font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext
+            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext
         }
         Repeater {
             model: page.playing.concat(page.recording)
@@ -126,7 +126,7 @@ ColumnLayout {
         Layout.leftMargin: 4
         wrapMode: Text.Wrap
         text: "Pipewire remembers the device and each app's volume. The volume keys and the OSD change the output above."
-        font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
     }
 
     // a device or app: mute button, name, slider, percentage
@@ -149,11 +149,11 @@ ColumnLayout {
             anchors.fill: parent
             spacing: 14
             Rectangle {
-                implicitWidth: 34; implicitHeight: 34; radius: 17
+                implicitWidth: 34; implicitHeight: 34; radius: Atelier.radiusLg
                 color: vr.muted ? Qt.alpha(Atelier.red, 0.16) : Qt.alpha(Atelier.accent, 0.14)
                 Behavior on color { ColorAnimation { duration: Atelier.durFast } }
                 Text { anchors.centerIn: parent; text: vr.muted ? (vr.input ? "󰍭" : "󰝟") : vr.icon
-                    font.family: Atelier.font; font.pixelSize: 15; color: vr.muted ? Atelier.red : Atelier.accent }
+                    font.family: Atelier.font; font.pixelSize: Atelier.fsXl; color: vr.muted ? Atelier.red : Atelier.accent }
                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; enabled: vr.ok
                     onClicked: vr.node.audio.muted = !vr.node.audio.muted }
             }
@@ -163,9 +163,9 @@ ColumnLayout {
                 RowLayout {
                     Layout.fillWidth: true
                     Text { Layout.fillWidth: true; text: vr.label; elide: Text.ElideRight
-                        font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium; color: Atelier.text }
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.Medium; color: Atelier.text }
                     Text { visible: vr.description !== ""; Layout.maximumWidth: 220; text: vr.description; elide: Text.ElideRight
-                        font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
                 }
                 // slim bar with a gradient fill (0–150 %)
                 Item {
@@ -207,7 +207,7 @@ ColumnLayout {
                 Layout.preferredWidth: 44
                 horizontalAlignment: Text.AlignRight
                 text: Math.round(vr.vol * 100) + "%"
-                font.family: Atelier.font; font.pixelSize: 12; color: vr.vol > 1 ? Atelier.peach : Atelier.subtext1
+                font.family: Atelier.font; font.pixelSize: Atelier.fsMd; color: vr.vol > 1 ? Atelier.peach : Atelier.subtext1
             }
         }
     }
