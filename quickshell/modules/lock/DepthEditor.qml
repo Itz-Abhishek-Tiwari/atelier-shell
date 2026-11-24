@@ -1,20 +1,32 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Effects
+import qs.components
 import qs.config
 
 // Lock screen editor for the Depth lock (One UI style "customise lock screen"): shown over the
 // live preview (qs ipc call lock edit, Settings → Lock screen → Depth → Customise). Every
 // choice is written to Settings.lock right away, so the clock behind it updates as you pick;
 // Cancel puts back what was there when the editor opened, Done/Esc keeps it.
+//
+// Built from the shell's shared pieces (Segmented tabs, ToggleSwitch, ChoicePill,
+// PrimaryButton) so it looks like the rest of Atelier. Five tabs:
+//   Style    solid / glass, depth effect, shadow, glass frost + tint
+//   Colour   auto, theme, white, black, every theme colour, any hex
+//   Font     typeface + weight
+//   Layout   position (auto / drag), one line / stacked, size
+//   Details  date (long / short / off), weather, AM/PM, 12 / 24-hour
 Item {
     id: ed
     required property var lockRoot
     anchors.fill: parent
 
-    readonly property var keys: ["depthPos", "depthX", "depthY", "depthEffect", "depthStyle", "depthColor", "depthLayout", "depthClockSize", "depthFont", "depthWeight", "depthShadow"]
-    readonly property var defaults: ({ depthPos: "auto", depthX: 0.5, depthY: 0.1, depthEffect: true, depthStyle: "solid", depthColor: "auto", depthLayout: "horizontal", depthClockSize: 0.22,
-                                       depthFont: "display", depthWeight: "bold", depthShadow: true })
+    readonly property var defaults: ({
+        depthPos: "auto", depthX: 0.5, depthY: 0.1, depthEffect: true, depthStyle: "solid", depthColor: "auto",
+        depthLayout: "horizontal", depthClockSize: 0.22, depthFont: "display", depthWeight: "bold", depthShadow: true,
+        depthGlassTint: 0.2, depthGlassFrost: 0.9, depthDate: "long", depthWeather: true, depthAmPm: true, clock: "system"
+    })
+    readonly property var keys: Object.keys(defaults)
     property var snapshot: ({})
     property string tab: "style"
     property real shown: 0
@@ -29,11 +41,31 @@ Item {
 
     function set(k, v) { Settings.lock[k] = v; }
     function cancel() {
-        for (const k of keys) Settings.lock[k] = snapshot[k];
+        for (const k of keys) if (snapshot[k] !== undefined) Settings.lock[k] = snapshot[k];
         lockRoot.stopPreview();
     }
     function done() { lockRoot.stopPreview(); }
     function reset() { for (const k of keys) Settings.lock[k] = defaults[k]; }
+
+    // the theme colours, without repeats (some themes use one colour for several roles)
+    readonly property var swatches: {
+        const seen = {};
+        return allSwatches.filter(x => {
+            if (x.label) return true;
+            const k = String(x.c);
+            if (seen[k]) return false;
+            seen[k] = true;
+            return true;
+        });
+    }
+    readonly property var allSwatches: [
+        { id: "auto", label: "Auto" }, { id: "theme", label: "Theme", c: Atelier.text },
+        { id: "white", label: "White", c: "#ffffff" }, { id: "black", label: "Black", c: "#161616" },
+        { id: "accent", label: "Accent", c: Atelier.accent }, { id: "pink", c: Atelier.pink }, { id: "red", c: Atelier.red },
+        { id: "peach", c: Atelier.peach }, { id: "yellow", c: Atelier.yellow }, { id: "green", c: Atelier.green },
+        { id: "teal", c: Atelier.teal }, { id: "sky", c: Atelier.sky }, { id: "blue", c: Atelier.blue },
+        { id: "lavender", c: Atelier.lavender }, { id: "mauve", c: Atelier.mauve }
+    ]
 
     // ── the sheet ──
     Item {
@@ -41,7 +73,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 24 - (1 - ed.shown) * (sheet.height + 40)
-        width: Math.min(860, parent.width - 48)
+        width: Math.min(940, parent.width - 48)
         height: sheet.height
 
         RectangularShadow {
@@ -54,7 +86,7 @@ Item {
         Rectangle {
             id: sheet
             width: parent.width
-            height: col.implicitHeight + 36
+            height: col.implicitHeight + 40
             radius: Math.max(22, Atelier.rounding)
             color: Atelier.surface
             border.width: 1
@@ -66,188 +98,176 @@ Item {
             ColumnLayout {
                 id: col
                 anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top
-                anchors.margins: 18
-                spacing: 14
+                anchors.margins: 20
+                spacing: 16
 
-                // header
+                // ── header: title · tabs · actions ──
                 RowLayout {
                     Layout.fillWidth: true
-                    Layout.preferredWidth: col.width
-                    spacing: 8
+                    spacing: 12
+                    Rectangle {
+                        implicitWidth: 36; implicitHeight: 36; radius: 12
+                        color: Qt.alpha(Atelier.accent, 0.14)
+                        border.width: 1; border.color: Qt.alpha(Atelier.accent, 0.35)
+                        Text { anchors.centerIn: parent; text: "󰌾"; font.family: Atelier.font; font.pixelSize: 17; color: Atelier.accent }
+                    }
                     ColumnLayout {
-                        spacing: 1
-                        Text { text: "Customise lock screen"; font.family: Atelier.fontUi; font.pixelSize: 16; font.weight: Font.DemiBold; color: Atelier.text }
+                        spacing: 0
+                        Text { text: "Customise the lock screen"; font.family: Atelier.fontUi; font.pixelSize: 15; font.weight: Font.DemiBold; color: Atelier.text }
                         Text { text: "Changes show on the clock as you pick"; font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
                     }
                     Item { Layout.fillWidth: true }
-                    Btn { label: "Reset"; onClicked: ed.reset() }
-                    Btn { label: "Cancel"; onClicked: ed.cancel() }
-                    Btn { label: "Done"; primary: true; onClicked: ed.done() }
+                    ChoicePill { label: "Reset"; icon: "󰑙"; onClicked: ed.reset() }
+                    ChoicePill { label: "Cancel"; onClicked: ed.cancel() }
+                    PrimaryButton { label: "Done"; icon: "󰄬"; onClicked: ed.done() }
                 }
 
-                // tabs
-                Row {
-                    spacing: 6
-                    Repeater {
-                        model: [{ id: "style", label: "Style", icon: "󰏘" }, { id: "colour", label: "Colour", icon: "󰉦" },
-                                { id: "font", label: "Font", icon: "󰛖" }, { id: "size", label: "Layout & size", icon: "󰩨" }]
-                        Rectangle {
-                            required property var modelData
-                            readonly property bool on: ed.tab === modelData.id
-                            width: tabRow.implicitWidth + 24; height: 32; radius: 16
-                            color: on ? Atelier.accentFill : (tabMa.containsMouse ? Atelier.container : "transparent")
-                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                            Row {
-                                id: tabRow
-                                anchors.centerIn: parent
-                                spacing: 7
-                                Text { anchors.verticalCenter: parent.verticalCenter; text: parent.parent.modelData.icon; font.family: Atelier.font; font.pixelSize: 13
-                                    color: parent.parent.on ? Atelier.onFill : Atelier.subtext1 }
-                                Text { anchors.verticalCenter: parent.verticalCenter; text: parent.parent.modelData.label; font.family: Atelier.fontUi; font.pixelSize: 12
-                                    font.weight: parent.parent.on ? Font.DemiBold : Font.Normal
-                                    color: parent.parent.on ? Atelier.onFill : Atelier.subtext1 }
-                            }
-                            MouseArea { id: tabMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ed.tab = parent.modelData.id }
+                Segmented {
+                    Layout.fillWidth: true
+                    segmentWidth: (col.width - 6 - 4 * 2) / 5
+                    model: [{ id: "style", label: "Style", icon: "󰏘" }, { id: "colour", label: "Colour", icon: "󰉦" },
+                            { id: "font", label: "Font", icon: "󰛖" }, { id: "layout", label: "Layout", icon: "󰩨" },
+                            { id: "details", label: "Details", icon: "󰃭" }]
+                    current: ed.tab
+                    onPicked: (id) => ed.tab = id
+                }
+
+                // ── Style ─────────────────────────────────────────────────────
+                RowLayout {
+                    visible: ed.tab === "style"
+                    Layout.fillWidth: true
+                    spacing: 16
+                    StyleTile { kind: "solid"; label: "Solid"; sub: "A clean, coloured clock" }
+                    StyleTile { kind: "glass"; label: "Glass"; sub: "Frosted digits; the picture shows through" }
+                    Panel {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignTop
+                        implicitHeight: styleRows.implicitHeight + 6
+                        ColumnLayout {
+                            id: styleRows
+                            x: 0; y: 3; width: parent.width
+                            spacing: 0
+                            OptRow { first: true; label: "Depth effect"; sub: "The clock goes behind the subject"
+                                ToggleSwitch { on: Settings.lock.depthEffect; onToggled: ed.set("depthEffect", !Settings.lock.depthEffect) } }
+                            OptRow { label: "Shadow"; sub: "Lifts the clock off busy pictures"
+                                ToggleSwitch { on: Settings.lock.depthShadow; onToggled: ed.set("depthShadow", !Settings.lock.depthShadow) } }
+                            OptRow { visible: Settings.lock.depthStyle === "glass"; label: "Frost"; sub: "Blur inside the digits"
+                                Slide { from: 0.2; to: 1; key: "depthGlassFrost"; fallback: 0.9; percent: true } }
+                            OptRow { visible: Settings.lock.depthStyle === "glass"; label: "Tint"; sub: "Clock colour in the glass"
+                                Slide { from: 0; to: 0.7; key: "depthGlassTint"; fallback: 0.2; percent: true } }
                         }
                     }
                 }
 
-                // ── Style: solid / glass (big preview tiles) + shadow ──
-                RowLayout {
-                    visible: ed.tab === "style"
-                    Layout.fillWidth: true
-                    spacing: 12
-                    StyleTile { kind: "solid"; label: "Solid"; sub: "A clean, coloured clock" }
-                    StyleTile { kind: "glass"; label: "Glass"; sub: "Frosted digits, the wallpaper shows through" }
-                    ColumnLayout {
-                    Layout.alignment: Qt.AlignVCenter
-                    spacing: 8
-                    Opt {
-                        label: Settings.lock.depthEffect ? "Depth effect on" : "Depth effect off"
-                        icon: "󰽙"
-                        on: Settings.lock.depthEffect
-                        onClicked: ed.set("depthEffect", !Settings.lock.depthEffect)
-                    }
-                    Opt {
-                        label: Settings.lock.depthShadow ? "Shadow on" : "Shadow off"
-                        icon: "󰘷"
-                        on: Settings.lock.depthShadow
-                        onClicked: ed.set("depthShadow", !Settings.lock.depthShadow)
-                    }
-                    }
-                    Item { Layout.fillWidth: true }
-                }
-
-                // ── Colour: swatches + custom hex ──
+                // ── Colour ────────────────────────────────────────────────────
                 ColumnLayout {
                     visible: ed.tab === "colour"
                     Layout.fillWidth: true
-                    spacing: 10
+                    spacing: 12
                     Flow {
                         Layout.fillWidth: true
                         spacing: 10
                         Repeater {
-                            model: [
-                                { id: "auto",     label: "Auto",   c: "transparent" },
-                                { id: "theme",    label: "Theme",  c: Atelier.text },
-                                { id: "white",    label: "White",  c: "#ffffff" },
-                                { id: "black",    label: "Black",  c: "#161616" },
-                                { id: "accent",   label: "Accent", c: Atelier.accent },
-                                { id: "pink",     label: "",       c: Atelier.pink },
-                                { id: "red",      label: "",       c: Atelier.red },
-                                { id: "peach",    label: "",       c: Atelier.peach },
-                                { id: "yellow",   label: "",       c: Atelier.yellow },
-                                { id: "green",    label: "",       c: Atelier.green },
-                                { id: "teal",     label: "",       c: Atelier.teal },
-                                { id: "sky",      label: "",       c: Atelier.sky },
-                                { id: "blue",     label: "",       c: Atelier.blue },
-                                { id: "lavender", label: "",       c: Atelier.lavender },
-                                { id: "mauve",    label: "",       c: Atelier.mauve }
-                            ]
-                            Column {
+                            model: ed.swatches
+                            Item {
+                                id: sw
                                 required property var modelData
                                 readonly property bool on: Settings.lock.depthColor === modelData.id
-                                spacing: 4
+                                width: modelData.label ? swLabel.implicitWidth + 50 : 38
+                                height: 38
                                 Rectangle {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: 38; height: 38; radius: 19
-                                    color: parent.modelData.c
-                                    border.width: parent.on ? 3 : 1
-                                    border.color: parent.on ? Atelier.accent : Atelier.outline
-                                    // auto: a little rainbow so it reads as "from the picture"
+                                    anchors.fill: parent
+                                    radius: height / 2
+                                    color: sw.modelData.label ? (sw.on ? Atelier.containerHigh : Atelier.container) : "transparent"
+                                    border.width: sw.on ? 2 : (sw.modelData.label ? 1 : 0)
+                                    border.color: sw.on ? Atelier.accent : Atelier.outline
+                                }
+                                Rectangle {
+                                    id: dot
+                                    x: sw.modelData.label ? 6 : 3; anchors.verticalCenter: parent.verticalCenter
+                                    width: sw.modelData.label ? 26 : 32; height: width; radius: width / 2
+                                    color: sw.modelData.c || "transparent"
+                                    border.width: 1; border.color: Qt.alpha(Atelier.text, 0.25)
+                                    // Auto: half light, half dark (it picks from the picture)
                                     Rectangle {
-                                        visible: parent.parent.modelData.id === "auto"
-                                        anchors.fill: parent; anchors.margins: 4; radius: width / 2
+                                        visible: sw.modelData.id === "auto"
+                                        anchors.fill: parent; radius: parent.radius
                                         gradient: Gradient {
                                             orientation: Gradient.Horizontal
-                                            GradientStop { position: 0; color: Atelier.peach }
-                                            GradientStop { position: 0.5; color: Atelier.green }
-                                            GradientStop { position: 1; color: Atelier.blue }
+                                            GradientStop { position: 0.0; color: "#f2f2f2" }
+                                            GradientStop { position: 0.499; color: "#f2f2f2" }
+                                            GradientStop { position: 0.5; color: "#1e1e1e" }
+                                            GradientStop { position: 1.0; color: "#1e1e1e" }
                                         }
                                     }
-                                    scale: swMa.containsMouse ? 1.1 : 1
-                                    Behavior on scale { NumberAnimation { duration: 140 } }
-                                    MouseArea { id: swMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                                        onClicked: ed.set("depthColor", parent.parent.modelData.id) }
+                                    // ring for the round, unlabelled swatches
+                                    Rectangle {
+                                        visible: !sw.modelData.label && sw.on
+                                        anchors.centerIn: parent
+                                        width: parent.width + 8; height: width; radius: width / 2
+                                        color: "transparent"; border.width: 2; border.color: Atelier.text
+                                    }
+                                    scale: swMa.containsMouse && !sw.on ? 1.12 : 1
+                                    Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
                                 }
-                                Text {
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    visible: parent.modelData.label !== ""
-                                    text: parent.modelData.label
-                                    font.family: Atelier.fontUi; font.pixelSize: 10
-                                    color: parent.on ? Atelier.text : Atelier.subtext
-                                }
+                                Text { id: swLabel; visible: !!sw.modelData.label; anchors.left: dot.right; anchors.leftMargin: 8; anchors.verticalCenter: parent.verticalCenter
+                                       text: sw.modelData.label || ""; font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.Medium
+                                       color: sw.on ? Atelier.text : Atelier.subtext1 }
+                                MouseArea { id: swMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                            onClicked: ed.set("depthColor", sw.modelData.id) }
                             }
                         }
                     }
                     RowLayout {
-                        spacing: 8
-                        Text { text: "Custom"; font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext1 }
+                        spacing: 10
+                        Text { text: "Your own"; font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext1 }
                         Rectangle {
-                            implicitWidth: 130; implicitHeight: 32; radius: 16
+                            implicitWidth: 150; implicitHeight: 34; radius: 17
                             color: Atelier.container
                             border.width: 1
-                            border.color: hexIn.activeFocus ? Qt.alpha(Atelier.accent, 0.7) : Atelier.outline
-                            Rectangle {
-                                anchors.left: parent.left; anchors.leftMargin: 8; anchors.verticalCenter: parent.verticalCenter
-                                width: 16; height: 16; radius: 8
-                                color: /^#[0-9a-fA-F]{6}$/.test(hexIn.text) ? hexIn.text : "transparent"
-                                border.width: 1; border.color: Atelier.outline
-                            }
-                            TextInput {
-                                id: hexIn
-                                anchors.fill: parent; anchors.leftMargin: 32; anchors.rightMargin: 10
-                                verticalAlignment: TextInput.AlignVCenter
-                                text: Settings.lock.depthColor.startsWith("#") ? Settings.lock.depthColor : ""
-                                font.family: Atelier.font; font.pixelSize: 12
-                                color: Atelier.text
-                                maximumLength: 7
-                                selectByMouse: true
-                                onAccepted: {
-                                    let v = text.trim();
-                                    if (v && !v.startsWith("#")) v = "#" + v;
-                                    if (/^#[0-9a-fA-F]{6}$/.test(v)) ed.set("depthColor", v.toLowerCase());
+                            border.color: hexIn.activeFocus || Settings.lock.depthColor.startsWith("#") ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
+                            Row {
+                                anchors.fill: parent; anchors.leftMargin: 10
+                                spacing: 8
+                                Rectangle { anchors.verticalCenter: parent.verticalCenter; width: 16; height: 16; radius: 8
+                                            color: Settings.lock.depthColor.startsWith("#") ? Settings.lock.depthColor : "transparent"
+                                            border.width: 1; border.color: Atelier.outline }
+                                TextInput {
+                                    id: hexIn
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 100
+                                    text: Settings.lock.depthColor.startsWith("#") ? Settings.lock.depthColor : ""
+                                    font.family: Atelier.font; font.pixelSize: 12; color: Atelier.text
+                                    maximumLength: 7; selectByMouse: true
+                                    onAccepted: {
+                                        let v = text.trim();
+                                        if (v && !v.startsWith("#")) v = "#" + v;
+                                        if (/^#[0-9a-fA-F]{6}$/.test(v)) ed.set("depthColor", v.toLowerCase());
+                                    }
+                                    Text { visible: !parent.text && !parent.activeFocus; anchors.verticalCenter: parent.verticalCenter
+                                           text: "#rrggbb"; font: parent.font; color: Atelier.subtext; opacity: 0.7 }
                                 }
-                                Text { anchors.verticalCenter: parent.verticalCenter; visible: !parent.text && !parent.activeFocus; text: "#rrggbb"
-                                    font: parent.font; color: Atelier.subtext }
                             }
                         }
-                        Text { text: "Enter to apply"; font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
+                        Text { text: "Enter applies · Auto picks a tone from the picture that reads on it"
+                               font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
                     }
                 }
 
-                // ── Font: family + weight, each label drawn in its own font ──
+                // ── Font ──────────────────────────────────────────────────────
                 ColumnLayout {
                     visible: ed.tab === "font"
                     Layout.fillWidth: true
-                    spacing: 10
-                    Row {
-                        spacing: 10
+                    spacing: 12
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 12
                         Repeater {
                             model: [{ id: "display", label: "Display", fam: "Inter Display" }, { id: "mono", label: "Mono", fam: Atelier.font },
                                     { id: "serif", label: "Serif", fam: "Noto Serif" }]
                             FontTile {
                                 required property var modelData
+                                Layout.fillWidth: true
                                 fam: modelData.fam; label: modelData.label
                                 weight: ({ light: Font.Light, regular: Font.Normal, bold: Font.Bold, black: Font.Black })[Settings.lock.depthWeight] ?? Font.Bold
                                 on: Settings.lock.depthFont === modelData.id
@@ -255,11 +275,12 @@ Item {
                             }
                         }
                     }
-                    Row {
-                        spacing: 6
+                    RowLayout {
+                        spacing: 8
+                        Text { text: "Weight"; font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext1; Layout.rightMargin: 6 }
                         Repeater {
                             model: [{ id: "light", label: "Light" }, { id: "regular", label: "Regular" }, { id: "bold", label: "Bold" }, { id: "black", label: "Black" }]
-                            Opt {
+                            ChoicePill {
                                 required property var modelData
                                 label: modelData.label
                                 on: Settings.lock.depthWeight === modelData.id
@@ -269,72 +290,54 @@ Item {
                     }
                 }
 
-                // ── Layout & size ──
-                ColumnLayout {
-                    visible: ed.tab === "size"
+                // ── Layout ────────────────────────────────────────────────────
+                Panel {
+                    visible: ed.tab === "layout"
                     Layout.fillWidth: true
-                    spacing: 12
-                    RowLayout {
-                        spacing: 6
-                        Text { text: "Position"; font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext1; Layout.rightMargin: 6 }
-                        Opt { label: "Auto"; icon: "󰚩"; on: Settings.lock.depthPos !== "custom"; onClicked: ed.set("depthPos", "auto") }
-                        Opt { label: "Custom"; icon: "󰆾"; on: Settings.lock.depthPos === "custom"; onClicked: ed.set("depthPos", "custom") }
-                        Text {
-                            Layout.leftMargin: 8
-                            text: Settings.lock.depthPos === "custom" ? "Drag the clock on the screen above to move it"
-                                                                       : "Placed around your wallpaper's subject, different on every picture"
-                            font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
-                        }
+                    implicitHeight: layoutRows.implicitHeight + 6
+                    ColumnLayout {
+                        id: layoutRows
+                        x: 0; y: 3; width: parent.width
+                        spacing: 0
+                        OptRow { first: true; label: "Position"
+                            sub: Settings.lock.depthPos === "custom" ? "Drag the clock on the screen above · double-click it to centre"
+                                                                     : "Placed around the subject of each picture"
+                            Row { spacing: 6
+                                ChoicePill { label: "Automatic"; on: Settings.lock.depthPos !== "custom"; onClicked: ed.set("depthPos", "auto") }
+                                ChoicePill { label: "Where I put it"; on: Settings.lock.depthPos === "custom"; onClicked: ed.set("depthPos", "custom") } } }
+                        OptRow { label: "Arrangement"; sub: "Stacked turns into one line by itself where the subject would hide the minutes"
+                            Row { spacing: 6
+                                ChoicePill { label: "12:45"; mono: true; on: Settings.lock.depthLayout !== "stacked"; onClicked: ed.set("depthLayout", "horizontal") }
+                                ChoicePill { label: "12 / 45"; mono: true; on: Settings.lock.depthLayout === "stacked"; onClicked: ed.set("depthLayout", "stacked") } } }
+                        OptRow { label: "Size"; sub: "Automatic position may shrink it a little to fit above the subject"
+                            Slide { from: 0.12; to: 0.34; key: "depthClockSize"; fallback: 0.22; percent: false; suffix: "%"; scaleShown: 100 / 0.22 } }
                     }
-                    Row {
-                        spacing: 6
-                        Opt { label: "One line  12:45"; on: Settings.lock.depthLayout !== "stacked"; onClicked: ed.set("depthLayout", "horizontal") }
-                        Opt { label: "Stacked  12 / 45"; on: Settings.lock.depthLayout === "stacked"; onClicked: ed.set("depthLayout", "stacked") }
-                    }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 12
-                        Text { text: "Size"; font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext1 }
-                        Text { text: "A"; font.family: "Inter Display"; font.pixelSize: 12; font.weight: Font.Bold; color: Atelier.subtext }
-                        // slider
-                        Item {
-                            id: slider
-                            Layout.fillWidth: true
-                            implicitHeight: 28
-                            readonly property real from: 0.12
-                            readonly property real to: 0.34
-                            readonly property real frac: (Settings.lock.depthClockSize - from) / (to - from)
-                            Rectangle {
-                                anchors.verticalCenter: parent.verticalCenter
-                                width: parent.width; height: 6; radius: 3
-                                color: Qt.alpha(Atelier.accent, 0.18)
-                                Rectangle { width: parent.width * slider.frac; height: parent.height; radius: 3; color: Atelier.accentFill }
-                            }
-                            Rectangle {
-                                x: slider.frac * (slider.width - width)
-                                anchors.verticalCenter: parent.verticalCenter
-                                width: 20; height: 20; radius: 10
-                                color: Atelier.text
-                                border.width: 3; border.color: Atelier.accentFill
-                            }
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                function pick(x) {
-                                    const f = Math.max(0, Math.min(1, x / width));
-                                    ed.set("depthClockSize", Math.round((slider.from + f * (slider.to - slider.from)) * 100) / 100);
-                                }
-                                onPressed: (m) => pick(m.x)
-                                onPositionChanged: (m) => { if (pressed) pick(m.x); }
-                            }
-                        }
-                        Text { text: "A"; font.family: "Inter Display"; font.pixelSize: 22; font.weight: Font.Bold; color: Atelier.subtext }
-                    }
-                    Text {
-                        Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
-                        text: "Stacked turns into one line by itself on pictures where the subject would hide the minutes."
-                        font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+                }
+
+                // ── Details ───────────────────────────────────────────────────
+                Panel {
+                    visible: ed.tab === "details"
+                    Layout.fillWidth: true
+                    implicitHeight: detailRows.implicitHeight + 6
+                    ColumnLayout {
+                        id: detailRows
+                        x: 0; y: 3; width: parent.width
+                        spacing: 0
+                        OptRow { first: true; label: "Date"
+                            Row { spacing: 6
+                                ChoicePill { label: "Monday, 23 November"; on: (Settings.lock.depthDate || "long") === "long"; onClicked: ed.set("depthDate", "long") }
+                                ChoicePill { label: "Mon 23 Nov"; on: Settings.lock.depthDate === "short"; onClicked: ed.set("depthDate", "short") }
+                                ChoicePill { label: "Off"; on: Settings.lock.depthDate === "off"; onClicked: ed.set("depthDate", "off") } } }
+                        OptRow { label: "Weather"; sub: "The temperature after the date"
+                            ToggleSwitch { on: Settings.lock.depthWeather ?? true; onToggled: ed.set("depthWeather", !(Settings.lock.depthWeather ?? true)) } }
+                        OptRow { label: "Clock"
+                            sub: Settings.lock.clock === "system" ? "Follows Appearance → 24-hour clock" : "Only the lock screen"
+                            Row { spacing: 6
+                                ChoicePill { label: "System"; on: Settings.lock.clock === "system"; onClicked: ed.set("clock", "system") }
+                                ChoicePill { label: "12-hour"; on: Settings.lock.clock === "12"; onClicked: ed.set("clock", "12") }
+                                ChoicePill { label: "24-hour"; on: Settings.lock.clock === "24"; onClicked: ed.set("clock", "24") } } }
+                        OptRow { visible: !Atelier.lockClock24; label: "AM / PM"; sub: "Small, beside the digits"
+                            ToggleSwitch { on: Settings.lock.depthAmPm ?? true; onToggled: ed.set("depthAmPm", !(Settings.lock.depthAmPm ?? true)) } }
                     }
                 }
             }
@@ -342,42 +345,82 @@ Item {
     }
 
     // ── pieces ──
-    component Btn: Rectangle {
-        id: b
+    // one option row in a Panel: label (+ quiet line) on the left, the control on the right
+    component OptRow: Item {
+        id: orow
+        property bool first: false
         property string label
-        property bool primary: false
-        signal clicked()
-        implicitWidth: bt.implicitWidth + 28; implicitHeight: 34; radius: 17
-        color: primary ? (bMa.containsMouse ? Qt.lighter(Atelier.accentFill, 1.1) : Atelier.accentFill)
-                       : (bMa.containsMouse ? Atelier.containerHigh : Atelier.container)
-        border.width: primary ? 0 : 1; border.color: Atelier.outline
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-        Text { id: bt; anchors.centerIn: parent; text: b.label; font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold
-            color: b.primary ? Atelier.onFill : Atelier.text }
-        MouseArea { id: bMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: b.clicked() }
+        property string sub: ""
+        default property alias control: oSlot.data
+        Layout.fillWidth: true
+        implicitHeight: Math.max(52, oText.implicitHeight + 22)
+        Rectangle { visible: !orow.first; anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right
+                    anchors.leftMargin: 14; anchors.rightMargin: 14; height: 1; color: Atelier.outline }
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 16; anchors.rightMargin: 14
+            spacing: 16
+            ColumnLayout {
+                id: oText
+                Layout.fillWidth: true
+                spacing: 1
+                Text { Layout.fillWidth: true; text: orow.label; font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium; color: Atelier.text; elide: Text.ElideRight }
+                Text { Layout.fillWidth: true; visible: orow.sub !== ""; text: orow.sub; font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext; wrapMode: Text.WordWrap }
+            }
+            Item { id: oSlot; implicitWidth: childrenRect.width; implicitHeight: childrenRect.height }
+        }
     }
 
-    component Opt: Rectangle {
-        id: o
-        property string label
-        property string icon: ""
-        property bool on: false
-        signal clicked()
-        implicitWidth: oRow.implicitWidth + 26; implicitHeight: 34; radius: 17
-        color: on ? Qt.alpha(Atelier.accent, 0.18) : (oMa.containsMouse ? Atelier.container : "transparent")
-        border.width: 1
-        border.color: on ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-        Row {
-            id: oRow
-            anchors.centerIn: parent
-            spacing: 7
-            Text { visible: o.icon !== ""; anchors.verticalCenter: parent.verticalCenter; text: o.icon; font.family: Atelier.font; font.pixelSize: 13
-                color: o.on ? Atelier.accent : Atelier.subtext1 }
-            Text { anchors.verticalCenter: parent.verticalCenter; text: o.label; font.family: Atelier.fontUi; font.pixelSize: 12
-                font.weight: o.on ? Font.DemiBold : Font.Normal; color: o.on ? Atelier.text : Atelier.subtext1 }
+    // a slider bound to Settings.lock[key], with its value shown
+    component Slide: RowLayout {
+        id: sl
+        property real from: 0
+        property real to: 1
+        property string key
+        property real fallback: 0
+        property bool percent: true
+        property string suffix: "%"
+        property real scaleShown: 100
+        readonly property real value: Settings.lock[key] ?? fallback
+        readonly property real frac: Math.max(0, Math.min(1, (value - from) / (to - from)))
+        spacing: 12
+        Item {
+            id: track
+            implicitWidth: 180; implicitHeight: 26
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                width: parent.width; height: 6; radius: 3
+                color: Atelier.containerHigh
+                Rectangle { width: Math.max(6, parent.width * sl.frac); height: parent.height; radius: 3; color: Atelier.accentFill }
+            }
+            Rectangle {
+                x: sl.frac * (track.width - width)
+                anchors.verticalCenter: parent.verticalCenter
+                width: 18; height: 18; radius: 9
+                color: Atelier.onFill
+                border.width: 3; border.color: Atelier.accentFill
+                scale: slMa.pressed ? 1.15 : 1
+                Behavior on scale { NumberAnimation { duration: 120 } }
+            }
+            MouseArea {
+                id: slMa
+                anchors.fill: parent
+                anchors.topMargin: -6; anchors.bottomMargin: -6
+                cursorShape: Qt.PointingHandCursor
+                function pick(x) {
+                    const f = Math.max(0, Math.min(1, x / width));
+                    ed.set(sl.key, Math.round((sl.from + f * (sl.to - sl.from)) * 100) / 100);
+                }
+                onPressed: (m) => pick(m.x)
+                onPositionChanged: (m) => { if (pressed) pick(m.x); }
+            }
         }
-        MouseArea { id: oMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: o.clicked() }
+        Text {
+            Layout.preferredWidth: 44
+            horizontalAlignment: Text.AlignRight
+            text: Math.round(sl.value * sl.scaleShown) + sl.suffix
+            font.family: Atelier.font; font.pixelSize: 11; color: Atelier.subtext1
+        }
     }
 
     component FontTile: Rectangle {
@@ -387,15 +430,15 @@ Item {
         property int weight: Font.Bold
         property bool on: false
         signal clicked()
-        width: 132; height: 84; radius: 16
-        color: on ? Qt.alpha(Atelier.accent, 0.14) : (ftMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+        implicitHeight: 96; radius: 16
+        color: on ? Qt.alpha(Atelier.accent, 0.12) : (ftMa.containsMouse ? Atelier.containerHigh : Atelier.container)
         border.width: on ? 2 : 1
         border.color: on ? Atelier.accent : Atelier.outline
         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-        Text { anchors.horizontalCenter: parent.horizontalCenter; y: 8; text: "12:45"; font.family: ft.fam; font.pixelSize: 34; font.weight: ft.weight
+        Text { anchors.horizontalCenter: parent.horizontalCenter; y: 10; text: "12:45"; font.family: ft.fam; font.pixelSize: 38; font.weight: ft.weight
             font.features: { "tnum": 1 }; color: Atelier.text }
-        Text { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 8; text: ft.label
-            font.family: Atelier.fontUi; font.pixelSize: 11; color: ft.on ? Atelier.text : Atelier.subtext }
+        Text { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 10; text: ft.label
+            font.family: Atelier.fontUi; font.pixelSize: 11; font.weight: ft.on ? Font.DemiBold : Font.Normal; color: ft.on ? Atelier.text : Atelier.subtext }
         MouseArea { id: ftMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ft.clicked() }
     }
 
@@ -405,38 +448,39 @@ Item {
         property string label
         property string sub
         readonly property bool on: Settings.lock.depthStyle === kind
-        Layout.preferredWidth: 230
-        implicitHeight: 96
-        radius: 16
-        color: on ? Qt.alpha(Atelier.accent, 0.14) : (stMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+        Layout.preferredWidth: 220
+        Layout.alignment: Qt.AlignTop
+        implicitHeight: 172
+        radius: 18
+        color: on ? Qt.alpha(Atelier.accent, 0.12) : (stMa.containsMouse ? Atelier.containerHigh : Atelier.container)
         border.width: on ? 2 : 1
         border.color: on ? Atelier.accent : Atelier.outline
         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-        // mini sample: solid = filled digits, glass = outlined, frosted-looking digits
+        // a small picture of each look: solid digits / frosted digits with a rim
         Rectangle {
             id: sample
-            anchors.left: parent.left; anchors.leftMargin: 10
-            anchors.verticalCenter: parent.verticalCenter
-            width: 92; height: 72; radius: 12
+            anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top
+            anchors.margins: 10
+            height: 96; radius: 12
             gradient: Gradient {
-                GradientStop { position: 0; color: Atelier.blue }
+                GradientStop { position: 0; color: Atelier.sapphire }
                 GradientStop { position: 1; color: Atelier.mauve }
             }
             Text {
                 anchors.centerIn: parent
-                text: "12"
-                font.family: "Inter Display"; font.pixelSize: 40; font.weight: Font.Black
-                color: st.kind === "glass" ? Qt.rgba(1, 1, 1, 0.38) : Atelier.crust
+                text: "12:45"
+                font.family: "Inter Display"; font.pixelSize: 44; font.weight: Font.Bold
+                font.features: { "tnum": 1 }
+                color: st.kind === "glass" ? Qt.rgba(1, 1, 1, 0.3) : "white"
                 style: st.kind === "glass" ? Text.Outline : Text.Normal
                 styleColor: Qt.rgba(1, 1, 1, 0.85)
             }
         }
         Column {
-            anchors.left: sample.right; anchors.leftMargin: 12
-            anchors.right: parent.right; anchors.rightMargin: 10
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 3
-            Text { text: st.label; font.family: Atelier.fontUi; font.pixelSize: 14; font.weight: Font.DemiBold; color: Atelier.text }
+            anchors.left: parent.left; anchors.right: parent.right; anchors.top: sample.bottom
+            anchors.margins: 12; anchors.topMargin: 10
+            spacing: 2
+            Text { text: st.label; font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold; color: Atelier.text }
             Text { width: parent.width; text: st.sub; wrapMode: Text.WordWrap; font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
         }
         MouseArea { id: stMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ed.set("depthStyle", st.kind) }

@@ -1,0 +1,3 @@
+# Let the wheel group switch the battery charge limit (charge_types: Standard | Long_Life) from the
+# shell (Battery tab of the system monitor) without a password prompt.
+SUBSYSTEM=="power_supply", KERNEL=="BAT*", ACTION=="add|change", RUN+="/bin/chgrp wheel /sys/class/power_supply/%k/charge_types", RUN+="/bin/chmod g+w /sys/class/power_supply/%k/charge_types"

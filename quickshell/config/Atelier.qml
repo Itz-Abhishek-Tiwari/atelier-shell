@@ -142,10 +142,14 @@ Singleton {
     // the glass opacity changes the frame and drawer host re-map themselves (remapToken).
     property int remapToken: 0
     Timer { id: remapTimer; interval: 1200; onTriggered: root.remapToken++ }
-    readonly property real _glass: Settings.appearance.glass
+    readonly property real _glass: Settings.shellGlass
     on_GlassChanged: remapTimer.restart()
+    // layer blur is also a map-time rule: re-map when the shell blur is switched
+    readonly property bool _shellBlur: Settings.appearance.shellBlur
+    on_ShellBlurChanged: remapTimer.restart()
 
-    readonly property color surface: Qt.alpha(isLight ? c.base : c.crust, Perf.lean ? 1 : Math.min(1, Settings.appearance.glass + (isLight ? 0.02 : 0)))
+    readonly property color surface: Qt.alpha(isLight || Settings.appearance.glassTone === "base" ? c.base : c.crust,
+                                              Perf.lean ? 1 : Math.min(1, Settings.shellGlass + (isLight ? 0.02 : 0)))
     readonly property color shadow: isLight ? Qt.rgba(0, 0, 0, 0.22) : Qt.rgba(0, 0, 0, 0.42)
     readonly property color scrim: Qt.alpha(c.crust, 0.45)
 

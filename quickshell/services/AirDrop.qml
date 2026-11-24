@@ -174,11 +174,26 @@ Singleton {
         if (sendPhase !== "choose" || !sendPaths.length) return;
         browseProc.running = false;
         sendTarget = name;
+        sendProgress = -1;
+        sendError = "";
         sendPhase = "looking";
         sendProc.command = ["owly", "send", "--seconds", "40", "--to", name].concat(sendPaths);
         sendProc.running = true;
     }
     property string sendTarget: ""
+    property real sendProgress: -1      // 0..1 while the upload runs, -1 before it starts
+    // owly's upload progress ("65536 / 5326370 bytes") is \r-separated on ONE line, so it
+    // arrives glued together; split it, and keep it out of sendError (it showed as the error).
+    function _sendLine(line) {
+        for (const part of line.split("\r")) {
+            const s = part.trim();
+            if (!s) continue;
+            const p = s.match(/(\d+)\s*\/\s*(\d+)\s*bytes/);
+            if (p) { sendPhase = "sending"; sendProgress = Math.min(1, +p[1] / Math.max(1, +p[2])); }
+            else if (/error|fail|refus|declin|denied|timed? ?out|reset|closed/i.test(s)) sendError = s.replace(/^error:\s*/i, "");
+            else if (/send|upload|accept|ask/i.test(s)) sendPhase = "sending";
+        }
+    }
     function cancelSend(): void {
         browseProc.running = false;
         if (sendProc.running) sendProc.signal(2);
@@ -215,6 +230,7 @@ Singleton {
                 } else if (/doesn't exist|does not exist|no such device/i.test(line)) {
                     // the USB stick is unplugged (or its driver didn't attach after a reconnect)
                     root.error = "Plug in the AirDrop Wi-Fi stick";
+                    root.stickPresent = false;
                 } else if (/error|fail|can't|cannot|not found|denied/i.test(line)) {
                     root.error = line.trim().replace(/^error:\s*/i, "");
                 }
@@ -234,12 +250,41 @@ Singleton {
                 root._radioForSend = false;
             }
     }
-    Timer { id: radioRetry; interval: 4000; onTriggered: if (root.enabled) radio.running = true }
-    // gave up (stick unplugged…): keep checking quietly, so it comes back by itself when it's there again
+    // a retry first looks for the stick, and only starts the radio when it's there
+    Timer { id: radioRetry; interval: 4000; onTriggered: if (root.enabled) stickCheck.running = true }
+    // gave up while the stick IS there (owlyd hiccup…): try again now and then
     Timer {
         interval: 20000; repeat: true
-        running: root.enabled && root.available && root.radioState === "error"
+        running: root.enabled && root.available && root.radioState === "error" && root.stickPresent
         onTriggered: { root.retries = 0; root.error = ""; root._startRadio(); }
+    }
+
+    // ── the USB stick coming and going ──
+    // While the stick is unplugged, don't poke owly at all: a radio start that lands while
+    // rtl8xxxu is still probing a just-replugged stick froze the driver until a reboot
+    // (2026-11-22). Only watch for the interface (a sysfs test, touches nothing), and once it's
+    // back give the driver a few seconds to settle before starting the radio.
+    // "airdrop0" = station in /etc/owly/radio.toml (fixed name from 10-atelier-airdrop.link).
+    property bool stickPresent: true
+    Process {
+        id: stickCheck
+        command: ["test", "-e", "/sys/class/net/airdrop0"]
+        onExited: (code) => {
+            const there = code === 0;
+            if (there && !root.stickPresent) { root.stickPresent = true; stickSettle.restart(); }
+            else if (there) { if (root.enabled) radio.running = true; }
+            else { root.stickPresent = false; root.radioState = "error"; root.error = "Plug in the AirDrop Wi-Fi stick"; }
+        }
+    }
+    Timer {
+        interval: 3000; repeat: true
+        running: root.enabled && !root.stickPresent && !stickSettle.running
+        onTriggered: stickCheck.running = true
+    }
+    Timer {
+        id: stickSettle
+        interval: 5000
+        onTriggered: if (root.enabled) { root.retries = 0; root.error = ""; root._startRadio(); }
     }
     Timer { id: peerTimer; interval: 15000; onTriggered: root.peerNearby = false }
 
@@ -328,18 +373,13 @@ Singleton {
 
     Process {
         id: sendProc
-        stdout: SplitParser {
-            onRead: (line) => { if (/send|upload|accept|ask/i.test(line)) root.sendPhase = "sending"; }
-        }
-        stderr: SplitParser {
-            onRead: (line) => {
-                if (/send|upload|accept|ask/i.test(line) && !/error|fail/i.test(line)) root.sendPhase = "sending";
-                else if (line.trim()) root.sendError = line.trim().replace(/^error:\s*/i, "");
-            }
-        }
+        stdout: SplitParser { onRead: (line) => root._sendLine(line) }
+        stderr: SplitParser { onRead: (line) => root._sendLine(line) }
         onExited: (code) => {
             root.sendPhase = code === 0 ? "sent" : "failed";
-            if (code !== 0 && !root.sendError) root.sendError = "No one accepted it";
+            if (code !== 0 && !root.sendError)
+                root.sendError = root.sendProgress >= 0 ? "The transfer stopped at " + Math.round(root.sendProgress * 100) + "%" : "No one accepted it";
+            console.warn("airdrop send exited", code, "progress", root.sendProgress, "error:", root.sendError);
             sendHide.restart();
             if (root._radioForSend) { root._radioForSend = false; if (!root.enabled) root._stopRadio(); }
         }

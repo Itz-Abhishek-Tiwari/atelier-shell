@@ -73,6 +73,13 @@ bind(mainMod .. " + G",             hl.dsp.exec_cmd(qs .. "games toggle"),      
 bind(mainMod .. " + Alt + W",       hl.dsp.exec_cmd(qs .. "wallpaper toggle"),     "Shell · Wallpapers")
 bind(mainMod .. " + slash",         hl.dsp.exec_cmd(qs .. "keyboard toggle"),      "Shell · On-screen keyboard")
 bind(mainMod .. " + BackSpace",     hl.dsp.exec_cmd(qs .. "power toggle"),         "Shell · Power menu")
+bind(mainMod .. " + Shift + M",     hl.dsp.exec_cmd(qs .. "sysmon toggle"),        "Shell · System monitor")
+bind(mainMod .. " + Alt + T",       hl.dsp.exec_cmd(qs .. "timers toggle"),        "Shell · Timers & pomodoro")
+bind(mainMod .. " + Shift + X",     hl.dsp.exec_cmd(qs .. "colorpicker pick"),     "Shell · Pick a colour")
+-- Alt+Tab window switcher: hold Alt, tap Tab; letting go of Alt focuses the highlighted window
+bind("ALT + Tab",                   hl.dsp.exec_cmd(qs .. "switcher next"),        "Windows · Switch window @ Alt + Tab")
+bind("ALT + SHIFT + Tab",           hl.dsp.exec_cmd(qs .. "switcher prev"))
+hl.bind("Alt_L", hl.dsp.exec_cmd(qs .. "switcher commit"), { release = true, ignore_mods = true })
 bind(mainMod .. " + L",             hl.dsp.exec_cmd(qs .. "lock lock || hyprlock"), "Shell · Lock")
 bind("Ctrl + Alt + W",              hl.dsp.exec_cmd("killall waybar || waybar"))
 

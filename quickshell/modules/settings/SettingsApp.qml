@@ -30,44 +30,48 @@ Item {
 
     property string page: "appearance"
     readonly property var pages: [
-        { id: "profile",       group: "Personalise", icon: "󰀄", label: "Profile",         sub: "Your picture, name and greetings",
-          keys: "profile picture photo avatar face image name display greeting account user login full name computer hostname" },
-        { id: "appearance",    group: "Personalise", icon: "󰏘", label: "Appearance",      sub: "Theme, wallpaper and the shell's shape",
-          keys: "theme colour color wallpaper transition fade wipe slide roundness corners frame border glass opacity control center layout tiles icons cards list header shortcuts" },
-        { id: "bar",           group: "Personalise", icon: "󰍜", label: "Bar",             sub: "Position, sections and pinned apps",
+        { id: "profile",       group: "Personalise", icon: "󰀄", label: "Profile",           sub: "Picture, name and greetings",
+          keys: "profile picture photo avatar face image name display greeting account user login full computer hostname" },
+        { id: "appearance",    group: "Personalise", icon: "󰏘", label: "Appearance",        sub: "Theme, wallpaper, glass, blur and shadows",
+          keys: "theme colour color wallpaper transition fade wipe slide roundness corners frame border glass opacity blur transparency translucent vibrancy dim solid shadows windows control center layout tiles icons cards list header shortcuts 24-hour clock time animation speed shell" },
+        { id: "bar",           group: "Personalise", icon: "󰍜", label: "Bar",               sub: "Position, sections and pinned apps",
           keys: "bar panel position workspaces tray clock pinned apps hover logo power title" },
-        { id: "widgets",       group: "Personalise", icon: "󰕮", label: "Desktop",         sub: "The clock and text on your desktop",
-          keys: "desktop widget clock date weather greeting tasks media music font shadow" },
-        { id: "general",       group: "System",      icon: "󰒓", label: "General",         sub: "Clock, web search, camera, recording, emoji, updates",
-          keys: "name 24-hour clock time search engine google duckduckgo bing web recording record screen fps sound animation speed motion iphone camera webcam droidcam emoji emoticon gif gifs giphy tenor skin tone" },
-        { id: "defaults",      group: "System",      icon: "󰀻", label: "Default apps",    sub: "Browser, files, editor, media and terminal",
-          keys: "default apps applications open with browser web email mail file manager folders text editor code images pictures photos viewer video player music audio pdf documents archives zip terminal mime xdg" },
-        { id: "windows",       group: "System",      icon: "󰖲", label: "Windows",         sub: "Tiling layout, gaps, blur and animations",
-          keys: "windows tiling layout dwindle master scrolling monocle gaps blur opacity transparency shadow animations hyprland rounding" },
-        { id: "notifications", group: "System",      icon: "󰂚", label: "Notifications",   sub: "Pop-ups and Do Not Disturb",
+        { id: "widgets",       group: "Personalise", icon: "󰕮", label: "Desktop",           sub: "The clock and text on your wallpaper",
+          keys: "desktop widget clock date weather greeting tasks media music font shadow colour color accent icons glass frosted blur card" },
+        { id: "controlcenter", group: "Personalise", icon: "󰒓", label: "Control center",    sub: "Switches layout, header and shortcuts",
+          keys: "control center quick settings toggles tiles icons cards list header shortcuts notifications" },
+        { id: "notifications", group: "Personalise", icon: "󰂚", label: "Notifications",     sub: "Pop-ups and Do Not Disturb",
           keys: "notifications pop-ups popups do not disturb dnd" },
-        { id: "display",       group: "System",      icon: "󰍹", label: "Display & power", sub: "Night light, idle & sleep, battery, performance modes",
-          keys: "night light warmth display volume brightness osd caffeine awake sleep performance game mode programming power" },
-        { id: "modes",         group: "System",      icon: "󰊗", label: "Modes",           sub: "What Programming and Game mode change",
-          keys: "modes performance game programming dev developer blur opacity opaque shadows animations tearing power profile do not disturb dnd caffeine awake widgets auto detect steam games" },
-        { id: "displays",      group: "Hardware",    icon: "󰍺", label: "Displays",        sub: "Resolution, scale, rotation, arrangement",
-          keys: "monitor monitors screen resolution refresh rate hz scale rotation rotate portrait mirror hdmi external vrr freesync position arrangement" },
-        { id: "input",         group: "Hardware",    icon: "󰌌", label: "Keyboard & mouse", sub: "Layouts, key repeat, pointer and touchpad",
-          keys: "keyboard layout language repeat delay caps lock escape numlock mouse pointer speed sensitivity acceleration scroll natural touchpad trackpad tap click left-handed focus" },
-        { id: "sound",         group: "Hardware",    icon: "󰕾", label: "Sound",           sub: "Output, microphone and app volumes",
-          keys: "sound audio volume speaker headphones output input microphone mic mute apps pipewire bluetooth" },
-        { id: "shortcuts",     group: "Hardware",    icon: "󰘳", label: "Shortcuts",       sub: "Change keys and add your own",
-          keys: "shortcuts keybinds keybindings hotkeys keys bind rebind custom command" },
-        { id: "lock",          group: "Security",    icon: "󰌾", label: "Lock screen",     sub: "Built-in styles, or a qylock theme from GitHub",
-          keys: "lock screen qylock themes notifications privacy" },
-        { id: "login",         group: "Security",    icon: "󰍂", label: "Login screen",    sub: "The greetd login: layout, look, sync",
+        { id: "lock",          group: "Personalise", icon: "󰌾", label: "Lock screen",       sub: "Eight built-in styles and their options",
+          keys: "lock screen themes styles notifications privacy" },
+        { id: "login",         group: "Personalise", icon: "󰍂", label: "Login screen",      sub: "Matches your lock screen; sync and boot options",
           keys: "login greeter greetd sddm boot quiet sync" },
-        { id: "storage",       group: "Device",      icon: "󰋊", label: "Storage",         sub: "What is using your disk",
-          keys: "storage disk space clean trash cache folders" },
-        { id: "profiles",      group: "Device",      icon: "󰆓", label: "Profiles",        sub: "Save, switch and back up your setup",
+        { id: "windows",       group: "Workspace",   icon: "󰖲", label: "Windows",           sub: "Tiling, gaps, corners and animations",
+          keys: "windows tiling layout dwindle master scrolling monocle gaps rounding corners animations hyprland" },
+        { id: "modes",         group: "Workspace",   icon: "󰊗", label: "Modes",             sub: "Normal, Programming and Game mode",
+          keys: "modes performance game programming dev developer blur opacity opaque shadows animations tearing power profile do not disturb dnd caffeine awake widgets auto detect steam games mode" },
+        { id: "shortcuts",     group: "Workspace",   icon: "󰘳", label: "Shortcuts",         sub: "Change keys and add your own",
+          keys: "shortcuts keybinds keybindings hotkeys keys bind rebind custom command" },
+        { id: "defaults",      group: "Workspace",   icon: "󰀻", label: "Default apps",      sub: "Which app opens what, and web search",
+          keys: "default apps applications open with browser web email mail file manager folders text editor code images pictures photos viewer video player music audio pdf documents archives zip terminal mime xdg search engine google duckduckgo bing" },
+        { id: "tools",         group: "Workspace",   icon: "󰦬", label: "Tools",             sub: "Screen recording, emoji & GIFs, focus timer",
+          keys: "tools screen recording record fps sound folder emoji emoticon gif gifs giphy tenor skin tone timer pomodoro focus break stopwatch" },
+        { id: "displays",      group: "Hardware",    icon: "󰍺", label: "Displays",          sub: "Monitors, night light, volume pop-up",
+          keys: "monitor monitors screen resolution refresh rate hz scale rotation rotate portrait mirror hdmi external vrr freesync position arrangement night light warmth schedule osd on-screen display volume brightness pop-up" },
+        { id: "sound",         group: "Hardware",    icon: "󰕾", label: "Sound",             sub: "Output, microphone and app volumes",
+          keys: "sound audio volume speaker headphones output input microphone mic mute apps pipewire bluetooth" },
+        { id: "input",         group: "Hardware",    icon: "󰌌", label: "Keyboard & mouse",  sub: "Layouts, key repeat, pointer, touchpad",
+          keys: "keyboard layout language repeat delay caps lock escape numlock mouse pointer speed sensitivity acceleration scroll natural touchpad trackpad tap click left-handed focus" },
+        { id: "power",         group: "Hardware",    icon: "󰂄", label: "Power & battery",   sub: "Sleep, keep awake, battery alerts",
+          keys: "power battery sleep suspend idle dim lock screen off caffeine awake low critical charger alerts" },
+        { id: "phone",         group: "Hardware",    icon: "󰏲", label: "iPhone",            sub: "Use your iPhone as a webcam",
+          keys: "iphone phone camera webcam droidcam usb hotspot wifi" },
+        { id: "storage",       group: "System",      icon: "󰋊", label: "Storage",           sub: "Disk use, clean up, drives",
+          keys: "storage disk space clean trash cache folders drives usb sd card eject" },
+        { id: "profiles",      group: "System",      icon: "󰆓", label: "Backup & profiles", sub: "Save, switch and back up your setup",
           keys: "profiles profile backup export import save restore docked laptop hot-plug automatic switch" },
-        { id: "about",         group: "Device",      icon: "󰋽", label: "About",           sub: "This laptop's model and specs, version, reset",
-          keys: "about version files reset json hardware specs specifications laptop model computer cpu processor gpu graphics ram memory disk ssd storage battery health cycles display screen wifi bios" }
+        { id: "about",         group: "System",      icon: "󰋽", label: "About",             sub: "This laptop, updates, reset",
+          keys: "about version files reset json hardware specs specifications laptop model computer cpu processor gpu graphics ram memory disk ssd storage battery health cycles display screen wifi bios updates pacman aur check" }
     ]
     readonly property var current: pages.find(p => p.id === page) || pages[0]
 
@@ -105,7 +109,7 @@ Item {
 
     function toggle() { if (visible && animActive) close(); else open(); }
     function open(p) {
-        const old = { behavior: "general" };          // pages that were renamed or merged
+        const old = { behavior: "appearance", general: "appearance", display: "power" };   // pages that were renamed or merged
         if (p) page = old[p] || (pages.some(x => x.id === p) ? p : page);
         if (!animActive) openedAt = Date.now();
         visible = true;
@@ -122,7 +126,7 @@ Item {
     Timer { id: closeTimer; interval: Atelier.durClose + 40; onTriggered: if (!win.animActive) win.visible = false }
 
     // The drawer sits above every window and holds the keyboard, so a window that Settings
-    // starts (photo picker, terminal for chfn/pacman, file manager, qylock preview) would open
+    // starts (photo picker, terminal for chfn/pacman, file manager) would open
     // behind it. Step aside as soon as a new window maps.
     Connections {
         target: Hyprland
@@ -574,48 +578,83 @@ Item {
                             }
 
                             SettingCard {
-                                title: "Frame & glass"; icon: "󰹑"; tint: Atelier.blue
+                                title: "Shell"; icon: "󰹑"; tint: Atelier.blue
                                 SettingSlider { label: "Border thickness"; description: "The frame around the screen"; from: 4; to: 20; step: 1; suffix: " px"; tint: Atelier.blue
                                     value: Settings.appearance.frame; onMoved: (v) => Settings.appearance.frame = v }
-                                SettingSlider { label: "Glass opacity"; description: "How solid the bar and drawers are"; from: 0.6; to: 1; step: 0.02; decimals: 2; tint: Atelier.blue
-                                    value: Settings.appearance.glass; onMoved: (v) => Settings.appearance.glass = v }
+                                SettingSlider { label: "Shell animation speed"; description: "Drawers, pop-ups and the bar. 1.0 is the default; higher is faster"; from: 0.5; to: 2; step: 0.1; decimals: 1; suffix: "×"
+                                    value: Settings.general.animSpeed; onMoved: (v) => Settings.general.animSpeed = v }
+                                SettingSwitch { label: "24-hour clock"; description: "Bar, widgets, control center and lock screen"
+                                    checked: Settings.general.clock24; onToggled: (v) => Settings.general.clock24 = v }
                             }
 
                             SettingCard {
-                                id: ccCard
-                                title: "Control center"; icon: "󰒓"; tint: Atelier.lavender
-                                readonly property var all: [
-                                    { id: "screenshot", label: "Screenshot" }, { id: "record", label: "Record" },
-                                    { id: "wallpaper", label: "Wallpaper" }, { id: "theme", label: "Theme" },
-                                    { id: "emoji", label: "Emoji" }, { id: "clipboard", label: "Clipboard" },
-                                    { id: "camera", label: "Camera" }, { id: "keyboard", label: "On-screen keyboard" },
-                                    { id: "keybinds", label: "Shortcuts list" }, { id: "settings", label: "Settings" }]
-                                readonly property var picked: Settings.controlCenter.shortcuts || []
-                                function setShortcut(id, on) {
-                                    // keep the order of `all`; at most five
-                                    const next = all.map(x => x.id).filter(x => x === id ? on : picked.indexOf(x) >= 0);
-                                    Settings.controlCenter.shortcuts = next.slice(0, 5);
+                                id: winLook
+                                title: "Transparency"; icon: "󰂵"; tint: Atelier.sky
+                                readonly property var w: Settings.windows
+                                function resetBlur() {
+                                    const d = { blurSize: 9, blurPasses: 2, blurVibrancy: 0.17, blurNoise: 0.012, blurContrast: 0.95, blurBrightness: 0.90 };
+                                    for (const k in d) Settings.windows[k] = d[k];
                                 }
-                                SettingChoice { label: "Layout"; description: "How the switches are drawn (also the grid button in its header)"; tint: Atelier.lavender
-                                    options: [{ id: "list", label: "List" }, { id: "tiles", label: "Tiles" }, { id: "icons", label: "Icons" }, { id: "cards", label: "Cards" }]
-                                    value: Settings.controlCenter.layout; onPicked: (id) => Settings.controlCenter.layout = id }
-                                SettingChoice { label: "Header"; description: "Big clock with the date, or one compact line"; tint: Atelier.lavender
-                                    options: [{ id: "full", label: "Big clock" }, { id: "compact", label: "Compact" }]
-                                    value: Settings.controlCenter.header; onPicked: (id) => Settings.controlCenter.header = id }
-                                SettingSlider { label: "Notifications shown"; description: "The rest behind \"Show more\""; from: 1; to: 10; step: 1; tint: Atelier.lavender
-                                    value: Settings.controlCenter.notifLimit; onMoved: (v) => Settings.controlCenter.notifLimit = Math.round(v) }
-                                Repeater {
-                                    model: ccCard.all
-                                    SettingSwitch {
-                                        required property var modelData
-                                        label: "Shortcut: " + modelData.label
-                                        description: !checked && ccCard.picked.length >= 5 ? "Up to five; turn one off first" : ""
-                                        tint: Atelier.lavender
-                                        checked: ccCard.picked.indexOf(modelData.id) >= 0
-                                        onToggled: (v) => { if (!v || ccCard.picked.length < 5) ccCard.setShortcut(modelData.id, v); }
-                                    }
-                                }
+                                SettingSlider { label: "Focused window opacity"; description: "Applies to every app"; from: 0.6; to: 1; step: 0.01; decimals: 2; tint: Atelier.sky
+                                    value: winLook.w.activeOpacity; onMoved: (v) => Settings.windows.activeOpacity = v }
+                                SettingSlider { label: "Unfocused window opacity"; from: 0.5; to: 1; step: 0.01; decimals: 2; tint: Atelier.sky
+                                    value: winLook.w.inactiveOpacity; onMoved: (v) => Settings.windows.inactiveOpacity = v }
+                                SettingSwitch { label: "Shell matches windows"; description: Settings.appearance.glassMatchWindows
+                                        ? "The bar and drawers use the focused window opacity (" + Math.round(Settings.windows.activeOpacity * 100) + "%), so their blur looks the same"
+                                        : "The bar and drawers have their own opacity"
+                                    checked: Settings.appearance.glassMatchWindows; onToggled: (v) => Settings.appearance.glassMatchWindows = v }
+                                SettingSlider { visible: !Settings.appearance.glassMatchWindows; label: "    Shell glass"; description: "How solid the bar and drawers are"; from: 0.6; to: 1; step: 0.02; decimals: 2
+                                    value: Settings.appearance.glass; onMoved: (v) => Settings.appearance.glass = v }
+                                SettingChoice { visible: !Atelier.isLight; label: "Shell glass colour"; description: "Deep is the theme's darkest shade; Base is the background most apps use, and lets more blur show"
+                                    options: [{ id: "deep", label: "Deep" }, { id: "base", label: "Base" }]
+                                    value: Settings.appearance.glassTone; onPicked: (id) => Settings.appearance.glassTone = id }
+                                SettingSwitch { label: "Keep video, games and image apps solid"
+                                    description: "Off: every app is see-through and blurred, including mpv, VLC, image viewers, Steam games, GIMP, Krita, Blender, OBS"
+                                    tint: Atelier.sky; checked: winLook.w.solidApps; onToggled: (v) => Settings.windows.solidApps = v }
+                                SettingSwitch { label: "Keep fullscreen windows solid"; tint: Atelier.sky
+                                    checked: winLook.w.solidFullscreen; onToggled: (v) => Settings.windows.solidFullscreen = v }
                             }
+
+                            SettingCard {
+                                title: "Blur"; icon: "󰂵"; tint: Atelier.sky
+                                SettingRow { label: "Applies to"; description: "Strength, smoothness and colour are shared by windows, the bar and drawers"
+                                    Chip { icon: "󰑙"; text: "Reset look"; tint: Atelier.subtext; interactive: true; implicitHeight: 28; onClicked: winLook.resetBlur() } }
+                                SettingSwitch { label: "Behind windows"; description: "Frosted glass behind see-through windows"; tint: Atelier.sky
+                                    checked: winLook.w.blur; onToggled: (v) => Settings.windows.blur = v }
+                                SettingSwitch { visible: winLook.w.blur; label: "    Blur what's behind"
+                                    description: winLook.w.blurBehind ? "Windows blur the windows under them. Uses noticeably more GPU"
+                                                                      : "Off: windows show the blurred wallpaper only (cheap, looks the same for tiled windows)"
+                                    tint: Atelier.sky; checked: winLook.w.blurBehind; onToggled: (v) => Settings.windows.blurBehind = v }
+                                SettingSwitch { label: "Behind the shell"; description: "Frosted glass behind the bar and drawers"
+                                    checked: Settings.appearance.shellBlur; onToggled: (v) => Settings.appearance.shellBlur = v }
+                                SettingSlider { visible: winLook.w.blur || Settings.appearance.shellBlur; label: "    Strength"; description: "How far each pass spreads"; from: 2; to: 16; step: 1; tint: Atelier.sky
+                                    value: winLook.w.blurSize; onMoved: (v) => Settings.windows.blurSize = Math.round(v) }
+                                SettingSlider { visible: winLook.w.blur || Settings.appearance.shellBlur; label: "    Smoothness"; description: "More passes look softer but cost GPU"; from: 1; to: 4; step: 1; tint: Atelier.sky
+                                    value: winLook.w.blurPasses; onMoved: (v) => Settings.windows.blurPasses = Math.round(v) }
+                                SettingSlider { visible: winLook.w.blur || Settings.appearance.shellBlur; label: "    Vibrancy"; description: "Colour of what shows through"; from: 0; to: 0.6; step: 0.01; decimals: 2; tint: Atelier.sky
+                                    value: winLook.w.blurVibrancy; onMoved: (v) => Settings.windows.blurVibrancy = v }
+                                SettingSlider { visible: winLook.w.blur || Settings.appearance.shellBlur; label: "    Brightness"; from: 0.5; to: 1.3; step: 0.01; decimals: 2; tint: Atelier.sky
+                                    value: winLook.w.blurBrightness; onMoved: (v) => Settings.windows.blurBrightness = v }
+                                SettingSlider { visible: winLook.w.blur || Settings.appearance.shellBlur; label: "    Contrast"; from: 0.5; to: 1.5; step: 0.01; decimals: 2; tint: Atelier.sky
+                                    value: winLook.w.blurContrast; onMoved: (v) => Settings.windows.blurContrast = v }
+                                SettingSlider { visible: winLook.w.blur || Settings.appearance.shellBlur; label: "    Grain"; description: "A little noise hides colour banding"; from: 0; to: 0.08; step: 0.002; decimals: 3; tint: Atelier.sky
+                                    value: winLook.w.blurNoise; onMoved: (v) => Settings.windows.blurNoise = v }
+                                SettingSwitch { visible: winLook.w.blur; label: "    Menus and tooltips"; description: "Blur behind app pop-ups too"; tint: Atelier.sky
+                                    checked: winLook.w.blurPopups; onToggled: (v) => Settings.windows.blurPopups = v }
+                            }
+
+                            SettingCard {
+                                title: "Shadows & dimming"; icon: "󰘵"; tint: Atelier.sky
+                                SettingSwitch { label: "Window shadows"; tint: Atelier.sky
+                                    checked: winLook.w.shadow; onToggled: (v) => Settings.windows.shadow = v }
+                                SettingSwitch { label: "Shell shadows"; description: "Under the drawers and along the frame"
+                                    checked: Settings.appearance.shellShadow; onToggled: (v) => Settings.appearance.shellShadow = v }
+                                SettingSwitch { label: "Dim unfocused windows"; tint: Atelier.sky
+                                    checked: winLook.w.dimInactive; onToggled: (v) => Settings.windows.dimInactive = v }
+                                SettingSlider { visible: winLook.w.dimInactive; label: "    Dim amount"; from: 0.02; to: 0.4; step: 0.01; decimals: 2; tint: Atelier.sky
+                                    value: winLook.w.dimStrength; onMoved: (v) => Settings.windows.dimStrength = v }
+                            }
+
                         }
 
                         // ═════════ Bar ═════════
@@ -850,7 +889,9 @@ Item {
                                             font.family: parent.option.id === "mono" ? Atelier.font : parent.option.id === "serif" ? "Noto Serif" : "Inter Display"
                                             font.pixelSize: 30
                                             font.weight: ({ thin: Font.Thin, light: Font.Light, regular: Font.Normal, bold: Font.Bold })[Settings.widgets.clockWeight]
-                                            color: parent.selected ? (Settings.widgets.clockColor === "accent" ? Atelier.accent : Atelier.text) : Atelier.subtext
+                                            color: !parent.selected ? Atelier.subtext
+                                                : Settings.widgets.clockColor.startsWith("#") ? Settings.widgets.clockColor
+                                                : Atelier[Settings.widgets.clockColor] !== undefined ? Atelier[Settings.widgets.clockColor] : Atelier.text
                                         }
                                     }
                                 }
@@ -859,9 +900,6 @@ Item {
                                     value: Settings.widgets.clockWeight; onPicked: (id) => Settings.widgets.clockWeight = id }
                                 SettingSlider { label: "Size"; from: 64; to: 220; step: 4; suffix: " px"
                                     value: Settings.widgets.clockSize; onMoved: (v) => Settings.widgets.clockSize = Math.round(v) }
-                                SettingChoice { label: "Colour"
-                                    options: [{ id: "text", label: "Text" }, { id: "accent", label: "Accent" }]
-                                    value: Settings.widgets.clockColor; onPicked: (id) => Settings.widgets.clockColor = id }
                                 SettingSwitch { visible: !Atelier.clock24; label: "AM / PM"; description: "Small label beside the time"
                                     checked: Settings.widgets.showAmPm; onToggled: (v) => Settings.widgets.showAmPm = v }
                                 SettingSwitch { label: "Leading zero"; description: "09:15 instead of 9:15"
@@ -897,6 +935,28 @@ Item {
                                     text: Settings.widgets.tasksFile; onCommitted: (t) => Settings.widgets.tasksFile = t.trim() || "~/day_plan.md" }
                                 SettingSwitch { label: "System"; description: "CPU, memory, disk and battery as one line"
                                     checked: Settings.widgets.showSystem; onToggled: (v) => Settings.widgets.showSystem = v }
+                            }
+
+                            SettingCard {
+                                title: "Colours"
+                                enabled: Settings.widgets.enabled; opacity: enabled ? 1 : 0.5
+                                SettingSwatches { label: "Clock"
+                                    value: Settings.widgets.clockColor; onPicked: (id) => Settings.widgets.clockColor = id }
+                                SettingSwatches { label: "Date"
+                                    value: Settings.widgets.dateColor; onPicked: (id) => Settings.widgets.dateColor = id }
+                                SettingSwatches { label: "Icons"; allowColourful: true
+                                    value: Settings.widgets.glyphColor; onPicked: (id) => Settings.widgets.glyphColor = id }
+                            }
+
+                            SettingCard {
+                                title: "Glass"
+                                enabled: Settings.widgets.enabled; opacity: enabled ? 1 : 0.5
+                                SettingSwitch { label: "Glass clock"; description: "The digits turn to glass, the wallpaper blurred inside them (like iOS)"
+                                    checked: Settings.widgets.glass; onToggled: (v) => Settings.widgets.glass = v }
+                                SettingSlider { visible: Settings.widgets.glass; label: "    Frost"; from: 10; to: 100; step: 5; suffix: "%"
+                                    value: Math.round(Settings.widgets.glassBlur * 100); onMoved: (v) => Settings.widgets.glassBlur = v / 100 }
+                                SettingSlider { visible: Settings.widgets.glass; label: "    Colour"; description: "How much of the clock colour shows in the glass"; from: 0; to: 85; step: 5; suffix: "%"
+                                    value: Math.round(Settings.widgets.glassTint * 100); onMoved: (v) => Settings.widgets.glassTint = v / 100 }
                             }
 
                             SettingCard {
@@ -1017,106 +1077,6 @@ Item {
                             }
                         }
 
-                        // ═════════ General ═════════
-                        ColumnLayout {
-                            visible: win.page === "general"
-                            Layout.fillWidth: true
-                            spacing: 20
-
-                            SettingCard {
-                                title: "iPhone camera"
-                                SettingRow {
-                                    label: PhoneCam.live ? "Live over " + PhoneCam.linkLabel
-                                        : PhoneCam.state === "connecting" ? "Connecting…"
-                                        : PhoneCam.state === "error" ? "Not connected" : "Off"
-                                    description: PhoneCam.state === "error" ? PhoneCam.error
-                                        : "Open DroidCam on the iPhone. It shows up as \"iPhone Camera\" in the camera drawer, OBS, browsers and Discord."
-                                    Chip { icon: "󰄜"; text: PhoneCam.running ? "Disconnect" : "Connect"; tint: PhoneCam.running ? Atelier.red : Atelier.accent
-                                        interactive: true; implicitHeight: 30; onClicked: PhoneCam.toggle() }
-                                }
-                                SettingChoice { label: "Connect over"; description: "Auto tries the USB cable, then your iPhone hotspot, then Wi-Fi"
-                                    options: [{ id: "auto", label: "Auto" }, { id: "usb", label: "USB" }, { id: "hotspot", label: "Hotspot" }, { id: "wifi", label: "Wi-Fi" }]
-                                    value: Settings.phone.mode; onPicked: (id) => Settings.phone.mode = id }
-                                SettingField { label: "iPhone address on Wi-Fi"; description: "Only for your router's Wi-Fi: the IP DroidCam shows. Empty = find it by name"
-                                    placeholder: "192.168.1.23"
-                                    text: Settings.phone.wifiAddress; onCommitted: (t) => Settings.phone.wifiAddress = t.trim() }
-                            }
-
-                            SettingCard {
-                                title: "You"; icon: "󰥔"; tint: Atelier.peach
-                                SettingSwitch { label: "24-hour clock"; description: "Bar, widgets, control center and lock screen"; tint: Atelier.peach
-                                    checked: Settings.general.clock24; onToggled: (v) => Settings.general.clock24 = v }
-                            }
-
-                            SettingCard {
-                                title: "Web search"; icon: "󰒓"
-                                SettingRow { label: "Default apps"; description: "Browser, file manager, editor, players, terminal"
-                                    Chip { icon: "󰅂"; text: "Open"; tint: Atelier.subtext; interactive: true; implicitHeight: 28; onClicked: win.page = "defaults" } }
-                                SettingChoice { label: "Web search"; description: "The launcher's ? search"
-                                    options: win.searchPresets
-                                    value: win.customSearch ? "custom" : Settings.behavior.searchUrl
-                                    onPicked: (id) => { if (id !== "custom") Settings.behavior.searchUrl = id; else if (!win.customSearch) Settings.behavior.searchUrl = "https://"; } }
-                                SettingField { visible: win.customSearch; label: "Search URL"; description: "Your query is added at the end"; fieldWidth: 300
-                                    placeholder: "https://example.com/search?q="
-                                    text: Settings.behavior.searchUrl; onCommitted: (t) => Settings.behavior.searchUrl = t.trim() || "https://duckduckgo.com/?q=" }
-                            }
-
-                            SettingCard {
-                                title: "Screen recording"; icon: "󰑋"; tint: Atelier.red
-                                SettingRow { label: Recorder.available ? "Start / stop" : "Needs wf-recorder"
-                                    description: Recorder.available ? "Super+Shift+R picks an area · Super+Alt+R records the whole screen · R in the screenshot picker"
-                                                                    : "sudo pacman -S wf-recorder" }
-                                SettingChoice { label: "Sound"; tint: Atelier.red
-                                    options: [{ id: "none", label: "None" }, { id: "system", label: "System" }, { id: "mic", label: "Microphone" }]
-                                    value: Settings.recorder.audio; onPicked: (id) => Settings.recorder.audio = id }
-                                SettingChoice { label: "Frame rate"; tint: Atelier.red
-                                    options: [{ id: "30", label: "30 fps" }, { id: "60", label: "60 fps" }]
-                                    value: String(Settings.recorder.fps); onPicked: (id) => Settings.recorder.fps = Number(id) }
-                                SettingField { label: "Save to"; placeholder: "~/Videos/Recordings"; fieldWidth: 260
-                                    text: Settings.recorder.folder; onCommitted: (t) => Settings.recorder.folder = t.trim() || "~/Videos/Recordings" }
-                            }
-                            SettingCard {
-                                title: "Emoji & GIFs"; icon: "󰞅"; tint: Atelier.yellow
-                                SettingRow { label: "Open"
-                                    description: "Super+; for emoji · Super+Shift+; for GIFs · Tab switches between them"
-                                    Chip { icon: "󰞅"; text: "Emoji"; tint: Atelier.yellow; interactive: true; implicitHeight: 32
-                                        onClicked: win.requestOverlay("emoji") } }
-                                SettingSwitch { label: "Type the emoji for me"
-                                    description: "Also types it into the window you were in (needs wtype). Off: only copies it"
-                                    checked: Settings.emoji.typeOnPick; onToggled: (v) => Settings.emoji.typeOnPick = v }
-                                SettingChoice { label: "Skin tone"; description: "For emoji that have one"
-                                    options: [{ id: "0", label: "✋" }, { id: "1", label: "✋🏻" }, { id: "2", label: "✋🏼" },
-                                              { id: "3", label: "✋🏽" }, { id: "4", label: "✋🏾" }, { id: "5", label: "✋🏿" }]
-                                    value: String(Settings.emoji.tone); onPicked: (id) => Settings.emoji.tone = Number(id) }
-                                SettingChoice { label: "GIF service"; description: "Both are free with a key; safe search is always on"
-                                    options: [{ id: "giphy", label: "GIPHY" }, { id: "tenor", label: "Tenor" }]
-                                    value: Settings.emoji.gifProvider; onPicked: (id) => Settings.emoji.gifProvider = id }
-                                SettingField { label: "API key"; fieldWidth: 280
-                                    description: Settings.emoji.gifProvider === "tenor" ? "console.cloud.google.com → enable the Tenor API → create a key"
-                                                                                       : "developers.giphy.com → Create an app → API key"
-                                    placeholder: "Paste your key"
-                                    text: Settings.emoji.gifKey; onCommitted: (t) => Settings.emoji.gifKey = t.trim() }
-                            }
-
-                            SettingCard {
-                                title: "Updates & drives"; icon: "󰚰"; tint: Atelier.teal
-                                SettingSwitch { label: "Check for updates"; tint: Atelier.teal
-                                    description: Updates.count > 0 ? Updates.count + " waiting: they're in the control center" : "Shows them in the control center (system and AUR, no password needed)"
-                                    checked: Settings.updates.check; onToggled: (v) => Settings.updates.check = v }
-                                SettingSlider { visible: Settings.updates.check; label: "Check every"; from: 1; to: 24; step: 1; suffix: " h"; tint: Atelier.teal
-                                    value: Settings.updates.hours; onMoved: (v) => Settings.updates.hours = Math.round(v) }
-                                SettingRow {
-                                    visible: Settings.updates.check
-                                    label: "Check now"
-                                    description: Updates.checking ? "Checking…" : Updates.checkedAt > 0 ? "Last checked " + Notifs.ago(Updates.checkedAt) : "Not checked yet"
-                                    Chip { icon: "󰑐"; text: "Check"; tint: Atelier.teal; interactive: !Updates.checking; implicitHeight: 30
-                                        onClicked: Updates.check() }
-                                }
-                                SettingSwitch { label: "Plugged-in drives"; description: "A notification with Open and Eject when a USB drive or SD card goes in"; tint: Atelier.teal
-                                    checked: Settings.drives.notify; onToggled: (v) => Settings.drives.notify = v }
-                            }
-                        }
-
                         // ═════════ Windows (Hyprland) ═════════
                         ColumnLayout {
                             visible: win.page === "windows"
@@ -1200,25 +1160,57 @@ Item {
                             }
 
                             SettingCard {
-                                title: "Transparency & blur"; icon: "󰂵"; tint: Atelier.sky
-                                SettingSlider { label: "Focused window opacity"; from: 0.6; to: 1; step: 0.01; decimals: 2; tint: Atelier.sky
-                                    value: Settings.windows.activeOpacity; onMoved: (v) => Settings.windows.activeOpacity = v }
-                                SettingSlider { label: "Unfocused window opacity"; from: 0.5; to: 1; step: 0.01; decimals: 2; tint: Atelier.sky
-                                    value: Settings.windows.inactiveOpacity; onMoved: (v) => Settings.windows.inactiveOpacity = v }
-                                SettingSwitch { label: "Background blur"; tint: Atelier.sky
-                                    checked: Settings.windows.blur; onToggled: (v) => Settings.windows.blur = v }
-                                SettingSlider { label: "Blur quality"; description: "More passes look smoother but cost GPU"; from: 1; to: 4; step: 1; tint: Atelier.sky
-                                    value: Settings.windows.blurPasses; onMoved: (v) => Settings.windows.blurPasses = v }
-                                SettingSwitch { label: "Window shadows"; tint: Atelier.sky
-                                    checked: Settings.windows.shadow; onToggled: (v) => Settings.windows.shadow = v }
+                                title: "Animations"; icon: "󰓅"; tint: Atelier.green
+                                SettingSwitch { label: "Window animations"; description: "Opening, closing, moving and workspace switches"; tint: Atelier.green
+                                    checked: Settings.windows.animations; onToggled: (v) => Settings.windows.animations = v }
+                            }
+
+                        }
+
+                        // ═════════ Control center ═════════
+                        ColumnLayout {
+                            visible: win.page === "controlcenter"
+                            Layout.fillWidth: true
+                            spacing: 20
+
+                            SettingCard {
+                                id: ccCard
+                                title: "Look"; icon: "󰒓"; tint: Atelier.lavender
+                                readonly property var all: [
+                                    { id: "screenshot", label: "Screenshot" }, { id: "record", label: "Record" },
+                                    { id: "wallpaper", label: "Wallpaper" }, { id: "theme", label: "Theme" },
+                                    { id: "emoji", label: "Emoji" }, { id: "clipboard", label: "Clipboard" },
+                                    { id: "camera", label: "Camera" }, { id: "keyboard", label: "On-screen keyboard" },
+                                    { id: "keybinds", label: "Shortcuts list" }, { id: "settings", label: "Settings" }]
+                                readonly property var picked: Settings.controlCenter.shortcuts || []
+                                function setShortcut(id, on) {
+                                    // keep the order of `all`; at most five
+                                    const next = all.map(x => x.id).filter(x => x === id ? on : picked.indexOf(x) >= 0);
+                                    Settings.controlCenter.shortcuts = next.slice(0, 5);
+                                }
+                                SettingChoice { label: "Layout"; description: "How the switches are drawn (also the grid button in its header)"; tint: Atelier.lavender
+                                    options: [{ id: "list", label: "List" }, { id: "tiles", label: "Tiles" }, { id: "icons", label: "Icons" }, { id: "cards", label: "Cards" }]
+                                    value: Settings.controlCenter.layout; onPicked: (id) => Settings.controlCenter.layout = id }
+                                SettingChoice { label: "Header"; description: "Big clock with the date, or one compact line"; tint: Atelier.lavender
+                                    options: [{ id: "full", label: "Big clock" }, { id: "compact", label: "Compact" }]
+                                    value: Settings.controlCenter.header; onPicked: (id) => Settings.controlCenter.header = id }
+                                SettingSlider { label: "Notifications shown"; description: "The rest behind \"Show more\""; from: 1; to: 10; step: 1; tint: Atelier.lavender
+                                    value: Settings.controlCenter.notifLimit; onMoved: (v) => Settings.controlCenter.notifLimit = Math.round(v) }
                             }
 
                             SettingCard {
-                                title: "Motion"; icon: "󰓅"; tint: Atelier.green
-                                SettingSwitch { label: "Window animations"; description: "Opening, closing, moving and workspace switches"; tint: Atelier.green
-                                    checked: Settings.windows.animations; onToggled: (v) => Settings.windows.animations = v }
-                                SettingSlider { label: "Shell animation speed"; description: "Drawers, pop-ups and the bar. 1.0 is the default; higher is faster"; from: 0.5; to: 2; step: 0.1; decimals: 1; suffix: "×"
-                                    value: Settings.general.animSpeed; onMoved: (v) => Settings.general.animSpeed = v }
+                                title: "Shortcut buttons · " + ccCard.picked.length + " of 5"; icon: "󰒓"; tint: Atelier.lavender
+                                Repeater {
+                                    model: ccCard.all
+                                    SettingSwitch {
+                                        required property var modelData
+                                        label: modelData.label
+                                        description: !checked && ccCard.picked.length >= 5 ? "Five already; turn one off first" : ""
+                                        tint: Atelier.lavender
+                                        checked: ccCard.picked.indexOf(modelData.id) >= 0
+                                        onToggled: (v) => { if (!v || ccCard.picked.length < 5) ccCard.setShortcut(modelData.id, v); }
+                                    }
+                                }
                             }
                         }
 
@@ -1266,37 +1258,11 @@ Item {
                             }
                         }
 
-                        // ═════════ Display & power ═════════
+                        // ═════════ Power & battery ═════════
                         ColumnLayout {
-                            visible: win.page === "display"
+                            visible: win.page === "power"
                             Layout.fillWidth: true
                             spacing: 20
-
-                            SettingCard {
-                                title: "Night light"; icon: "󰖔"; tint: Atelier.peach
-                                SettingSwitch { label: "Night light"; description: NightLight.available ? "Warmer colours, easier on the eyes at night (Super+Shift+N)" : "Needs hyprsunset: sudo pacman -S hyprsunset"; tint: Atelier.peach
-                                    checked: NightLight.active; onToggled: (v) => NightLight.set(v) }
-                                SettingSlider { label: "Warmth"; description: "Lower is warmer"; from: 2500; to: 6000; step: 100; suffix: " K"; tint: Atelier.peach
-                                    value: Settings.nightLight.temperature; onMoved: (v) => Settings.nightLight.temperature = Math.round(v) }
-                                SettingSwitch { label: "On a schedule"; description: "Turns on and off by itself at the times below"; tint: Atelier.peach
-                                    checked: Settings.nightLight.schedule; onToggled: (v) => Settings.nightLight.schedule = v }
-                                SettingField { visible: Settings.nightLight.schedule; label: "From"; description: "24-hour time, e.g. 20:00"; placeholder: "20:00"; fieldWidth: 90
-                                    text: Settings.nightLight.from; onCommitted: (t) => { if (/^\d{1,2}:\d{2}$/.test(t.trim())) Settings.nightLight.from = t.trim(); } }
-                                SettingField { visible: Settings.nightLight.schedule; label: "To"; description: "24-hour time, e.g. 07:00"; placeholder: "07:00"; fieldWidth: 90
-                                    text: Settings.nightLight.to; onCommitted: (t) => { if (/^\d{1,2}:\d{2}$/.test(t.trim())) Settings.nightLight.to = t.trim(); } }
-                            }
-
-                            SettingCard {
-                                title: "On-screen display"; icon: "󰕾"; tint: Atelier.accent
-                                SettingSlider { label: "Volume/brightness display time"; from: 0.5; to: 4; step: 0.1; decimals: 1; suffix: " s"; tint: Atelier.accent
-                                    value: Settings.behavior.osdSeconds; onMoved: (v) => Settings.behavior.osdSeconds = v }
-                            }
-
-                            SettingCard {
-                                title: "Keep awake"; icon: "󰅶"; tint: Atelier.peach
-                                SettingSwitch { label: "Caffeine"; description: "Keep the screen awake"; tint: Atelier.peach
-                                    checked: Atelier.caffeine; onToggled: (v) => Atelier.caffeine = v }
-                            }
 
                             SettingCard {
                                 title: "Idle & sleep"; icon: "󰒲"; tint: Atelier.lavender
@@ -1313,6 +1279,12 @@ Item {
                             }
 
                             SettingCard {
+                                title: "Keep awake"; icon: "󰅶"; tint: Atelier.peach
+                                SettingSwitch { label: "Caffeine"; description: "Keep the screen awake"; tint: Atelier.peach
+                                    checked: Atelier.caffeine; onToggled: (v) => Atelier.caffeine = v }
+                            }
+
+                            SettingCard {
                                 title: "Battery"; icon: "󰂃"; tint: Atelier.yellow
                                 SettingSwitch { label: "Low battery alerts"; description: "A notification when it runs low; the critical one stays up and gets through Do Not Disturb"; tint: Atelier.yellow
                                     checked: Settings.battery.alerts; onToggled: (v) => Settings.battery.alerts = v }
@@ -1322,19 +1294,6 @@ Item {
                                     value: Settings.battery.critical; onMoved: (v) => Settings.battery.critical = Math.round(v) }
                                 SettingSwitch { label: "Charger toast"; description: "\"Charging · 64%\" when you plug in or unplug"; tint: Atelier.yellow
                                     checked: Settings.battery.chargerToast; onToggled: (v) => Settings.battery.chargerToast = v }
-                            }
-
-                            SettingCard {
-                                title: "Performance modes"; icon: "󰊗"; tint: Atelier.sapphire
-                                SettingChoice { label: "Mode"; tint: Atelier.sapphire
-                                    options: [{ id: "normal", label: "Normal" }, { id: "dev", label: "Programming" }, { id: "game", label: "Game" }]
-                                    value: Perf.mode; onPicked: (id) => Perf.set(id) }
-                                SettingRow {
-                                    label: "Customise modes"
-                                    description: "Choose what Programming and Game mode change"
-                                    Chip { icon: "󰒓"; text: "Modes"; tint: Atelier.sapphire; interactive: true; implicitHeight: 30
-                                        onClicked: win.page = "modes" }
-                                }
                             }
                         }
 
@@ -1359,9 +1318,9 @@ Item {
                             function isDefault(m) { const d = defaults[m]; for (const k in d) if (Settings.modes[m + k] !== d[k]) return false; return true; }
 
                             SettingCard {
-                                title: "Mode now"; icon: "󰊗"; tint: Atelier.sapphire
+                                title: "Current mode"; icon: "󰊗"; tint: Atelier.sapphire
                                 SettingChoice { label: "Mode"; tint: Atelier.sapphire
-                                    description: "Normal is your own look from the Windows page"
+                                    description: "Normal is your own look from Appearance and Windows"
                                     options: [{ id: "normal", label: "Normal" }, { id: "dev", label: "Programming" }, { id: "game", label: "Game" }]
                                     value: Perf.mode; onPicked: (id) => Perf.set(id) }
                             }
@@ -1446,14 +1405,14 @@ Item {
                                     label: "In use"
                                     description: {
                                         const own = lockPage.ownStyles.find(x => x.id === Settings.lock.theme);
-                                        return own ? own.name + " · " + own.note : lockPage.nameOf(Settings.lock.theme) + " (a qylock theme from GitHub)";
+                                        return own ? own.name + " · " + own.note : "Atelier · Glass panel, this shell's own";
                                     }
                                     Chip { icon: "󰌾"; text: "Lock now"; tint: Atelier.mauve; interactive: true; implicitHeight: 30
                                         onClicked: Quickshell.execDetached(["qs", "ipc", "call", "lock", "lock"]) }
                                 }
                                 SettingSwitch { label: "Show notifications"; description: "App name and title only, never the message text"
                                     checked: Settings.notifications.lockShowCount; onToggled: (v) => Settings.notifications.lockShowCount = v }
-                                SettingChoice { label: "Clock"; description: Settings.lock.clock === "system" ? "Follows General → 24-hour clock (now " + (Atelier.clock24 ? "24" : "12") + "-hour)" : "For every built-in style"
+                                SettingChoice { label: "Clock"; description: Settings.lock.clock === "system" ? "Follows Appearance → 24-hour clock (now " + (Atelier.clock24 ? "24" : "12") + "-hour)" : "For every built-in style"
                                     options: [{ id: "system", label: "System" }, { id: "12", label: "12-hour" }, { id: "24", label: "24-hour" }]
                                     value: Settings.lock.clock; onPicked: (id) => Settings.lock.clock = id }
                             }
@@ -1492,6 +1451,10 @@ Item {
                                 SettingChoice { label: "Style"; description: "Glass shows the wallpaper, frosted, through the digits"; tint: Atelier.sky
                                     options: [{ id: "solid", label: "Solid" }, { id: "glass", label: "Glass" }]
                                     value: Settings.lock.depthStyle; onPicked: (id) => Settings.lock.depthStyle = id }
+                                SettingSlider { visible: Settings.lock.depthStyle === "glass"; label: "    Frost"; description: "Blur inside the digits"; from: 20; to: 100; step: 5; suffix: "%"
+                                    value: Math.round((Settings.lock.depthGlassFrost ?? 0.9) * 100); onMoved: (v) => Settings.lock.depthGlassFrost = v / 100 }
+                                SettingSlider { visible: Settings.lock.depthStyle === "glass"; label: "    Tint"; description: "Clock colour in the glass"; from: 0; to: 70; step: 5; suffix: "%"
+                                    value: Math.round((Settings.lock.depthGlassTint ?? 0.2) * 100); onMoved: (v) => Settings.lock.depthGlassTint = v / 100 }
                                 SettingRow {
                                     label: "Colour"
                                     description: Settings.lock.depthColor === "auto" ? "Auto: picked from your wallpaper (deep on a bright sky, pale on a dark one)"
@@ -1554,6 +1517,13 @@ Item {
                                     value: Settings.lock.depthClockSize; onMoved: (v) => Settings.lock.depthClockSize = v }
                                 SettingSwitch { label: "Soft shadow"; description: "Helps the clock read on bright pictures"; tint: Atelier.sky
                                     checked: Settings.lock.depthShadow; onToggled: (v) => Settings.lock.depthShadow = v }
+                                SettingChoice { label: "Date"
+                                    options: [{ id: "long", label: "Monday, 23 November" }, { id: "short", label: "Mon 23 Nov" }, { id: "off", label: "Off" }]
+                                    value: Settings.lock.depthDate || "long"; onPicked: (id) => Settings.lock.depthDate = id }
+                                SettingSwitch { label: "Weather"; description: "The temperature after the date"
+                                    checked: Settings.lock.depthWeather ?? true; onToggled: (v) => Settings.lock.depthWeather = v }
+                                SettingSwitch { visible: !Atelier.lockClock24; label: "AM / PM"; description: "Small, beside the digits"
+                                    checked: Settings.lock.depthAmPm ?? true; onToggled: (v) => Settings.lock.depthAmPm = v }
                             }
 
                             // the phone-inspired style in use: its own options (config/Settings.qml lockStyle)
@@ -1636,11 +1606,7 @@ Item {
                                 id: lockPage
                                 Layout.fillWidth: true
                                 implicitHeight: gallery.implicitHeight
-                                readonly property string script: Quickshell.shellDir + "/scripts/qylock.py"
-                                property var themes: []
-                                property string busy: ""            // theme id being downloaded
                                 readonly property bool shown: win.visible && win.page === "lock"
-                                onShownChanged: if (shown) refresh()
 
                                 readonly property var ownStyles: [
                                     { id: "atelier",   name: "Atelier",   note: "Glass panel, this shell's own" },
@@ -1651,7 +1617,7 @@ Item {
                                     { id: "oxygen",    name: "Oxygen",    note: "OnePlus OxygenOS-style" },
                                     { id: "material",  name: "Material",  note: "Pixel, Material You-style" },
                                     { id: "dot",       name: "Dot",       note: "Nothing OS-style" }
-                                ].map(x => Object.assign({ builtin: true, downloaded: true, preview: "", sizeMB: 0 }, x))
+                                ]
                                 readonly property var phoneIds: ["cupertino", "hyper", "harmony", "oxygen", "material", "dot"]
                                 // what the live miniatures read instead of the real lock (never locks anything)
                                 QtObject {
@@ -1666,45 +1632,8 @@ Item {
                                     property string weather: ""
                                 }
 
-                                function nameOf(id) { const t = themes.find(x => x.id === id); return t ? t.name : id; }
-                                function refresh() { listProc.running = true; }
-                                function fetchThen(t, then) {
-                                    busy = t.id;
-                                    fetchProc.target = t.id;
-                                    fetchProc.then = then;
-                                    fetchProc.command = [script, "fetch", t.id];
-                                    fetchProc.running = true;
-                                }
-                                function use(t) {
-                                    if (t.builtin || t.downloaded) Settings.lock.theme = t.id;
-                                    else fetchThen(t, "use");
-                                }
-                                function preview(t) {
-                                    if (t.builtin) Quickshell.execDetached(["qs", "ipc", "call", "lock", "previewStyle", t.id]);
-                                    else if (t.downloaded) Quickshell.execDetached([script, "preview", t.id]);
-                                    else fetchThen(t, "preview");
-                                }
-
-                                Process {
-                                    id: listProc
-                                    command: [lockPage.script, "list"]
-                                    stdout: StdioCollector {
-                                        onStreamFinished: { try { const d = JSON.parse(text); if (Array.isArray(d)) lockPage.themes = d; } catch (e) {} }
-                                    }
-                                }
-                                Process {
-                                    id: fetchProc
-                                    property string target: ""
-                                    property string then: ""
-                                    onExited: (code) => {
-                                        lockPage.busy = "";
-                                        if (code === 0) {
-                                            if (then === "use") Settings.lock.theme = target;
-                                            else if (then === "preview") Quickshell.execDetached([lockPage.script, "preview", target]);
-                                        }
-                                        lockPage.refresh();
-                                    }
-                                }
+                                function use(t) { Settings.lock.theme = t.id; }
+                                function preview(t) { Quickshell.execDetached(["qs", "ipc", "call", "lock", "previewStyle", t.id]); }
 
                                 Column {
                                     id: gallery
@@ -1713,8 +1642,8 @@ Item {
 
                                     // ── ours: built into the shell ──
                                     GalleryHead {
-                                        title: "Atelier styles"
-                                        sub: "Built into the shell: instant, on your wallpaper, nothing to download. The phone-inspired ones echo each phone's clock and layout, made for a laptop: a keyboard login, Wi-Fi and battery top right."
+                                        title: "Styles"
+                                        sub: "Built into the shell, drawn on your wallpaper. The phone-inspired ones echo each phone's clock and layout, made for a laptop: a keyboard login, Wi-Fi and battery top right."
                                     }
                                     Flow {
                                         width: parent.width
@@ -1722,24 +1651,6 @@ Item {
                                         Repeater { model: lockPage.ownStyles; delegate: LockThemeCard {} }
                                     }
 
-                                    // ── from the qylock repo on GitHub ──
-                                    Item { width: 1; height: 10 }
-                                    GalleryHead {
-                                        title: "From GitHub · qylock"
-                                        sub: "Lock screens by Darkkal44 (GPL-3.0). Hover a card to play its preview; a theme downloads the first time you preview or use it. If one ever fails, the Atelier lock takes over."
-                                        Chip { icon: "󰊤"; text: "GitHub"; tint: Atelier.subtext; interactive: true; implicitHeight: 30
-                                            onClicked: Quickshell.execDetached(["xdg-open", "https://github.com/Darkkal44/qylock"]) }
-                                    }
-                                    Flow {
-                                        width: parent.width
-                                        spacing: 12
-                                        Repeater { model: lockPage.themes; delegate: LockThemeCard {} }
-                                    }
-                                    Text {
-                                        visible: lockPage.themes.length === 0
-                                        text: "Loading the list…"
-                                        font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext
-                                    }
                                 }
                             }
                         }
@@ -1785,29 +1696,25 @@ Item {
                             }
 
                             SettingCard {
-                                title: "Layout"; icon: "󰕮"; tint: Atelier.mauve
-                                enabled: loginPage.on; opacity: enabled ? 1 : 0.5
-                                SettingChoice { label: "Style"; description: "Panel matches the lock screen; Minimal keeps only the centre column"; tint: Atelier.mauve
-                                    options: [{ id: "panel", label: "Panel" }, { id: "minimal", label: "Minimal" }]
-                                    value: Settings.greeter.layout; onPicked: (id) => Settings.greeter.layout = id }
-                                SettingField { label: "Greeting"; description: "Empty = Good morning / afternoon / evening"; placeholder: "By time of day"
-                                    text: Settings.greeter.greeting; onCommitted: (t) => Settings.greeter.greeting = t.trim() }
-                                SettingSwitch { label: "Weather card"; description: "Place and units from Widgets"; tint: Atelier.sapphire
-                                    checked: Settings.greeter.showWeather; onToggled: (v) => Settings.greeter.showWeather = v }
-                                SettingSwitch { label: "System card"; description: "Computer name, battery, network"; tint: Atelier.green
-                                    checked: Settings.greeter.showSystem; onToggled: (v) => Settings.greeter.showSystem = v }
-                                SettingSwitch { label: "Sleep · restart · power buttons"; tint: Atelier.red
-                                    checked: Settings.greeter.showPower; onToggled: (v) => Settings.greeter.showPower = v }
+                                title: "Look"; icon: "󰕮"; tint: Atelier.mauve
+                                SettingRow {
+                                    label: "Same as your lock screen"
+                                    description: {
+                                        const st = lockPage.ownStyles.find(x => x.id === Settings.lock.theme) || lockPage.ownStyles[0];
+                                        return st.name + " · " + st.note + ". Change the style and its options on the Lock screen page; the login screen follows.";
+                                    }
+                                    Chip { icon: "󰌾"; text: "Lock screen"; tint: Atelier.mauve; interactive: true; implicitHeight: 30; onClicked: win.page = "lock" }
+                                }
+                                SettingRow {
+                                    label: "Who and which desktop"
+                                    description: "A small pill in the top-left corner: F1 switches the person, F2 the desktop session"
+                                }
                             }
 
                             SettingCard {
-                                title: "Background"; icon: "󰸉"; tint: Atelier.sky
+                                title: "Sync"; icon: "󰑐"; tint: Atelier.sky
                                 enabled: loginPage.on; opacity: enabled ? 1 : 0.5
-                                SettingSlider { label: "Wallpaper blur"; from: 0; to: 1; step: 0.05; decimals: 2; tint: Atelier.sky
-                                    value: Settings.greeter.blur; onMoved: (v) => Settings.greeter.blur = v }
-                                SettingSlider { label: "Dim"; from: 0; to: 0.8; step: 0.02; decimals: 2; tint: Atelier.sky
-                                    value: Settings.greeter.dim; onMoved: (v) => Settings.greeter.dim = v }
-                                SettingSwitch { label: "Follow theme & wallpaper"; description: "Copy your colours, wallpaper and ~/.face to the login screen whenever they change"; tint: Atelier.sky
+                                SettingSwitch { label: "Follow your look"; description: "Copy your colours, wallpaper, lock style and ~/.face to the login screen whenever they change"; tint: Atelier.sky
                                     checked: Settings.greeter.autoSync; onToggled: (v) => { Settings.greeter.autoSync = v; if (v) Greeter.sync(); } }
                                 SettingRow {
                                     label: "Sync now"
@@ -1835,6 +1742,91 @@ Item {
                                     Chip { visible: Greeter.active; icon: "󰜺"; text: "Uninstall"; tint: Atelier.red; interactive: true; implicitHeight: 30
                                         onClicked: Greeter.runInstaller("--uninstall") }
                                 }
+                            }
+                        }
+
+                        // ═════════ Tools ═════════
+                        ColumnLayout {
+                            visible: win.page === "tools"
+                            Layout.fillWidth: true
+                            spacing: 20
+
+                            SettingCard {
+                                title: "Screen recording"; icon: "󰑋"; tint: Atelier.red
+                                SettingRow { label: Recorder.available ? "Start / stop" : "Needs wf-recorder"
+                                    description: Recorder.available ? "Super+Shift+R picks an area · Super+Alt+R records the whole screen · R in the screenshot picker"
+                                                                    : "sudo pacman -S wf-recorder" }
+                                SettingChoice { label: "Sound"; tint: Atelier.red
+                                    options: [{ id: "none", label: "None" }, { id: "system", label: "System" }, { id: "mic", label: "Microphone" }]
+                                    value: Settings.recorder.audio; onPicked: (id) => Settings.recorder.audio = id }
+                                SettingChoice { label: "Frame rate"; tint: Atelier.red
+                                    options: [{ id: "30", label: "30 fps" }, { id: "60", label: "60 fps" }]
+                                    value: String(Settings.recorder.fps); onPicked: (id) => Settings.recorder.fps = Number(id) }
+                                SettingField { label: "Save to"; placeholder: "~/Videos/Recordings"; fieldWidth: 260
+                                    text: Settings.recorder.folder; onCommitted: (t) => Settings.recorder.folder = t.trim() || "~/Videos/Recordings" }
+                            }
+
+                            SettingCard {
+                                title: "Emoji & GIFs"; icon: "󰞅"; tint: Atelier.yellow
+                                SettingRow { label: "Open"
+                                    description: "Super+; for emoji · Super+Shift+; for GIFs · Tab switches between them"
+                                    Chip { icon: "󰞅"; text: "Emoji"; tint: Atelier.yellow; interactive: true; implicitHeight: 32
+                                        onClicked: win.requestOverlay("emoji") } }
+                                SettingSwitch { label: "Type the emoji for me"
+                                    description: "Also types it into the window you were in (needs wtype). Off: only copies it"
+                                    checked: Settings.emoji.typeOnPick; onToggled: (v) => Settings.emoji.typeOnPick = v }
+                                SettingChoice { label: "Skin tone"; description: "For emoji that have one"
+                                    options: [{ id: "0", label: "✋" }, { id: "1", label: "✋🏻" }, { id: "2", label: "✋🏼" },
+                                              { id: "3", label: "✋🏽" }, { id: "4", label: "✋🏾" }, { id: "5", label: "✋🏿" }]
+                                    value: String(Settings.emoji.tone); onPicked: (id) => Settings.emoji.tone = Number(id) }
+                                SettingChoice { label: "GIF service"; description: "Both are free with a key; safe search is always on"
+                                    options: [{ id: "giphy", label: "GIPHY" }, { id: "tenor", label: "Tenor" }]
+                                    value: Settings.emoji.gifProvider; onPicked: (id) => Settings.emoji.gifProvider = id }
+                                SettingField { label: "API key"; fieldWidth: 280
+                                    description: Settings.emoji.gifProvider === "tenor" ? "console.cloud.google.com → enable the Tenor API → create a key"
+                                                                                       : "developers.giphy.com → Create an app → API key"
+                                    placeholder: "Paste your key"
+                                    text: Settings.emoji.gifKey; onCommitted: (t) => Settings.emoji.gifKey = t.trim() }
+                            }
+
+                            SettingCard {
+                                title: "Focus timer"; icon: "󰔟"; tint: Atelier.accent
+                                SettingRow { label: "Open"; description: "Super+Alt+T · timers, stopwatch and pomodoro"
+                                    Chip { icon: "󱎫"; text: "Timers"; tint: Atelier.accent; interactive: true; implicitHeight: 32; onClicked: win.requestOverlay("timers") } }
+                                SettingSlider { label: "Focus length"; from: 5; to: 90; step: 5; suffix: " min"
+                                    value: Settings.behavior.pomoFocus; onMoved: (v) => Settings.behavior.pomoFocus = Math.round(v) }
+                                SettingSlider { label: "Short break"; from: 1; to: 30; step: 1; suffix: " min"
+                                    value: Settings.behavior.pomoShort; onMoved: (v) => Settings.behavior.pomoShort = Math.round(v) }
+                                SettingSlider { label: "Long break"; from: 5; to: 60; step: 5; suffix: " min"
+                                    value: Settings.behavior.pomoLong; onMoved: (v) => Settings.behavior.pomoLong = Math.round(v) }
+                                SettingSlider { label: "Long break after"; from: 2; to: 8; step: 1; suffix: " rounds"
+                                    value: Settings.behavior.pomoEvery; onMoved: (v) => Settings.behavior.pomoEvery = Math.round(v) }
+                            }
+                        }
+
+                        // ═════════ iPhone ═════════
+                        ColumnLayout {
+                            visible: win.page === "phone"
+                            Layout.fillWidth: true
+                            spacing: 20
+
+                            SettingCard {
+                                title: "iPhone camera"
+                                SettingRow {
+                                    label: PhoneCam.live ? "Live over " + PhoneCam.linkLabel
+                                        : PhoneCam.state === "connecting" ? "Connecting…"
+                                        : PhoneCam.state === "error" ? "Not connected" : "Off"
+                                    description: PhoneCam.state === "error" ? PhoneCam.error
+                                        : "Open DroidCam on the iPhone. It shows up as \"iPhone Camera\" in the camera drawer, OBS, browsers and Discord."
+                                    Chip { icon: "󰄜"; text: PhoneCam.running ? "Disconnect" : "Connect"; tint: PhoneCam.running ? Atelier.red : Atelier.accent
+                                        interactive: true; implicitHeight: 30; onClicked: PhoneCam.toggle() }
+                                }
+                                SettingChoice { label: "Connect over"; description: "Auto tries the USB cable, then your iPhone hotspot, then Wi-Fi"
+                                    options: [{ id: "auto", label: "Auto" }, { id: "usb", label: "USB" }, { id: "hotspot", label: "Hotspot" }, { id: "wifi", label: "Wi-Fi" }]
+                                    value: Settings.phone.mode; onPicked: (id) => Settings.phone.mode = id }
+                                SettingField { label: "iPhone address on Wi-Fi"; description: "Only for your router's Wi-Fi: the IP DroidCam shows. Empty = find it by name"
+                                    placeholder: "192.168.1.23"
+                                    text: Settings.phone.wifiAddress; onCommitted: (t) => Settings.phone.wifiAddress = t.trim() }
                             }
                         }
 
@@ -2225,13 +2217,59 @@ Item {
                                     }
                                 }
                             }
+                            SettingCard {
+                                title: "Drives"; icon: "󰋊"; tint: Atelier.teal
+                                SettingSwitch { label: "Plugged-in drives"; description: "A notification with Open and Eject when a USB drive or SD card goes in"; tint: Atelier.teal
+                                    checked: Settings.drives.notify; onToggled: (v) => Settings.drives.notify = v }
+                            }
+
                         }
 
                         // ═════════ Hardware + Profiles (own files) ═════════
-                        DisplaysPage { visible: win.page === "displays" }
+                        ColumnLayout {
+                            visible: win.page === "displays"
+                            Layout.fillWidth: true
+                            spacing: 20
+                            DisplaysPage { Layout.fillWidth: true }
+                            SettingCard {
+                                title: "Night light"; icon: "󰖔"; tint: Atelier.peach
+                                SettingSwitch { label: "Night light"; description: NightLight.available ? "Warmer colours, easier on the eyes at night (Super+Shift+N)" : "Needs hyprsunset: sudo pacman -S hyprsunset"; tint: Atelier.peach
+                                    checked: NightLight.active; onToggled: (v) => NightLight.set(v) }
+                                SettingSlider { label: "Warmth"; description: "Lower is warmer"; from: 2500; to: 6000; step: 100; suffix: " K"; tint: Atelier.peach
+                                    value: Settings.nightLight.temperature; onMoved: (v) => Settings.nightLight.temperature = Math.round(v) }
+                                SettingSwitch { label: "On a schedule"; description: "Turns on and off by itself at the times below"; tint: Atelier.peach
+                                    checked: Settings.nightLight.schedule; onToggled: (v) => Settings.nightLight.schedule = v }
+                                SettingField { visible: Settings.nightLight.schedule; label: "From"; description: "24-hour time, e.g. 20:00"; placeholder: "20:00"; fieldWidth: 90
+                                    text: Settings.nightLight.from; onCommitted: (t) => { if (/^\d{1,2}:\d{2}$/.test(t.trim())) Settings.nightLight.from = t.trim(); } }
+                                SettingField { visible: Settings.nightLight.schedule; label: "To"; description: "24-hour time, e.g. 07:00"; placeholder: "07:00"; fieldWidth: 90
+                                    text: Settings.nightLight.to; onCommitted: (t) => { if (/^\d{1,2}:\d{2}$/.test(t.trim())) Settings.nightLight.to = t.trim(); } }
+                            }
+                            SettingCard {
+                                title: "On-screen display"; icon: "󰕾"; tint: Atelier.accent
+                                SettingSlider { label: "Volume/brightness display time"; from: 0.5; to: 4; step: 0.1; decimals: 1; suffix: " s"; tint: Atelier.accent
+                                    value: Settings.behavior.osdSeconds; onMoved: (v) => Settings.behavior.osdSeconds = v }
+                            }
+                        }
                         InputPage { visible: win.page === "input" }
                         SoundPage { visible: win.page === "sound" }
-                        DefaultAppsPage { visible: win.page === "defaults" }
+                        ColumnLayout {
+                            visible: win.page === "defaults"
+                            Layout.fillWidth: true
+                            spacing: 20
+                            DefaultAppsPage { Layout.fillWidth: true }
+                            SettingCard {
+                                title: "Web search"; icon: "󰒓"
+                                SettingRow { label: "Default apps"; description: "Browser, file manager, editor, players, terminal"
+                                    Chip { icon: "󰅂"; text: "Open"; tint: Atelier.subtext; interactive: true; implicitHeight: 28; onClicked: win.page = "defaults" } }
+                                SettingChoice { label: "Web search"; description: "The launcher's ? search"
+                                    options: win.searchPresets
+                                    value: win.customSearch ? "custom" : Settings.behavior.searchUrl
+                                    onPicked: (id) => { if (id !== "custom") Settings.behavior.searchUrl = id; else if (!win.customSearch) Settings.behavior.searchUrl = "https://"; } }
+                                SettingField { visible: win.customSearch; label: "Search URL"; description: "Your query is added at the end"; fieldWidth: 300
+                                    placeholder: "https://example.com/search?q="
+                                    text: Settings.behavior.searchUrl; onCommitted: (t) => Settings.behavior.searchUrl = t.trim() || "https://duckduckgo.com/?q=" }
+                            }
+                        }
                         ShortcutsPage { visible: win.page === "shortcuts" }
                         ProfilesPage { visible: win.page === "profiles" }
 
@@ -2341,6 +2379,22 @@ Item {
                                 }
                             }
                             SettingCard {
+                                title: "Updates"; icon: "󰚰"; tint: Atelier.teal
+                                SettingSwitch { label: "Check for updates"; tint: Atelier.teal
+                                    description: Updates.count > 0 ? Updates.count + " waiting: they're in the control center" : "Shows them in the control center (system and AUR, no password needed)"
+                                    checked: Settings.updates.check; onToggled: (v) => Settings.updates.check = v }
+                                SettingSlider { visible: Settings.updates.check; label: "Check every"; from: 1; to: 24; step: 1; suffix: " h"; tint: Atelier.teal
+                                    value: Settings.updates.hours; onMoved: (v) => Settings.updates.hours = Math.round(v) }
+                                SettingRow {
+                                    visible: Settings.updates.check
+                                    label: "Check now"
+                                    description: Updates.checking ? "Checking…" : Updates.checkedAt > 0 ? "Last checked " + Notifs.ago(Updates.checkedAt) : "Not checked yet"
+                                    Chip { icon: "󰑐"; text: "Check"; tint: Atelier.teal; interactive: !Updates.checking; implicitHeight: 30
+                                        onClicked: Updates.check() }
+                                }
+                            }
+
+                            SettingCard {
                                 title: "Files"; icon: "󰉋"; tint: Atelier.lavender
                                 SettingRow {
                                     label: "settings.json"
@@ -2399,9 +2453,7 @@ Item {
     component LockThemeCard: Rectangle {
         id: tc
         required property var modelData
-        readonly property bool builtin: !!modelData.builtin
         readonly property bool inUse: Settings.lock.theme === modelData.id
-        readonly property bool busy: lockPage.busy === modelData.id
         width: Math.floor((gallery.width - 2 * 12) / 3)
         height: shot.height + 66
         radius: 14
@@ -2418,24 +2470,6 @@ Item {
             height: Math.round((tc.width - 12) * 0.5625)
             radius: 10
             color: Atelier.base
-
-            // qylock: the theme's own animated preview, playing only while hovered
-            AnimatedImage {
-                anchors.fill: parent
-                visible: !tc.builtin && source != ""
-                source: lockPage.shown && tc.modelData.preview ? "file://" + tc.modelData.preview : ""
-                playing: hov.hovered
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                cache: false
-            }
-            Text {
-                anchors.centerIn: parent
-                visible: !tc.builtin && !tc.modelData.preview
-                text: "No preview"
-                font.family: Atelier.fontUi; font.pixelSize: 11
-                color: Atelier.subtext
-            }
 
             // Depth: the wallpaper, a big clock, and the subject cut-out over it
             Item {
@@ -2519,14 +2553,6 @@ Item {
                 }
             }
 
-            // "playing" hint
-            Rectangle {
-                visible: !tc.builtin && !!tc.modelData.preview && !hov.hovered
-                anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.margins: 6
-                width: 22; height: 22; radius: 11
-                color: Qt.alpha(Atelier.crust, 0.7)
-                Text { anchors.centerIn: parent; text: "󰐊"; font.family: Atelier.font; font.pixelSize: 11; color: Atelier.text }
-            }
         }
 
         RowLayout {
@@ -2539,21 +2565,21 @@ Item {
                 Text { Layout.fillWidth: true; text: tc.modelData.name; font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.DemiBold; color: Atelier.text; elide: Text.ElideRight }
                 Text {
                     Layout.fillWidth: true
-                    text: tc.builtin ? tc.modelData.note : tc.busy ? "Downloading…" : tc.modelData.downloaded ? "Downloaded" : tc.modelData.sizeMB + " MB"
+                    text: tc.modelData.note
                     font.family: Atelier.fontUi; font.pixelSize: 10
-                    color: tc.busy ? Atelier.mauve : Atelier.subtext
+                    color: Atelier.subtext
                     elide: Text.ElideRight
                 }
             }
             Chip {
                 icon: "󰈈"; text: ""
-                tint: Atelier.subtext; interactive: !tc.busy; implicitHeight: 26
+                tint: Atelier.subtext; interactive: true; implicitHeight: 26
                 onClicked: lockPage.preview(tc.modelData)
             }
             Chip {
                 icon: tc.inUse ? "󰄬" : ""
-                text: tc.inUse ? "In use" : tc.busy ? "…" : "Use"
-                tint: Atelier.mauve; interactive: !tc.inUse && !tc.busy; implicitHeight: 26
+                text: tc.inUse ? "In use" : "Use"
+                tint: Atelier.mauve; interactive: !tc.inUse; implicitHeight: 26
                 onClicked: lockPage.use(tc.modelData)
             }
         }

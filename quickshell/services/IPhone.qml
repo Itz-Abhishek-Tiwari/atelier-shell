@@ -17,8 +17,14 @@ Singleton {
     readonly property var device: paired ? Bluetooth.devices.values.find(d => d.address.toUpperCase() === address.toUpperCase()) || null : null
     readonly property string name: device ? (device.name || device.deviceName || "iPhone") : "iPhone"
     readonly property bool connected: !!device && device.connected
-    // 0..1, or -1 when unknown (not connected, or the phone isn't sharing it)
-    readonly property real battery: device && device.connected && device.batteryAvailable ? device.battery : -1
+    // 0..1, or -1 when unknown (not connected, or the phone isn't sharing it).
+    // Falls back to Tether's reading: BlueZ adds the phone's Battery1 interface only after it
+    // connects, and Quickshell 0.3.2 misses interfaces added to a device it already tracks, so a
+    // shell started before the phone connected never sees BlueZ's battery.
+    readonly property real battery: !connected ? -1
+        : device.batteryAvailable ? device.battery
+        : tetherBattery
+    property real tetherBattery: -1
     property bool notifications: false
 
     readonly property string status: !paired ? "Not paired"
@@ -44,8 +50,11 @@ Singleton {
         command: ["tether", "--bt-diagnostics"]
         stdout: StdioCollector {
             onStreamFinished: {
-                try { root.notifications = !!JSON.parse(text).connection.le_connected; }
-                catch (e) { root.notifications = false; }
+                try {
+                    const c = JSON.parse(text).connection;
+                    root.notifications = !!c.le_connected;
+                    root.tetherBattery = typeof c.battery === "number" ? c.battery / 100 : -1;
+                } catch (e) { root.notifications = false; root.tetherBattery = -1; }
             }
         }
     }

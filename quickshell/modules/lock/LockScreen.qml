@@ -19,8 +19,7 @@ Scope {
     property bool locked: false
     property bool previewing: false
     readonly property bool active: locked || previewing
-    // locked by us OR by a qylock theme process (Settings → Lock screen)
-    readonly property bool isLocked: locked || themeLock.running
+    readonly property bool isLocked: locked
 
     // shared state for all surfaces (multi-monitor)
     property bool authMode: false          // passcode view shown
@@ -71,7 +70,7 @@ Scope {
     Timer { interval: 20 * 60 * 1000; repeat: true; running: true; onTriggered: weatherProc.running = true }
 
     // built-in looks: "depth" = DepthLock.qml (Samsung-style), a phone style = PhoneLock.qml,
-    // "atelier" = LockContent.qml; anything else is a qylock theme (its own process)
+    // "atelier" = LockContent.qml (also the fallback for an unknown id)
     readonly property var phoneStyles: ["cupertino", "hyper", "harmony", "oxygen", "material", "dot"]
     function isBuiltin(t) { return !t || t === "atelier" || t === "depth" || phoneStyles.indexOf(t) >= 0; }
     // the preview can show another style than the one in use (Settings → a card's Preview)
@@ -87,29 +86,9 @@ Scope {
     function uiFor(t) { return t === "depth" ? depthUi : phoneStyles.indexOf(t) >= 0 ? phoneUi : glassUi; }
 
     function lock() {
-        if (locked || themeLock.running) return;
-        const theme = Settings.lock.theme;
-        if (!isBuiltin(theme)) {
-            // a qylock theme: its own lock process (scripts/qylock.py). If it fails or crashes
-            // (non-zero exit), our own lock takes over at once: Hyprland allows a new locker to
-            // replace a dead one (misc.allow_session_lock_restore), so the session is never left
-            // in the red "locked but nothing drawn" state.
-            themeLock.command = [Quickshell.shellDir + "/scripts/qylock.py", "lock", theme];
-            themeLock.running = true;
-            return;
-        }
+        if (locked) return;
         resetState();
         locked = true;
-    }
-    Process {
-        id: themeLock
-        onExited: (code) => {
-            if (code !== 0) {
-                console.warn("LockScreen: qylock theme exited with", code, "- falling back to the Atelier lock");
-                root.resetState();
-                root.locked = true;
-            }
-        }
     }
     function preview() {
         resetState();

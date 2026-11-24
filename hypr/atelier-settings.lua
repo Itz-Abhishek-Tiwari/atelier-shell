@@ -2,14 +2,17 @@
 return {
     gaps_in = 2, gaps_out = 8,
     rounding = 0,
-    active_opacity = 0.95, inactive_opacity = 0.95,
+    active_opacity = 0.91, inactive_opacity = 0.90,
     blur = true, blur_passes = 3,
+    blur_size = 9, blur_vibrancy = 0.17, blur_noise = 0.038, blur_contrast = 0.95, blur_brightness = 0.90,
+    blur_xray = true, blur_popups = true, dim_inactive = true, dim_strength = 0.06,
+    solid_apps = true, solid_fullscreen = true, shell_blur = true,
     shadow = true, animations = true,
     layout = "dwindle",
     dwindle_preserve_split = true, dwindle_smart_split = true,
     master_orientation = "left", master_mfact = 0.55, master_new_on_top = false,
     scroll_column_width = 0.50,
-    shell_glass = 0.92,   -- shell surface opacity: blur threshold in conf/rules.lua
+    shell_glass = 0.91,   -- shell surface opacity: blur threshold in conf/rules.lua
     reserved = { top = 9, right = 9, bottom = 9, left = 42 },   -- shell frame: conf/monitors.lua
     -- Settings → Modes (atelier-mode.lua)
     modes = {

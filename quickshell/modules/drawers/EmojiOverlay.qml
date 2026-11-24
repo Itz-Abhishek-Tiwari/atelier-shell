@@ -10,7 +10,7 @@ import qs.config
 //   Emoji: search (names + CLDR keywords, "lol" finds 😂), categories, recent, skin tone.
 //          Pick = copy, and type it into the window you were in (Settings.emoji.typeOnPick, wtype).
 //          Shift+click / Shift+Enter = copy only and keep the drawer open (pick several).
-//   GIFs:  GIPHY or Tenor (free API key in Settings → General), safe search, trending + recent.
+//   GIFs:  GIPHY or Tenor (free API key in Settings → Tools), safe search, trending + recent.
 //          Click = copy the link (Discord, Telegram, Slack… embed it); right-click = copy the GIF file.
 // Data: scripts/emoji.py (Unicode emoji-test.txt + CLDR, cached) and scripts/gifs.py.
 // Keys: type to search · arrows move · Enter pick · Tab switch tab · Esc clear / close

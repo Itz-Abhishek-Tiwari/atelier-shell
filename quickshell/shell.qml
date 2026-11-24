@@ -114,6 +114,10 @@ ShellRoot {
         else if (name === "keybinds") keybindsOverlay.open();
         else if (name === "settings") settingsApp.open();
         else if (name === "emoji" || name === "gifs") emojiOverlay.open(name);
+        else if (name === "sysmon") sysMonOverlay.open();
+        else if (name === "timers") timerOverlay.open();
+        else if (name === "colors") colorPickerOverlay.open();
+        else if (name === "switcher") windowSwitcher.open();
         // keep the keyboard stacked above whatever just opened (it types into overlays too)
         if (osk.shown) oskRaise.restart();
     }
@@ -138,6 +142,10 @@ ShellRoot {
         keybindsOverlay.close();
         settingsApp.close();
         emojiOverlay.close();
+        sysMonOverlay.close();
+        timerOverlay.close();
+        colorPickerOverlay.close();
+        windowSwitcher.close();
     }
 
     // 0. Wallpaper, drawn by the shell (crossfades on change; replaces hyprpaper)
@@ -213,6 +221,7 @@ ShellRoot {
                        || clipboardOverlay.visible || cameraOverlay.visible || controlCenter.visible || themeOverlay.visible
                        || overviewOverlay.visible || gamesOverlay.visible || mediaOverlay.visible
                        || keybindsOverlay.visible || appsOverlay.visible || settingsApp.visible || emojiOverlay.visible
+                       || sysMonOverlay.visible || timerOverlay.visible || colorPickerOverlay.visible || windowSwitcher.visible
         popupVisible: notificationPopups.visible || osd.visible || toastPopup.visible || airDropPopup.visible
         osdItem: osd.visible ? osd.inputItem : null
         notifItem: notificationPopups.visible ? notificationPopups.inputItem : null
@@ -331,6 +340,26 @@ ShellRoot {
                 if (shellRoot.activeOverlay === "keybinds") shellRoot.activeOverlay = "";
             }
         }
+        SysMonOverlay {
+            id: sysMonOverlay
+            isLight: shellRoot.isLight
+            onClosedSignal: { if (shellRoot.activeOverlay === "sysmon") shellRoot.activeOverlay = ""; }
+        }
+        TimerOverlay {
+            id: timerOverlay
+            isLight: shellRoot.isLight
+            onClosedSignal: { if (shellRoot.activeOverlay === "timers") shellRoot.activeOverlay = ""; }
+        }
+        ColorPickerOverlay {
+            id: colorPickerOverlay
+            isLight: shellRoot.isLight
+            onClosedSignal: { if (shellRoot.activeOverlay === "colors") shellRoot.activeOverlay = ""; }
+        }
+        WindowSwitcher {
+            id: windowSwitcher
+            isLight: shellRoot.isLight
+            onClosedSignal: { if (shellRoot.activeOverlay === "switcher") shellRoot.activeOverlay = ""; }
+        }
         CalendarOverlay {
             id: calendarOverlay
             isLight: shellRoot.isLight
@@ -382,13 +411,21 @@ ShellRoot {
 
     // Background services that must run from login (singletons only start when first used):
     // battery alerts, idle & sleep (writes hypridle's config), update checks, plugged-in drives
-    readonly property var _services: [Battery, Idle, Updates, Drives]
+    readonly property var _services: [Battery, Idle, Updates, Drives, Timers, ColorPicker]
     Connections {
         target: Battery
         function onToast(msg, icon, clr) { toastPopup.showToast(msg, icon, clr); }
     }
     Connections {
         target: Drives
+        function onToast(msg, icon, clr) { toastPopup.showToast(msg, icon, clr); }
+    }
+    Connections {
+        target: Timers
+        function onToast(msg, icon, clr) { toastPopup.showToast(msg, icon, clr); }
+    }
+    Connections {
+        target: ColorPicker
         function onToast(msg, icon, clr) { toastPopup.showToast(msg, icon, clr); }
     }
 
@@ -445,6 +482,57 @@ ShellRoot {
             function check(): void { Updates.check(); }
             function run(): void { Updates.run(); }
             function count(): int { return Updates.count; }
+        }
+        IpcHandler {
+            target: "sysmon"
+            function toggle(): void { shellRoot.toggleOverlay("sysmon"); }
+            function open(): void { if (shellRoot.activeOverlay !== "sysmon") shellRoot.toggleOverlay("sysmon"); }
+            function close(): void { if (shellRoot.activeOverlay === "sysmon") shellRoot.closeAllOverlays(); }
+            function tab(t: string): void {
+                if (shellRoot.activeOverlay !== "sysmon") shellRoot.toggleOverlay("sysmon");
+                sysMonOverlay.setTab(t);
+            }
+        }
+        IpcHandler {
+            target: "timers"
+            function toggle(): void { shellRoot.toggleOverlay("timers"); }
+            function open(): void { if (shellRoot.activeOverlay !== "timers") shellRoot.toggleOverlay("timers"); }
+            function close(): void { if (shellRoot.activeOverlay === "timers") shellRoot.closeAllOverlays(); }
+            function tab(t: string): void {
+                if (shellRoot.activeOverlay !== "timers") shellRoot.toggleOverlay("timers");
+                timerOverlay.setTab(t);
+            }
+            // qs ipc call timers start "10m tea"  → returns the new timer's id (-1 = not understood)
+            function start(spec: string): int {
+                const m = spec.trim().match(/^(\S+)\s*(.*)$/);
+                const id = m ? Timers.add(Timers.parse(m[1]), m[2]) : -1;
+                if (id > 0) toastPopup.showToast("Timer started · " + m[1], "󱎫", Atelier.peach);
+                return id;
+            }
+            function clear(): void { Timers.clearAll(); }
+            function stopwatch(): void { Timers.swToggle(); }
+            function pomodoro(): void { Timers.pomoToggle(); }
+            function count(): int { return Timers.runningCount; }
+        }
+        IpcHandler {
+            target: "colorpicker"
+            function pick(): void { shellRoot.closeAllOverlays(); ColorPicker.pick(); }
+            function toggle(): void { shellRoot.toggleOverlay("colors"); }
+            function open(): void { if (shellRoot.activeOverlay !== "colors") shellRoot.toggleOverlay("colors"); }
+            function close(): void { if (shellRoot.activeOverlay === "colors") shellRoot.closeAllOverlays(); }
+            function last(): string { return ColorPicker.last; }
+            function clear(): void { ColorPicker.clear(); }
+        }
+        IpcHandler {
+            target: "switcher"
+            function _go(d: int): void {
+                if (shellRoot.activeOverlay !== "switcher") { shellRoot.closeAllOverlays(); shellRoot.activeOverlay = "switcher"; }
+                windowSwitcher.step(d);
+            }
+            function next(): void { _go(1); }
+            function prev(): void { _go(-1); }
+            function commit(): void { windowSwitcher.commit(); }
+            function cancel(): void { windowSwitcher.cancel(); }
         }
         IpcHandler {
             target: "calendar"
@@ -506,7 +594,7 @@ ShellRoot {
         IpcHandler {
             target: "settings"
             function toggle(): void { shellRoot.toggleOverlay("settings"); }
-            function open(page: string): void { shellRoot.toggleOverlay("settings:" + page); }     // page: appearance|bar|widgets|general|windows|notifications|display|displays|input|sound|shortcuts|lock|login|storage|profiles|about
+            function open(page: string): void { shellRoot.toggleOverlay("settings:" + page); }     // page: any id in SettingsApp.pages (appearance, bar, widgets, windows, tools, displays, power, …)
             function close(): void { if (shellRoot.activeOverlay === "settings") shellRoot.closeAllOverlays(); }
             function cycleLayout(): string {
                 const l = Settings.cycleLayout();

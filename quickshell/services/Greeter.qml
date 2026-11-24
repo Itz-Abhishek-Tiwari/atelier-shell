@@ -99,6 +99,13 @@ Singleton {
     function autoSync(): void { if (Settings.greeter.autoSync && writable) autoTimer.restart(); }
     Connections { target: Atelier; function onThemeIdChanged() { root.autoSync(); } function onIsLightChanged() { root.autoSync(); } }
     Connections { target: Wallpaper; function onCurrentChanged() { root.autoSync(); } }
+    // the login screen uses your lock-screen style: follow its options and the Depth cut-out
+    readonly property string _lockKey: JSON.stringify([Settings.lock.theme, Settings.lock.clock, Settings.lock.depthStyle,
+        Settings.lock.depthColor, Settings.lock.depthLayout, Settings.lock.depthFont, Settings.lock.depthWeight,
+        Settings.lock.depthClockSize, Settings.lock.depthEffect, Settings.lock.depthShadow, Settings.lock.depthPos,
+        Settings.lock.depthX, Settings.lock.depthY, JSON.stringify(Settings.lockStyle), Settings.general.clock24])
+    on_LockKeyChanged: autoSync()
+    Connections { target: DepthWall; function onCutoutChanged() { root.autoSync(); } }
 
     // ── actions ─────────────────────────────────────────────────────────────
     // Preview the repo's greeter in demo mode (fullscreen, password "demo", Esc closes)

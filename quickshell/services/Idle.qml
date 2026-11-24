@@ -4,7 +4,7 @@ import Quickshell
 import Quickshell.Io
 import qs.config
 
-// Idle & sleep (Settings → Display & power): writes ~/.config/atelier/hypridle.conf from
+// Idle & sleep (Settings → Power & battery): writes ~/.config/atelier/hypridle.conf from
 // Settings.idle and restarts hypridle on it. Autostart (hypr/conf/autostart.lua) uses this
 // file when it exists, the repo's hypr/hypridle.conf otherwise.
 // hypridle is only restarted when the file's content actually changes, so a shell reload
@@ -25,7 +25,7 @@ Singleton {
         // while charging: skip the suspend unless the user wants it (any mains/USB supply online)
         const suspend = i.suspendOnAC ? "systemctl suspend"
                                       : "grep -qsx 1 /sys/class/power_supply/*/online || systemctl suspend";
-        return "# Written by the Atelier shell (Settings → Display & power → Idle & sleep).\n"
+        return "# Written by the Atelier shell (Settings → Power & battery → Idle & sleep).\n"
              + "# Changes here are overwritten; hypr/hypridle.conf in the repo is the fallback.\n"
              + "$LOCKSCREEN = qs ipc call lock lock || hyprlock\n"
              + "$SCREEN_OFF = hyprctl dispatch 'hl.dsp.dpms({ action = \"off\" })'\n"

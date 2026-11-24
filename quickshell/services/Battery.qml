@@ -4,7 +4,7 @@ import Quickshell
 import Quickshell.Services.UPower
 import qs.config
 
-// Battery alerts (Settings → Display & power → Battery):
+// Battery alerts (Settings → Power & battery → Battery):
 //  - a notification at the low level and a critical one (stays, gets through Do Not Disturb)
 //    at the critical level, once each per discharge; the critical one replaces the low one
 //  - both are cleared as soon as the charger goes in
