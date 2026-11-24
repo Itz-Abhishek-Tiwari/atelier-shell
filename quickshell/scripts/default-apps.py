@@ -14,7 +14,7 @@ GTK/GIO, Qt/KDE and Electron apps all read. The terminal lives in Atelier's sett
 prints the command for it) and in ~/.config/xdg-terminals.list (xdg-terminal-exec: GIO uses it
 for "Terminal=true" apps).
 
-After a change the repo's seed copy (seed/config/mimeapps.list) is updated too, so a fresh
+After a change the repo's seed copy (setup/seed/config/mimeapps.list) is updated too, so a fresh
 install of this folder gets the same defaults.
 """
 import json
@@ -31,7 +31,7 @@ MIMEAPPS = CONF / "mimeapps.list"
 SETTINGS = CONF / "atelier/settings.json"
 # quickshell/scripts/ -> repo root (the config folder is a symlink into the repo)
 REPO = Path(os.path.realpath(__file__)).parent.parent.parent
-SEED = REPO / "seed/config/mimeapps.list"
+SEED = REPO / "setup/seed/config/mimeapps.list"
 
 CATEGORIES = [
     ("browser", "Web browser", ["x-scheme-handler/https", "x-scheme-handler/http", "text/html",
@@ -234,7 +234,7 @@ def write_defaults(updates):
     tmp = MIMEAPPS.with_name(MIMEAPPS.name + ".atelier-tmp")
     tmp.write_text(text)
     tmp.replace(MIMEAPPS)
-    if SEED.parent.is_dir() and CONF == HOME / ".config":
+    if SEED.parent.is_dir() and CONF == HOME / ".config" and not os.environ.get("ATELIER_NO_SEED"):
         try:
             shutil.copyfile(MIMEAPPS, SEED)
         except OSError:

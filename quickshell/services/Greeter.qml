@@ -6,11 +6,11 @@ import qs.config
 
 // The login screen (greeter/shell.qml, run by greetd as the `greeter` user) cannot read $HOME,
 // so this service mirrors what it needs into /var/lib/atelier-greeter, which
-// install-greeter.sh hands to you (no root needed afterwards):
+// greeter/install.sh hands to you (no root needed afterwards):
 //   settings.json  <- Settings.greeter (+ clock format, weather place)   written live
 //   colors.json, wallpaper.jpg, faces/$USER, fonts/  <- scripts/greeter-sync.sh
 // With Settings.greeter.autoSync the theme, wallpaper and avatar follow along automatically.
-// Changing the greeter's own files (/etc/greetd/...) still needs `sudo install-greeter.sh`.
+// Changing the greeter's own files (/etc/greetd/...) still needs `sudo greeter/install.sh`.
 Singleton {
     id: root
 
@@ -113,9 +113,9 @@ Singleton {
         if (writable) optsFile.setText(json);
         Quickshell.execDetached(["quickshell", "-p", repoDir + "/greeter/shell.qml"]);
     }
-    // Things that need root run install-greeter.sh in a terminal (sudo asks for the password)
+    // Things that need root run greeter/install.sh in a terminal (sudo asks for the password)
     function runInstaller(args: string): void {
-        const cmd = "sudo '" + repoDir + "/install-greeter.sh' " + args
+        const cmd = "sudo '" + repoDir + "/greeter/install.sh' " + args
             + "; echo; printf 'Press Enter to close… '; read _";
         Quickshell.execDetached([Settings.behavior.terminal || "ghostty", "-e", "sh", "-c", cmd]);
     }

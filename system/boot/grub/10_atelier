@@ -1,0 +1,77 @@
+#!/bin/sh
+# Atelier boot menu (installed to /etc/grub.d/10_atelier by system/boot/grub/install.sh).
+#
+# GRUB's runtime `uki` command (the old 15_uki) and the stock firmware entry give their entries
+# no --class, so a theme can't show icons for them. This writes the same entries with classes:
+#   Arch Linux               one per UKI in <ESP>/EFI/Linux (running kernel first; stale
+#                            *-fallback.efi images skipped)            --class arch
+#   Advanced                 the stock `uki` scan, kept as a rescue path   --class submenu
+#   UEFI Firmware Settings   only while the stock 30_uefi-firmware is disabled (a grub update
+#                            re-enables it; then this stays silent so nothing is listed twice)
+set -e
+
+prefix="/usr"
+exec_prefix="/usr"
+datarootdir="/usr/share"
+. "$datarootdir/grub/grub-mkconfig_lib"
+
+esp_dir=/boot/EFI/Linux
+[ -d "$esp_dir" ] || esp_dir=/efi/EFI/Linux
+[ -d "$esp_dir" ] || esp_dir=/boot/efi/EFI/Linux
+
+running="$(uname -r)"
+ukis=""
+if [ -d "$esp_dir" ]; then
+    for f in "$esp_dir"/*.efi; do
+        [ -f "$f" ] || continue
+        case "$f" in *-fallback.efi) continue ;; esac
+        flavor="$(basename "$f" .efi)"; flavor="${flavor#arch-}"     # linux, linux-zen, linux-lts
+        k="${flavor#linux}"; k="${k#-}"                                 # "", zen, lts
+        case "$running" in *"${k:-__none__}"*) ukis="$f
+$ukis" ;; *) ukis="$ukis
+$f" ;; esac
+    done
+fi
+
+if [ -z "$(printf '%s' "$ukis" | tr -d '\n')" ]; then
+    # nothing found: keep the system bootable with the plain runtime scan
+    echo "Atelier: no UKIs in $esp_dir, using the runtime uki scan" >&2
+    printf 'if [ "$grub_platform" = "efi" ]; then\n  uki\nfi\n'
+else
+    first=1
+    printf '%s\n' "$ukis" | while IFS= read -r f; do
+        [ -n "$f" ] || continue
+        flavor="$(basename "$f" .efi)"; flavor="${flavor#arch-}"
+        k="${flavor#linux}"; k="${k#-}"
+        if [ "$first" = 1 ]; then title="Arch Linux"; first=0
+        else title="Arch Linux · ${k:-standard} kernel"; fi
+        echo "Atelier: $title -> $f" >&2
+        rel="/EFI/Linux/$(basename "$f")"
+        cat <<EOF
+menuentry '$(echo "$title" | grub_quote)' --class arch --class gnu-linux --class os \$menuentry_id_option 'atelier-uki-$flavor' {
+$(prepare_grub_to_access_device "$(${grub_probe} --target=device "$f")" | sed 's/^/\t/')
+	chainloader $rel
+}
+EOF
+    done
+    cat <<'EOF'
+if [ "$grub_platform" = "efi" ]; then
+	submenu 'Advanced' --class submenu $menuentry_id_option 'atelier-advanced' {
+		uki
+	}
+fi
+EOF
+fi
+
+if [ ! -x /etc/grub.d/30_uefi-firmware ]; then
+    cat <<'EOF'
+if [ "$grub_platform" = "efi" ]; then
+	fwsetup --is-supported
+	if [ "$?" = 0 ]; then
+		menuentry 'UEFI Firmware Settings' --class efi --class firmware $menuentry_id_option 'uefi-firmware' {
+			fwsetup
+		}
+	fi
+fi
+EOF
+fi

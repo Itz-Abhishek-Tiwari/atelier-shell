@@ -50,7 +50,7 @@ Item {
     Timer { id: focusTimer; interval: 40; onTriggered: keys.forceActiveFocus() }
     Timer { id: closeTimer; interval: Atelier.durClose + 40; onTriggered: if (!root.animActive) root.visible = false }
 
-    // ── AdGuard DNS (config-scripts/adguard-dns.sh → ~/.local/bin/adguard-dns) ──
+    // ── AdGuard DNS (config/scripts/adguard-dns.sh → ~/.local/bin/adguard-dns) ──
     property string adguard: "off"          // on | family | off
     readonly property string adguardCli: Quickshell.env("HOME") + "/.local/bin/adguard-dns"
     Process {

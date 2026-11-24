@@ -65,7 +65,7 @@ Item {
         close();
     }
     function moveWindow(addr, id) {
-        dispatchLua(`hl.dsp.window.move({ workspace = ${id}, silent = true, window = "address:${addr}" })`,
+        dispatchLua(`hl.dsp.window.move({ workspace = ${id}, follow = false, window = "address:${addr}" })`,
                     `movetoworkspacesilent ${id},address:${addr}`);
         refreshLater.restart();
     }

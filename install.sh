@@ -16,10 +16,10 @@
 #    system   enable [multilib], install packages (+ GPU drivers by detected hardware,
 #             + headers for every installed kernel), copy system/etc/* into /etc
 #             (camera v4l2loopback, ntsync, zram, NVIDIA), enable services
-#    user     symlink every config in LINKS into this repo, copy seed/ files once
+#    user     symlink every config in LINKS into this repo, copy setup/seed/ files once
 #             (files apps rewrite themselves), unpack GTK themes, build the qt6ct
 #             plugin, install VS Code extensions, apply the current Atelier theme
-#    greeter  install-greeter.sh --enable (greetd + the Quickshell login screen)
+#    greeter  greeter/install.sh --enable (greetd + the Quickshell login screen)
 #
 #  Strategy: every config is a symlink from ~/.config/... into this repo, so
 #  editing either side edits the same file. Anything already at a target is
@@ -59,34 +59,38 @@ run()         { if $DRY_RUN; then echo -e "${C_MAGENTA}[dry-run]${C_RESET} $*"; 
 # repo path (relative to this script)  ->  link location
 # Each pair becomes:  <link location>  ->  <repo path>
 LINKS=(
+    # the desktop
     "quickshell:$CONF/quickshell"
     "hypr:$CONF/hypr"
-    "kitty:$CONF/kitty"
-    "ghostty:$CONF/ghostty"
-    "nvim:$CONF/nvim"                       # NamiConfig (Neovim)
-    "fastfetch:$CONF/fastfetch"
-    "zellij:$CONF/zellij"
-    "zed:$CONF/zed"
-    "gtk-3.0:$CONF/gtk-3.0"
-    "gtk-4.0:$CONF/gtk-4.0"
-    "qt5ct:$CONF/qt5ct"
-    "qt6ct:$CONF/qt6ct"
-    "Kvantum:$CONF/Kvantum"
-    "btop:$CONF/btop"
-    "cava:$CONF/cava"
-    "swappy:$CONF/swappy"
-    "zathura:$CONF/zathura"
-    "environment.d:$CONF/environment.d"     # QT_QPA_PLATFORMTHEME=qt6ct for every app
-    "vesktop/settings:$CONF/vesktop/settings"   # Vencord plugins + quick CSS
-    "config-scripts:$CONF/scripts"
-    "starship/starship.toml:$CONF/starship.toml"
-    "zsh:$CONF/zsh"
-    "zsh/.zshrc:$HOME/.zshrc"
     "theming/atelier-theme:$BIN/atelier-theme"
-    "config-scripts/adguard-dns.sh:$BIN/adguard-dns"
-    "bin/prime-run:$BIN/prime-run"
-    "bin/audiotube:$BIN/audiotube"
-    "kio/servicemenus/atelier-airdrop.desktop:$HOME/.local/share/kio/servicemenus/atelier-airdrop.desktop"   # Dolphin: Send with AirDrop
+    # config/<name> -> ~/.config/<name>
+    "config/kitty:$CONF/kitty"
+    "config/ghostty:$CONF/ghostty"
+    "config/nvim:$CONF/nvim"                       # NamiConfig (Neovim)
+    "config/fastfetch:$CONF/fastfetch"
+    "config/zellij:$CONF/zellij"
+    "config/zed:$CONF/zed"
+    "config/gtk-3.0:$CONF/gtk-3.0"
+    "config/gtk-4.0:$CONF/gtk-4.0"
+    "config/qt5ct:$CONF/qt5ct"
+    "config/qt6ct:$CONF/qt6ct"
+    "config/Kvantum:$CONF/Kvantum"
+    "config/btop:$CONF/btop"
+    "config/cava:$CONF/cava"
+    "config/swappy:$CONF/swappy"
+    "config/zathura:$CONF/zathura"
+    "config/environment.d:$CONF/environment.d"     # QT_QPA_PLATFORMTHEME=qt6ct for every app
+    "config/vesktop/settings:$CONF/vesktop/settings"   # Vencord plugins + quick CSS
+    "config/scripts:$CONF/scripts"
+    "config/starship.toml:$CONF/starship.toml"
+    "config/zsh:$CONF/zsh"
+    "config/zsh/.zshrc:$HOME/.zshrc"
+    # local/<path> -> ~/.local/<path>
+    "local/bin/prime-run:$BIN/prime-run"
+    "local/bin/audiotube:$BIN/audiotube"
+    "config/scripts/adguard-dns.sh:$BIN/adguard-dns"
+    "local/share/kio/servicemenus/atelier-airdrop.desktop:$HOME/.local/share/kio/servicemenus/atelier-airdrop.desktop"   # Dolphin: Send with AirDrop
+    "local/share/nautilus-python/extensions/atelier-open-terminal.py:$HOME/.local/share/nautilus-python/extensions/atelier-open-terminal.py"   # Nautilus: Open in Terminal (needs nautilus-python)
 )
 
 print_banner() {
@@ -170,7 +174,7 @@ install_packages() {
     run sudo pacman -S --needed --noconfirm pciutils >/dev/null || true
 
     local PAC=()
-    [ -f "$SCRIPT_DIR/packages-pacman.txt" ] && mapfile -t PAC < <(read_list "$SCRIPT_DIR/packages-pacman.txt")
+    [ -f "$SCRIPT_DIR/setup/packages/pacman.txt" ] && mapfile -t PAC < <(read_list "$SCRIPT_DIR/setup/packages/pacman.txt")
 
     # headers for every installed kernel (DKMS builds v4l2loopback / NVIDIA against them)
     local pb kern
@@ -184,18 +188,18 @@ install_packages() {
     local vendor
     for vendor in nvidia amd intel; do
         local pat="$vendor"; [ "$vendor" = amd ] && pat='AMD|ATI|Radeon'
-        if has_gpu "$pat" && [ -f "$SCRIPT_DIR/packages-gpu-$vendor.txt" ]; then
-            log_info "Detected a $vendor GPU: adding packages-gpu-$vendor.txt"
-            mapfile -t -O "${#PAC[@]}" PAC < <(read_list "$SCRIPT_DIR/packages-gpu-$vendor.txt")
+        if has_gpu "$pat" && [ -f "$SCRIPT_DIR/setup/packages/gpu-$vendor.txt" ]; then
+            log_info "Detected a $vendor GPU: adding setup/packages/gpu-$vendor.txt"
+            mapfile -t -O "${#PAC[@]}" PAC < <(read_list "$SCRIPT_DIR/setup/packages/gpu-$vendor.txt")
         fi
     done
 
     log_info "Installing official packages..."
     pacman_install "${PAC[@]}"
 
-    if [ -f "$SCRIPT_DIR/packages-aur.txt" ] && [ -n "$AUR_HELPER" ]; then
+    if [ -f "$SCRIPT_DIR/setup/packages/aur.txt" ] && [ -n "$AUR_HELPER" ]; then
         log_info "Installing AUR packages via $AUR_HELPER..."
-        mapfile -t AUR < <(read_list "$SCRIPT_DIR/packages-aur.txt")
+        mapfile -t AUR < <(read_list "$SCRIPT_DIR/setup/packages/aur.txt")
         local flags=(--needed --noconfirm)
         [ "$AUR_HELPER" = "yay" ] && flags+=(--answerclean None --answerdiff None)
         if ! run "$AUR_HELPER" -S "${flags[@]}" "${AUR[@]}"; then
@@ -292,10 +296,10 @@ install_greeter() {
     echo ""
     if systemctl is-enabled -q greetd.service 2>/dev/null && [ -d /etc/greetd/atelier-greeter ]; then
         log_info "Refreshing the Atelier login screen..."
-        run sudo "$SCRIPT_DIR/install-greeter.sh" --refresh || log_warn "Greeter refresh failed."
+        run sudo "$SCRIPT_DIR/greeter/install.sh" --refresh || log_warn "Greeter refresh failed."
     else
         log_info "Installing the Atelier login screen (greetd)..."
-        run sudo "$SCRIPT_DIR/install-greeter.sh" --enable || log_warn "Greeter install failed; run: sudo ./install-greeter.sh --enable"
+        run sudo "$SCRIPT_DIR/greeter/install.sh" --enable || log_warn "Greeter install failed; run: sudo greeter/install.sh --enable"
     fi
 }
 
@@ -340,10 +344,10 @@ install_icons() {
         for d in "$dest"/Colloid*; do gtk-update-icon-cache -qf "$d" 2>/dev/null || true; done
 }
 
-# ---- GTK themes: bundled (assets/gtk-themes.tar.xz -> ~/.themes) ---------------
+# ---- GTK themes: bundled (setup/gtk-themes.tar.xz -> ~/.themes) ---------------
 # Colloid / Rosepine / Tokyonight GTK builds named by "gtk" in theming/themes/*.json.
 install_gtk_themes() {
-    local tarball="$SCRIPT_DIR/assets/gtk-themes.tar.xz"
+    local tarball="$SCRIPT_DIR/setup/gtk-themes.tar.xz"
     [ -f "$tarball" ] || return 0
     local missing
     missing="$(tar -tJf "$tarball" | awk -F/ 'NF>1 && $2!="" {print $2}' | sort -u | while read -r t; do [ -e "$HOME/.themes/$t" ] || echo "$t"; done)"
@@ -400,10 +404,10 @@ restore_untracked() {
     done
 }
 
-# seed/config/<path> -> ~/.config/<path>, copied only when missing. These are files the app
+# setup/seed/config/<path> -> ~/.config/<path>, copied only when missing. These are files the app
 # (or atelier-theme) rewrites itself, so a symlink would be replaced on the first save.
 seed_files() {
-    local root="$SCRIPT_DIR/seed/config" f rel dest n=0
+    local root="$SCRIPT_DIR/setup/seed/config" f rel dest n=0
     [ -d "$root" ] || return 0
     while IFS= read -r -d '' f; do
         rel="${f#"$root"/}"; dest="$CONF/$rel"
@@ -412,14 +416,14 @@ seed_files() {
         run cp -a "$f" "$dest"
         n=$((n + 1))
     done < <(find "$root" -type f -print0)
-    [ "$n" -gt 0 ] && log_success "Seeded $n app settings file(s) (VS Code, Vesktop, default apps, Spicetify...)" \
+    [ "$n" -gt 0 ] && log_success "Seeded $n app settings file(s) (Atelier state, VS Code, Vesktop, default apps, Spicetify...)" \
                    || log_success "App settings already seeded."
 }
 
-# applications/*.desktop -> ~/.local/share/applications, with @HOME@ filled in.
+# local/share/applications/*.desktop -> ~/.local/share/applications, with @HOME@ filled in.
 install_desktop_entries() {
     local f dest
-    for f in "$SCRIPT_DIR"/applications/*.desktop; do
+    for f in "$SCRIPT_DIR"/local/share/applications/*.desktop; do
         [ -f "$f" ] || continue
         dest="$APPS/$(basename "$f")"
         if [ -f "$dest" ] && cmp -s <(sed "s#@HOME@#$HOME#g" "$f") "$dest"; then continue; fi
@@ -438,19 +442,12 @@ deploy_dotfiles() {
     done
     restore_untracked
 
-    # Machine-local state: seed once, never overwrite (the theme engine rewrites these).
-    run mkdir -p "$CONF/atelier"
-    for f in settings.json state.json theme.json theme.zsh; do
-        if [ -f "$SCRIPT_DIR/atelier/$f" ] && [ ! -e "$CONF/atelier/$f" ]; then
-            run cp "$SCRIPT_DIR/atelier/$f" "$CONF/atelier/$f"
-            log_success "Seeded ~/.config/atelier/$f"
-        fi
-    done
+    # Machine-local state (~/.config/atelier) is seeded with the rest: setup/seed/config/atelier
     seed_files
     install_desktop_entries
 
-    run chmod +x "$SCRIPT_DIR/theming/atelier-theme" "$SCRIPT_DIR/theming/build-qt6ct.sh" "$SCRIPT_DIR"/bin/* 2>/dev/null || true
-    run chmod +x "$SCRIPT_DIR"/config-scripts/*.py "$SCRIPT_DIR"/config-scripts/*.sh "$SCRIPT_DIR"/hypr/scripts/*.sh "$SCRIPT_DIR"/quickshell/scripts/* 2>/dev/null || true
+    run chmod +x "$SCRIPT_DIR/theming/atelier-theme" "$SCRIPT_DIR/theming/build-qt6ct.sh" "$SCRIPT_DIR"/local/bin/* 2>/dev/null || true
+    run chmod +x "$SCRIPT_DIR"/config/scripts/*.py "$SCRIPT_DIR"/config/scripts/*.sh "$SCRIPT_DIR"/hypr/scripts/*.sh "$SCRIPT_DIR"/quickshell/scripts/* 2>/dev/null || true
     run mkdir -p "$HOME/Pictures/Screenshots"
 
     case ":$PATH:" in
@@ -474,7 +471,7 @@ build_qt6ct() {
 }
 
 install_vscode_extensions() {
-    local list="$SCRIPT_DIR/vscode/extensions.txt"
+    local list="$SCRIPT_DIR/setup/vscode-extensions.txt"
     [ -f "$list" ] && command -v code >/dev/null 2>&1 || return 0
     local have e n=0
     have="$(code --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]')"

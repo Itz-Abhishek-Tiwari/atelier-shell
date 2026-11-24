@@ -16,6 +16,7 @@ Singleton {
     readonly property var general: adapter.general
     readonly property var appearance: adapter.appearance
     readonly property var bar: adapter.bar
+    readonly property var dock: adapter.dock
     readonly property var widgets: adapter.widgets
     readonly property var notifications: adapter.notifications
     readonly property var windows: adapter.windows
@@ -70,6 +71,11 @@ Singleton {
                 property bool shellBlur: true           // blur behind the bar and drawers
                 property bool shellShadow: true         // soft shadow under drawers and the frame
                 property string barPosition: "left"     // left | right | top | bottom
+                property string layout: "atelier"       // atelier (tiling) | classic (Traditional: floating windows, title bars, dock)
+                // each layout remembers its own bar edge and file manager (setLayout)
+                property var layoutBar: ({ atelier: "left", classic: "top" })
+                property var layoutFiles: ({ atelier: "org.kde.dolphin.desktop", classic: "org.gnome.Nautilus.desktop" })
+                property string titlebarButtons: "right" // Traditional: close / maximise / minimise on the left | right
                 property bool linkRounding: true        // windows follow the shell's roundness (concentric)
                 property string wallTransition: "fade"  // none | fade | wipe | slide | grow | zoom | spread | outline | random
                 property string wallDirection: "left"   // wipe / slide: left | right | top | bottom
@@ -93,6 +99,15 @@ Singleton {
                     { icon: "󰓇", color: "green",    cmd: "spotify-launcher || spotify" },
                     { icon: "󰙯", color: "lavender", cmd: "vesktop || discord" }
                 ]
+            }
+
+            property JsonObject dock: JsonObject {     // Traditional layout dock (modules/dock/Dock.qml)
+                property int iconSize: 40
+                property bool magnify: true             // icons grow under the pointer
+                property bool showRunning: true         // open apps that aren't kept in the dock appear after a divider
+                property string style: "shelf"          // shelf (a tab rising from a thin frame, sized to the icons) | bar (the whole bottom edge)
+                property bool showFolders: true         // Downloads and Trash at the right end
+                property var pinned: ["firefox", "com.mitchellh.ghostty", "org.gnome.Nautilus", "com.microsoft.VSCode", "spotify-launcher", "vesktop"]
             }
 
             property JsonObject widgets: JsonObject {
@@ -389,6 +404,46 @@ Singleton {
         return p && p.startsWith("~") ? Quickshell.env("HOME") + p.slice(1) : p;
     }
 
+    // Settings → Atelier / Traditional. Each layout keeps its own bar edge (Atelier: left,
+    // Traditional: top) and file manager (Dolphin / Nautilus): leaving a layout remembers its
+    // edge, entering one restores both. Either layout's values can be edited while the other is
+    // in use; only the active one's are applied right away.
+    readonly property var layoutDefaults: ({ bar: { atelier: "left", classic: "top" },
+                                             files: { atelier: "org.kde.dolphin.desktop", classic: "org.gnome.Nautilus.desktop" } })
+    function layoutBarOf(l: string): string {
+        const m = adapter.appearance.layoutBar || {};
+        return l === adapter.appearance.layout ? adapter.appearance.barPosition : (m[l] || layoutDefaults.bar[l]);
+    }
+    function layoutFilesOf(l: string): string { return (adapter.appearance.layoutFiles || {})[l] || layoutDefaults.files[l]; }
+    function _applyFiles(id: string): void {
+        // a layout switch is not a new default for fresh installs: leave the repo's seed alone
+        Quickshell.execDetached(["env", "ATELIER_NO_SEED=1", "python3", Quickshell.shellDir + "/scripts/default-apps.py", "set", "files", id]);
+    }
+    function setLayoutBar(l: string, edge: string): void {
+        const a = adapter.appearance;
+        a.layoutBar = Object.assign({}, layoutDefaults.bar, a.layoutBar || {}, { [l]: edge });
+        if (l === a.layout) a.barPosition = edge;
+    }
+    function setLayoutFiles(l: string, id: string): void {
+        const a = adapter.appearance;
+        a.layoutFiles = Object.assign({}, layoutDefaults.files, a.layoutFiles || {}, { [l]: id });
+        if (l === a.layout) _applyFiles(id);
+    }
+    function setLayout(id: string): void {
+        const a = adapter.appearance;
+        if (id === a.layout || (id !== "atelier" && id !== "classic")) return;
+        setLayoutBar(a.layout, a.barPosition);    // remember the edge of the layout you leave
+        const edge = layoutBarOf(id);
+        a.layout = id;
+        a.barPosition = edge;
+        _applyFiles(layoutFilesOf(id));
+    }
+    // Default apps → Files: that becomes the current layout's file manager
+    function rememberFiles(appId: string): void {
+        const a = adapter.appearance;
+        a.layoutFiles = Object.assign({}, layoutDefaults.files, a.layoutFiles || {}, { [a.layout === "classic" ? "classic" : "atelier"]: appId });
+    }
+
     readonly property var layouts: ["dwindle", "master", "scrolling", "monocle"]
     function cycleLayout(): string {
         const i = layouts.indexOf(adapter.windows.layout);
@@ -501,6 +556,8 @@ Singleton {
             + "    master_orientation = \"" + w.masterOrientation + "\", master_mfact = " + w.masterFactor.toFixed(2)
             + ", master_new_on_top = " + w.masterNewOnTop + ",\n"
             + "    scroll_column_width = " + w.scrollColumnWidth.toFixed(2) + ",\n"
+            + "    shell_layout = \"" + (adapter.appearance.layout === "classic" ? "classic" : "atelier") + "\", titlebar_buttons = \""
+            + (adapter.appearance.titlebarButtons === "left" ? "left" : "right") + "\",   -- conf/traditional.lua\n"
             + "    shell_glass = " + Math.min(1, root.shellGlass).toFixed(2) + ",   -- shell surface opacity: blur threshold in conf/rules.lua\n"
             + "    reserved = { top = " + root._inset("top") + ", right = " + root._inset("right")
             + ", bottom = " + root._inset("bottom") + ", left = " + root._inset("left") + " },   -- shell frame: conf/monitors.lua\n"
@@ -516,7 +573,11 @@ Singleton {
     function _inset(edge) {
         const a = adapter.appearance;
         const bar = ["left", "right", "top", "bottom"].indexOf(a.barPosition) >= 0 ? a.barPosition : "left";
-        return Math.round(edge === bar ? a.barWidth : a.frame);
+        // Traditional: the bottom edge is the dock bar (same rule as Atelier.insetBottom)
+        if (edge === "bottom" && a.layout === "classic" && bar !== "bottom") return Math.round(adapter.dock.iconSize + 14);
+        // Traditional with the bar on top: the slim flat bar (same rule as Atelier.barWidth)
+        const barW = a.layout === "classic" && bar === "top" ? 32 : a.barWidth;
+        return Math.round(edge === bar ? barW : a.frame);
     }
     property string _applied: ""
     // the parts last applied live, so only what changed is re-applied (a monitor re-apply can modeset)
@@ -590,6 +651,7 @@ Singleton {
                 + 'scrolling = { column_width = t.scroll_column_width } }); '
                 + 'if atelier_apply_solid then atelier_apply_solid(t) end; '
                 + 'if atelier_apply_shell_blur then atelier_apply_shell_blur(t) end; '
+                + 'if atelier_apply_traditional then atelier_apply_traditional(t) end; '
                 + 'if atelier_mode and atelier_mode ~= "normal" then m.apply(atelier_mode) end'];
             hyprEval.running = true;
         }

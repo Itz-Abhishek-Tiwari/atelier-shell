@@ -1,0 +1,25 @@
+# Desktop Core (AUR)
+# quickshell is installed via pacman (setup/packages/pacman.txt)
+bibata-cursor-theme-bin
+
+# Developer Applications (AUR)
+visual-studio-code-bin
+google-chrome
+bun-bin
+ideviceinstaller
+
+# Desktop apps (AUR)
+vesktop
+vencord-bin
+localsend-bin
+heroic-games-launcher
+antigravity
+codex-app-bin
+spicetify-cli
+
+# iPhone webcam helpers + Python deps of quickshell/scripts
+droidcam
+python-imageio-ffmpeg
+python-screeninfo
+owly
+tether-bin

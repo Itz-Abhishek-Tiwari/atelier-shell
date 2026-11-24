@@ -58,25 +58,43 @@ Dotfiles only (no `sudo`, no packages, no `/etc` changes):
 Preview without changing anything: `./install.sh --dry-run`. Skip the login screen: `--no-greeter`.
 
 ### What the installer does
-1. Enables `[multilib]`, installs `yay` if needed, then `packages-pacman.txt` + `packages-aur.txt`,
+1. Enables `[multilib]`, installs `yay` if needed, then `setup/packages/pacman.txt` + `aur.txt`,
    headers for every installed kernel (DKMS), and GPU drivers by detected hardware
-   (`packages-gpu-nvidia.txt`, `-amd.txt`, `-intel.txt`).
+   (`setup/packages/gpu-nvidia.txt`, `gpu-amd.txt`, `gpu-intel.txt`).
 2. Copies `system/etc/*` into `/etc` (iPhone-webcam `v4l2loopback` devices, `ntsync`, zram) and,
    with an NVIDIA GPU, `system/nvidia/etc/*` (DRM modeset + early KMS; rebuilds the initramfs).
    Replaced files are backed up to `~/.config/atelier-backups/system_<timestamp>/`.
 3. Enables NetworkManager, bluetooth, power-profiles-daemon, sshd, timesyncd and ufw (deny incoming).
-4. Installs the Colloid icons and unpacks the bundled GTK themes (`assets/gtk-themes.tar.xz` → `~/.themes`).
+4. Installs the Colloid icons and unpacks the bundled GTK themes (`setup/gtk-themes.tar.xz` → `~/.themes`).
 5. Backs up anything it would replace to `~/.config/atelier-backups/backup_<timestamp>/` (nothing is
    deleted), then symlinks the repo into place (safe to re-run).
-6. Seeds files that apps rewrite themselves, once: `~/.config/atelier/*`, and `seed/config/*`
-   (VS Code settings, Vesktop app settings, default apps, user dirs, Dolphin, Spicetify themes/apps).
-   Installs launchers from `applications/`.
-7. Builds the qt6ct plugin (`theming/build-qt6ct.sh`), installs `vscode/extensions.txt`, and applies
+6. Seeds files that apps rewrite themselves, once: `setup/seed/config/*` → `~/.config/*`
+   (Atelier state, VS Code settings, Vesktop app settings, default apps, user dirs, Dolphin, Spicetify themes/apps).
+   Installs launchers from `local/share/applications/`.
+7. Builds the qt6ct plugin (`theming/build-qt6ct.sh`), installs `setup/vscode-extensions.txt`, and applies
    the current Atelier theme so every app follows it.
-8. Sets zsh as the default shell and installs the login screen (`install-greeter.sh --enable`).
+8. Sets zsh as the default shell and installs the login screen (`greeter/install.sh --enable`).
 
 Not covered (do these by hand): the Android SDK/emulator images, the LastWave AppImage
 (`~/Applications/LastWave`), browser profiles and app logins.
+
+## How the repo is laid out
+
+Each folder mirrors where its files end up, so you can tell from the path what a file is for.
+
+```
+quickshell/    the shell: bar, drawers, lock screen, settings app        → ~/.config/quickshell
+hypr/          Hyprland (Lua config)                                      → ~/.config/hypr
+greeter/       the login screen (greetd) and its installer, install.sh
+theming/       atelier-theme, the theme engine, and its palettes          → ~/.local/bin/atelier-theme
+config/        app configs, one folder per app                            → ~/.config/<name>
+local/         bin/ and share/ (launchers, Dolphin menu)                  → ~/.local/<path>
+system/        etc/ (→ /etc), nvidia/, boot/grub, boot/refind             installed with sudo
+setup/         what the installer reads: packages/, seed/ (copied once),
+               the GTK themes tarball, VS Code extensions
+docs/          screenshots and the preview page
+install.sh     sets all of it up
+```
 
 ## What gets linked
 
@@ -84,13 +102,11 @@ Not covered (do these by hand): the Android SDK/emulator images, the LastWave Ap
 |---|---|
 | `quickshell/` | `~/.config/quickshell` |
 | `hypr/` | `~/.config/hypr` |
-| `kitty/`, `ghostty/`, `zed/`, `zellij/`, `fastfetch/`, `qt5ct/`, `qt6ct/`, `Kvantum/`, `gtk-3.0/`, `gtk-4.0/`, `btop/`, `cava/`, `swappy/`, `zathura/`, `environment.d/` | `~/.config/<same>` |
-| `vesktop/settings/` | `~/.config/vesktop/settings` (Vencord plugins, quick CSS) |
-| `nvim/` (NamiConfig) | `~/.config/nvim` |
-| `config-scripts/` | `~/.config/scripts` |
-| `starship/starship.toml` | `~/.config/starship.toml` |
-| `zsh/.zshrc`, `zsh/` | `~/.zshrc`, `~/.config/zsh` |
-| `theming/atelier-theme`, `bin/prime-run`, `bin/audiotube`, `config-scripts/adguard-dns.sh` | `~/.local/bin/<name>` |
+| `config/<name>` (kitty, ghostty, nvim, zed, zellij, fastfetch, qt5ct, qt6ct, Kvantum, gtk-3.0, gtk-4.0, btop, cava, swappy, zathura, environment.d, zsh, scripts, starship.toml) | `~/.config/<name>` |
+| `config/vesktop/settings/` | `~/.config/vesktop/settings` (Vencord plugins, quick CSS) |
+| `config/zsh/.zshrc` | `~/.zshrc` |
+| `theming/atelier-theme`, `local/bin/prime-run`, `local/bin/audiotube`, `config/scripts/adguard-dns.sh` | `~/.local/bin/<name>` |
+| `local/share/kio/servicemenus/atelier-airdrop.desktop` | Dolphin's "Send with AirDrop" menu |
 
 ## Login screen (Quickshell instead of SDDM)
 
@@ -100,12 +116,12 @@ Settings → Lock screen uses, with the same options), on your wallpaper and in 
 pill in the top-left corner picks the person (F1) and the desktop session (F2).
 
 ```bash
-./install-greeter.sh --demo             # preview it fullscreen (password: demo, Esc closes), changes nothing
-sudo ./install-greeter.sh               # install greetd + cage + greeter files (login manager unchanged)
-sudo ./install-greeter.sh --enable      # switch the login manager from SDDM to greetd
-sudo ./install-greeter.sh --refresh     # update the installed greeter after pulling changes
-sudo ./install-greeter.sh --quiet-boot  # hide kernel/systemd text at boot (edits /etc/kernel/cmdline)
-sudo ./install-greeter.sh --uninstall   # switch back to SDDM and remove the greeter
+greeter/install.sh --demo              # preview it fullscreen (password: demo, Esc closes), changes nothing
+sudo greeter/install.sh               # install greetd + cage + greeter files (login manager unchanged)
+sudo greeter/install.sh --enable      # switch the login manager from SDDM to greetd
+sudo greeter/install.sh --refresh     # update the installed greeter after pulling changes
+sudo greeter/install.sh --quiet-boot  # hide kernel/systemd text at boot (edits /etc/kernel/cmdline)
+sudo greeter/install.sh --uninstall   # switch back to SDDM and remove the greeter
 ```
 
 **Settings → Login screen** controls it after installing: *Follow your look* copies your colours,
@@ -126,9 +142,9 @@ The UI keeps the same look; the work behind it changes. Switch in the control ce
 
 | Mode | Key | What it does |
 |---|---|---|
-| **Normal** | | Your own look and settings. |
-| **Programming** | `Super+Shift+D` | Opaque windows (crisp text, no blur work behind them), 1-pass blur, faster window animations, no dimming, performance power profile (balanced on battery), screen kept awake. Remembered across logins. |
-| **Game** | `Super+Shift+G` | No blur / shadows / animations, opaque windows and shell glass, tearing allowed, performance power profile, Do Not Disturb, screen kept awake, desktop widgets not drawn. Not remembered across logins. |
+| **Normal** | | Your own look and settings. Windows glide in on a soft spring; drawers open with one gentle overshoot. |
+| **Programming** | `Super+Shift+D` | Opaque windows (crisp text, no blur work behind them), 1-pass blur, crisp low-travel animations (shorter, barely any scale or slide, no overshoot, in windows and the shell alike), no dimming, performance power profile (balanced on battery), screen kept awake. Remembered across logins. |
+| **Game** | `Super+Shift+G` | No blur / shadows / animations (or, if you keep them, fades only: nothing moves over the game), quick shell drawers, opaque windows and shell glass, tearing allowed, performance power profile, Do Not Disturb, screen kept awake, desktop widgets not drawn. Not remembered across logins. |
 
 **Game library** (`Super+G`): a drawer from the bottom edge, styled like the rest of the shell, listing every installed game:
 Steam (all libraries, including `/mnt/games`), Heroic (Epic, GOG, sideloaded), Lutris, `.desktop`
@@ -197,6 +213,6 @@ From scripts: `qs ipc call profiles list|save <name>|apply <name>|active`, and
 ## Notes
 - **Icons:** [Colloid](https://github.com/vinceliuice/Colloid-icon-theme) everywhere (GTK, Qt/qt6ct, KDE, the shell). `install.sh` fetches the variants your themes use, and `atelier-theme apply <id>` switches to the matching one (e.g. Catppuccin → `Colloid-Purple-Catppuccin-Dark`).
 - **Wallpapers** live in `hypr/wall/` and are git-ignored (large). Drop your own images there.
-- Machine-specific state (`~/.config/atelier/state.json`, etc.) is seeded from `atelier/` but never overwritten.
+- Machine-specific state (`~/.config/atelier/state.json`, etc.) is seeded from `setup/seed/config/atelier/` but never overwritten.
 - `~/.local/bin` must be on your `PATH` for `atelier-theme`.
 - Qt theming plugin: run `theming/build-qt6ct.sh` once if you want themed Qt apps.

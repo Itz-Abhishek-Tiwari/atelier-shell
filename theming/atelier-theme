@@ -227,6 +227,9 @@ return {{
     -- plain, tight dark shadow (no coloured glow)
     shadow            = 0x55{hex6(c['crust'])},
     shadow_inactive   = 0x33{hex6(c['crust'])},
+    -- window title bars (Traditional layout, conf/traditional.lua): the theme's surface and ink
+    titlebar = {{ bg = "{a(c['base'], 'ff')}", text = "{a(c['subtext1'], 'ff')}", inactive = "{a(c['surface2'], 'ff')}",
+                 close = "{a(c['red'], 'ff')}", min = "{a(c['yellow'], 'ff')}", max = "{a(c['green'], 'ff')}" }},
     cursor            = "{cursor_theme(t)}",
     cursor_size       = {CURSOR_SIZE},
 }}
@@ -238,7 +241,8 @@ return {{
         'general = { col = { active_border = { colors = t.active_border, angle = 45 }, inactive_border = t.inactive_border } }, '
         'decoration = { shadow = { color = t.shadow, color_inactive = t.shadow_inactive } }, '
         'group = { col = { border_active = { colors = t.group_active, angle = 45 }, border_inactive = t.group_inactive }, '
-        'groupbar = { col = { active = t.groupbar_active, inactive = t.groupbar_inactive }, text_color = t.groupbar_text } } })')
+        'groupbar = { col = { active = t.groupbar_active, inactive = t.groupbar_inactive }, text_color = t.groupbar_text } } }); '
+        'require("conf.lib").theme = t; if atelier_trad and atelier_trad.on then hl.exec_cmd("hyprctl reload") end')   # title-bar buttons take colours only when created (config load)
 
 
 def term_colors(t, c):

@@ -46,6 +46,10 @@ Item {
           keys: "lock screen themes styles notifications privacy" },
         { id: "login",         group: "Personalise", icon: "󰍂", label: "Login screen",      sub: "Matches your lock screen; sync and boot options",
           keys: "login greeter greetd sddm boot quiet sync" },
+        { id: "atelier",       group: "Layouts",     icon: "󰕰", label: "Atelier",           sub: "Tiling windows, bar on the side",
+          keys: "atelier layout tiling tile dwindle master scrolling monocle split bar position file manager dolphin" },
+        { id: "classic",       group: "Layouts",     icon: "󰖯", label: "Traditional",       sub: "Floating windows, menu bar and dock",
+          keys: "traditional classic layout floating title bar buttons menu bar global menu dock shelf magnify trash downloads file manager nautilus" },
         { id: "windows",       group: "Workspace",   icon: "󰖲", label: "Windows",           sub: "Tiling, gaps, corners and animations",
           keys: "windows tiling layout dwindle master scrolling monocle gaps rounding corners animations hyprland" },
         { id: "modes",         group: "Workspace",   icon: "󰊗", label: "Modes",             sub: "Normal, Programming and Game mode",
@@ -670,7 +674,7 @@ Item {
                                     description: "Moves the whole bar. Pop-ups, drawers and window margins follow it."
                                     options: [{ id: "left", label: "Left" }, { id: "top", label: "Top" }, { id: "right", label: "Right" }, { id: "bottom", label: "Bottom" }]
                                     value: Settings.appearance.barPosition
-                                    onPicked: (id) => Settings.appearance.barPosition = id
+                                    onPicked: (id) => Settings.setLayoutBar(Settings.appearance.layout, id)   // remembered per layout
                                     preview: Component {
                                         Item {
                                             readonly property string e: parent.option.id
@@ -1082,66 +1086,6 @@ Item {
                             visible: win.page === "windows"
                             Layout.fillWidth: true
                             spacing: 20
-
-                            SettingCard {
-                                title: "Layout"; icon: "󰕰"; tint: Atelier.accent
-                                SettingTiles {
-                                    label: "Tiling layout"
-                                    description: win.layoutInfo[Settings.windows.layout] + "  ·  Super+Alt+Space cycles"
-                                    options: [{ id: "dwindle", label: "Dwindle" }, { id: "master", label: "Master" }, { id: "scrolling", label: "Scrolling" }, { id: "monocle", label: "Monocle" }]
-                                    value: Settings.windows.layout
-                                    onPicked: (id) => Settings.windows.layout = id
-                                    preview: Component {
-                                        Item {
-                                            id: lay
-                                            readonly property string l: parent.option.id
-                                            readonly property color c: parent.selected ? Atelier.accent : Atelier.overlay1
-                                            // window rects as fractions [x, y, w, h] of the tile
-                                            readonly property var rects: l === "dwindle" ? [[0, 0, .5, 1], [.5, 0, .5, .5], [.5, .5, .25, .5], [.75, .5, .25, .5]]
-                                                : l === "master" ? [[0, 0, .6, 1], [.6, 0, .4, .333], [.6, .333, .4, .333], [.6, .666, .4, .334]]
-                                                : l === "scrolling" ? [[-.25, 0, .45, 1], [.22, 0, .56, 1], [.8, 0, .45, 1]]
-                                                : [[0, 0, 1, 1]]
-                                            Repeater {
-                                                model: lay.rects
-                                                Rectangle {
-                                                    required property var modelData
-                                                    required property int index
-                                                    x: modelData[0] * lay.width + 2; y: modelData[1] * lay.height + 2
-                                                    width: modelData[2] * lay.width - 4; height: modelData[3] * lay.height - 4
-                                                    radius: 4
-                                                    color: Qt.alpha(lay.c, index === (lay.l === "scrolling" ? 1 : 0) ? 0.55 : 0.22)
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                // dwindle
-                                SettingSwitch { visible: Settings.windows.layout === "dwindle"; label: "Keep split direction"; description: "New windows keep the split you chose instead of re-guessing"
-                                    checked: Settings.windows.dwindlePreserveSplit; onToggled: (v) => Settings.windows.dwindlePreserveSplit = v }
-                                SettingSwitch { visible: Settings.windows.layout === "dwindle"; label: "Smart split"; description: "Split on the side of the window your cursor is nearest"
-                                    checked: Settings.windows.dwindleSmartSplit; onToggled: (v) => Settings.windows.dwindleSmartSplit = v }
-
-                                // master
-                                SettingChoice { visible: Settings.windows.layout === "master"; label: "Master position"; description: "Where the big window sits"
-                                    options: [{ id: "left", label: "Left" }, { id: "right", label: "Right" }, { id: "top", label: "Top" }, { id: "bottom", label: "Bottom" }, { id: "center", label: "Center" }]
-                                    value: Settings.windows.masterOrientation; onPicked: (id) => Settings.windows.masterOrientation = id }
-                                SettingSlider { visible: Settings.windows.layout === "master"; label: "Master size"; description: "Share of the screen the master takes"; from: 0.3; to: 0.8; step: 0.01; decimals: 2
-                                    value: Settings.windows.masterFactor; onMoved: (v) => Settings.windows.masterFactor = v }
-                                SettingSwitch { visible: Settings.windows.layout === "master"; label: "New windows on top"; description: "Otherwise they go to the end of the stack"
-                                    checked: Settings.windows.masterNewOnTop; onToggled: (v) => Settings.windows.masterNewOnTop = v }
-
-                                // scrolling
-                                SettingSlider { visible: Settings.windows.layout === "scrolling"; label: "Column width"; description: "Width of each column, as a share of the screen"; from: 0.2; to: 1; step: 0.05; decimals: 2
-                                    value: Settings.windows.scrollColumnWidth; onMoved: (v) => Settings.windows.scrollColumnWidth = v }
-
-                                Text {
-                                    visible: Settings.windows.layout === "monocle"
-                                    Layout.fillWidth: true
-                                    text: "Monocle has no options: every window is full-size and you switch between them."
-                                    font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext; wrapMode: Text.Wrap
-                                }
-                            }
 
                             SettingCard {
                                 title: "Spacing & corners"; icon: "󰖲"; tint: Atelier.sky
@@ -1756,7 +1700,7 @@ Item {
                                 }
                                 SettingRow {
                                     label: "Switch back to SDDM"
-                                    description: "Removes the Atelier greeter. If a login ever fails: Ctrl+Alt+F3, sign in, run install-greeter.sh --uninstall."
+                                    description: "Removes the Atelier greeter. If a login ever fails: Ctrl+Alt+F3, sign in, run greeter/install.sh --uninstall."
                                     Chip { visible: Greeter.active; icon: "󰜺"; text: "Uninstall"; tint: Atelier.red; interactive: true; implicitHeight: 30
                                         onClicked: Greeter.runInstaller("--uninstall") }
                                 }
@@ -2268,6 +2212,8 @@ Item {
                                     value: Settings.behavior.osdSeconds; onMoved: (v) => Settings.behavior.osdSeconds = v }
                             }
                         }
+                        LayoutPage { which: "atelier"; visible: win.page === "atelier" }
+                        LayoutPage { which: "classic"; visible: win.page === "classic" }
                         InputPage { visible: win.page === "input" }
                         SoundPage { visible: win.page === "sound" }
                         ColumnLayout {

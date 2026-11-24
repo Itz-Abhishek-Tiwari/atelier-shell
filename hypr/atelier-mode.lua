@@ -4,7 +4,7 @@
 --
 --   normal  your own look from Settings (hypr/atelier-settings.lua)
 --   dev     programming: opaque windows (crisp text, no blur work behind them), 1-pass blur,
---           faster window animations, no dimming
+--           shorter, low-travel window animations (M.motion.dev), no dimming
 --   game    maximum performance: no blur, no shadows, no animations, opaque windows,
 --           tearing allowed for fullscreen games
 --
@@ -47,6 +47,8 @@ M.defaults = {
         },
     },
     mouse_curve = true,          -- macOS-style acceleration curve on the 2.4 GHz mouse
+    shell_layout = "atelier",    -- Settings → Bar → Layout: "classic" = Traditional (conf/traditional.lua)
+    titlebar_buttons = "right",  -- Traditional title bars: left | right
     -- Settings → Keyboard & mouse → Touchpad gestures (registered in conf/input.lua)
     gestures = {
         workspace = true, workspace_fingers = 3,   -- swipe sideways: previous / next workspace
@@ -91,33 +93,89 @@ function M.saved_mode()
     return "normal"
 end
 
--- The one animation set: smooth near-critically-damped springs for windows, long ease-out
--- beziers for slides, quiet ease-in for things leaving. Curves and springs are defined in
--- conf/animations.lua. `k` scales every duration: Hyprland "speed" is in 100 ms units, so a
--- smaller number is faster.
+-- Motion, one profile per mode. Curves and springs are defined in conf/animations.lua.
+-- Each leaf is { speed, curve, style }; Hyprland "speed" is in 100 ms units (smaller = faster),
+-- `false` turns that leaf off. Springs (glide, swift) are near-critically damped: no wobble.
+--
+--   normal  glide: windows grow in on a soft spring, workspaces slide with a long ease-out
+--           tail, things leave quickly and quietly
+--   dev     crisp: the same timing scaled by Settings → Modes → "Animation length", but with
+--           less travel (windows barely scale, workspaces slide 5 %) and no soft tails, so
+--           motion never pulls your eye off the code
+--   game    still: only used when Game mode keeps animations on. Fades only, nothing moves or
+--           scales (a moving window makes the compositor redraw the whole game every frame)
 local springs = { glide = true, swift = true }
-function M.animations(k)
-    local function a(leaf, speed, curve, style)
-        local spec = { leaf = leaf, enabled = true, speed = speed * k, style = style }
-        if springs[curve] then spec.spring = curve else spec.bezier = curve end
-        hl.animation(spec)
+M.motion = {
+    normal = {
+        windowsIn        = { 4.2, "glide",        "popin 92%" },
+        windowsOut       = { 1.8, "easeInSoft",   "popin 94%" },
+        windowsMove      = { 3.8, "swift" },
+        fadeIn           = { 2.2, "almostLinear" },
+        fadeOut          = { 1.6, "almostLinear" },
+        fadeSwitch       = { 3.0, "quick" },
+        fadeShadow       = { 3.0, "quick" },
+        fadeDim          = { 3.5, "almostLinear" },
+        border           = { 4.0, "easeOutQuint" },
+        layersIn         = { 3.2, "easeOutQuint", "fade" },
+        layersOut        = { 1.6, "easeInSoft",   "fade" },
+        fadeLayersIn     = { 2.0, "almostLinear" },
+        fadeLayersOut    = { 1.4, "almostLinear" },
+        workspaces       = { 4.2, "easeOutExpo",  "slidefade 12%" },
+        specialWorkspace = { 4.0, "easeOutExpo",  "slidefadevert 12%" },
+        zoomFactor       = { 5.0, "easeOutQuint" },
+    },
+    dev = {
+        windowsIn        = { 3.0, "swift",        "popin 97%" },
+        windowsOut       = { 1.4, "easeInSoft",   "popin 98%" },
+        windowsMove      = { 3.2, "swift" },
+        fadeIn           = { 1.8, "almostLinear" },
+        fadeOut          = { 1.2, "almostLinear" },
+        fadeSwitch       = { 2.2, "quick" },
+        fadeShadow       = { 2.2, "quick" },
+        fadeDim          = { 2.5, "almostLinear" },
+        border           = { 2.5, "quick" },
+        layersIn         = { 2.4, "easeOutQuint", "fade" },
+        layersOut        = { 1.2, "easeInSoft",   "fade" },
+        fadeLayersIn     = { 1.6, "almostLinear" },
+        fadeLayersOut    = { 1.0, "almostLinear" },
+        workspaces       = { 3.4, "easeOutQuint", "slidefade 5%" },
+        specialWorkspace = { 3.2, "easeOutQuint", "slidefadevert 5%" },
+        zoomFactor       = { 3.0, "easeOutQuint" },
+    },
+    game = {
+        windowsIn        = { 1.6, "almostLinear", "popin 100%" },
+        windowsOut       = { 1.0, "almostLinear", "popin 100%" },
+        windowsMove      = false,
+        fadeIn           = { 1.6, "almostLinear" },
+        fadeOut          = { 1.0, "almostLinear" },
+        fadeSwitch       = false,
+        fadeShadow       = false,
+        fadeDim          = false,
+        border           = false,
+        layersIn         = { 1.4, "almostLinear", "fade" },
+        layersOut        = { 1.0, "almostLinear", "fade" },
+        fadeLayersIn     = { 1.4, "almostLinear" },
+        fadeLayersOut    = { 1.0, "almostLinear" },
+        workspaces       = { 1.6, "almostLinear", "fade" },
+        specialWorkspace = { 1.6, "almostLinear", "fade" },
+        zoomFactor       = false,
+    },
+}
+
+-- Apply a mode's motion profile; `k` scales every duration (Programming mode's slider).
+function M.animations(mode, k)
+    if type(mode) == "number" then mode, k = "normal", mode end   -- old call style: M.animations(k)
+    local set = M.motion[mode] or M.motion.normal
+    k = k or 1
+    for leaf, a in pairs(set) do
+        if a == false then
+            hl.animation({ leaf = leaf, enabled = false })
+        else
+            local spec = { leaf = leaf, enabled = true, speed = a[1] * k, style = a[3] }
+            if springs[a[2]] then spec.spring = a[2] else spec.bezier = a[2] end
+            hl.animation(spec)
+        end
     end
-    a("windowsIn",        4.2, "glide",        "popin 92%")
-    a("windowsOut",       1.8, "easeInSoft",   "popin 94%")
-    a("windowsMove",      3.8, "swift")
-    a("fadeIn",           2.2, "almostLinear")
-    a("fadeOut",          1.6, "almostLinear")
-    a("fadeSwitch",       3.0, "quick")
-    a("fadeShadow",       3.0, "quick")
-    a("fadeDim",          3.5, "almostLinear")
-    a("border",           4.0, "easeOutQuint")
-    a("layersIn",         3.2, "easeOutQuint", "fade")
-    a("layersOut",        1.6, "easeInSoft",   "fade")
-    a("fadeLayersIn",     2.0, "almostLinear")
-    a("fadeLayersOut",    1.4, "almostLinear")
-    a("workspaces",       4.2, "easeOutExpo",  "slidefade 12%")
-    a("specialWorkspace", 4.0, "easeOutExpo",  "slidefadevert 12%")
-    a("zoomFactor",       5.0, "easeOutQuint")
     hl.animation({ leaf = "borderangle", enabled = false })   -- no looping gradient
 end
 
@@ -147,7 +205,7 @@ function M.apply(mode)
             },
             animations = { enabled = o.animations and t.animations },
         })
-        if o.animations and t.animations then M.animations(mode == "dev" and (o.anim_speed or 0.6) or 1) end
+        if o.animations and t.animations then M.animations(mode, mode == "dev" and (o.anim_speed or 0.6) or 1) end
     else
         hl.config({
             general    = { allow_tearing = false },
@@ -157,7 +215,7 @@ function M.apply(mode)
             },
             animations = { enabled = t.animations },
         })
-        M.animations(1)
+        M.animations("normal", 1)
     end
 end
 

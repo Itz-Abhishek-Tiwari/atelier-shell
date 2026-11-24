@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.Mpris
+import qs.components
 import qs.config
 import qs.modules.background
 import qs.modules.bar
@@ -45,12 +46,24 @@ ShellRoot {
         // Never go through closeAllOverlays() here: it clears hoverMode for a moment, the host's
         // bar strip loses the pointer, and the leave timer closes the new drawer (close → reopen).
         openOverlay(name, centerY);
-        if (prev === "wifi") wifiOverlay.hideNow();
-        else if (prev === "bluetooth") bluetoothOverlay.hideNow();
-        else if (prev === "calendar") calendarOverlay.hideNow();
-        else if (prev === "media") mediaOverlay.hideNow();
+        if (prev !== "" && lazyDrawers[prev]) lazyDrawers[prev].hideNow();
     }
     property string edgeHover: ""         // "media" while the pointer is on the top-edge sensor
+
+    // every lazy drawer by name (the `drawers` IPC target)
+    readonly property var lazyDrawers: ({ overview: overviewOverlay, games: gamesOverlay, theme: themeOverlay,
+        controlcenter: controlCenter, wifi: wifiOverlay, bluetooth: bluetoothOverlay, power: powerOverlay,
+        launcher: launcherOverlay, apps: appsOverlay, camera: cameraOverlay, clipboard: clipboardOverlay,
+        media: mediaOverlay, keybinds: keybindsOverlay, sysmon: sysMonOverlay, timers: timerOverlay,
+        colors: colorPickerOverlay, switcher: windowSwitcher, calendar: calendarOverlay,
+        wallpaper: wallpaperOverlay, emoji: emojiOverlay, settings: settingsApp })
+
+    // Drawers are built on demand (components/LazyDrawer.qml). The bar's hover icons prefetch
+    // theirs as soon as the pointer reaches them, so the hover-open itself never waits.
+    function prefetch(name) {
+        const d = lazyDrawers[name];
+        if (d) d.prefetch();
+    }
 
     function toggleOverlay(name, centerY) {
         // the on-screen keyboard is independent: it stays open while other overlays come and go
@@ -81,7 +94,7 @@ ShellRoot {
         if ((name === "emoji" || name === "gifs") && (activeOverlay === "emoji" || activeOverlay === "gifs")
                 && activeOverlay !== name) {
             activeOverlay = name;
-            emojiOverlay.setTab(name);
+            emojiOverlay.call("setTab", name);
             return;
         }
         // clicking the icon of a hover-opened drawer pins it (instead of closing it)
@@ -97,27 +110,11 @@ ShellRoot {
     function openOverlay(name, centerY) {
         shellRoot.lastCenterY = centerY || 0;
         activeOverlay = name;
-        if (name === "wifi") wifiOverlay.open(shellRoot.lastCenterY);
-        else if (name === "bluetooth") bluetoothOverlay.open(shellRoot.lastCenterY);
-        else if (name === "power") powerOverlay.open();
-        else if (name === "launcher") launcherOverlay.open();
-        else if (name === "apps") appsOverlay.open();
-        else if (name === "calendar") calendarOverlay.open(shellRoot.lastCenterY);
-        else if (name === "wallpaper") wallpaperOverlay.open();
-        else if (name === "clipboard") clipboardOverlay.open();
-        else if (name === "camera") cameraOverlay.open();
-        else if (name === "controlcenter") controlCenter.open();
-        else if (name === "theme") themeOverlay.open();
-        else if (name === "overview") overviewOverlay.open();
-        else if (name === "games") gamesOverlay.open();
-        else if (name === "media") mediaOverlay.open();
-        else if (name === "keybinds") keybindsOverlay.open();
-        else if (name === "settings") settingsApp.open();
-        else if (name === "emoji" || name === "gifs") emojiOverlay.open(name);
-        else if (name === "sysmon") sysMonOverlay.open();
-        else if (name === "timers") timerOverlay.open();
-        else if (name === "colors") colorPickerOverlay.open();
-        else if (name === "switcher") windowSwitcher.open();
+        if (name === "emoji" || name === "gifs") emojiOverlay.open(name);        // two tabs of one drawer
+        else if (name === "wifi" || name === "bluetooth" || name === "calendar")  // placed by their bar icon
+            lazyDrawers[name].open(shellRoot.lastCenterY);
+        else if (lazyDrawers[name]) lazyDrawers[name].open();
+        else console.warn("openOverlay: no drawer", name);
         // keep the keyboard stacked above whatever just opened (it types into overlays too)
         if (osk.shown) oskRaise.restart();
     }
@@ -125,27 +122,7 @@ ShellRoot {
     function closeAllOverlays() {
         activeOverlay = "";
         hoverMode = false;
-        wifiOverlay.close();
-        bluetoothOverlay.close();
-        powerOverlay.close();
-        launcherOverlay.close();
-        appsOverlay.close();
-        calendarOverlay.close();
-        wallpaperOverlay.close();
-        clipboardOverlay.close();
-        cameraOverlay.close();
-        controlCenter.close();
-        themeOverlay.close();
-        overviewOverlay.close();
-        gamesOverlay.close();
-        mediaOverlay.close();
-        keybindsOverlay.close();
-        settingsApp.close();
-        emojiOverlay.close();
-        sysMonOverlay.close();
-        timerOverlay.close();
-        colorPickerOverlay.close();
-        windowSwitcher.close();
+        for (const k in lazyDrawers) lazyDrawers[k].close();   // only built drawers do anything
     }
 
     // 0. Wallpaper, drawn by the shell (crossfades on change; replaces hyprpaper)
@@ -168,9 +145,11 @@ ShellRoot {
             // music drawer from the top edge: hover opens it (only while a player exists), click pins/toggles
             onTopHovered: if (Mpris.players.values.length > 0) shellRoot.hoverOverlay("media")
             onTopClicked: shellRoot.toggleOverlay("media")
+            onOpenApps: shellRoot.toggleOverlay("apps")
             onTopHoverChanged: shellRoot.edgeHover = topHover ? "media" : ""
 
             Waybar {
+                id: waybar
                 activeOverlay: shellRoot.activeOverlay
                 onOpenWifi: (centerY) => shellRoot.toggleOverlay("wifi", centerY)
                 onOpenBluetooth: (centerY) => shellRoot.toggleOverlay("bluetooth", centerY)
@@ -180,10 +159,14 @@ ShellRoot {
                 onOpenWallpaper: shellRoot.toggleOverlay("wallpaper")
                 onOpenControlCenter: shellRoot.toggleOverlay("controlcenter")
                 onHoverOpen: (name, centerY) => { shellRoot.barZones = zones(); shellRoot.hoverOverlay(name, centerY); }
-                onHoverTargetChanged: shellRoot.barHover = hoverTarget
+                onHoverTargetChanged: {
+                    shellRoot.barHover = hoverTarget;
+                    shellRoot.prefetch(hoverTarget);   // build its drawer in the background before the hover opens it
+                }
             }
         }
     }
+
 
 
     // On-screen keyboard (Super+/): types into the focused window via wtype, never takes focus itself
@@ -218,22 +201,18 @@ ShellRoot {
     DrawerHost {
         id: drawerHost
         activeOverlay: shellRoot.activeOverlay
-        drawerVisible: wifiOverlay.visible || bluetoothOverlay.visible || powerOverlay.visible
-                       || launcherOverlay.visible || calendarOverlay.visible || wallpaperOverlay.visible
-                       || clipboardOverlay.visible || cameraOverlay.visible || controlCenter.visible || themeOverlay.visible
-                       || overviewOverlay.visible || gamesOverlay.visible || mediaOverlay.visible
-                       || keybindsOverlay.visible || appsOverlay.visible || settingsApp.visible || emojiOverlay.visible
-                       || sysMonOverlay.visible || timerOverlay.visible || colorPickerOverlay.visible || windowSwitcher.visible
+        drawerVisible: {
+            for (const k in shellRoot.lazyDrawers) if (shellRoot.lazyDrawers[k].shown) return true;
+            return false;
+        }
         popupVisible: notificationPopups.visible || osd.visible || toastPopup.visible || airDropPopup.visible
         osdItem: osd.visible ? osd.inputItem : null
         notifItem: notificationPopups.visible ? notificationPopups.inputItem : null
         airdropItem: airDropPopup.visible ? airDropPopup.inputItem : null
         hoverMode: shellRoot.hoverMode
         barHover: shellRoot.barHover
-        hoverBody: shellRoot.activeOverlay === "wifi" ? wifiOverlay.bodyItem
-                 : shellRoot.activeOverlay === "bluetooth" ? bluetoothOverlay.bodyItem
-                 : shellRoot.activeOverlay === "calendar" ? calendarOverlay.bodyItem
-                 : shellRoot.activeOverlay === "media" ? mediaOverlay.bodyItem : null
+        // the hover drawers (wifi, bluetooth, calendar, media) have a body; the rest give null
+        hoverBody: shellRoot.lazyDrawers[shellRoot.activeOverlay] ? shellRoot.lazyDrawers[shellRoot.activeOverlay].bodyItem : null
         barZones: shellRoot.barZones
         edgeHover: shellRoot.edgeHover
         onHoverLeft: shellRoot.closeAllOverlays()
@@ -241,159 +220,249 @@ ShellRoot {
         onHoverPin: shellRoot.hoverMode = false
 
         // Desktop overview (Super+Tab)
-        OverviewOverlay {
+        LazyDrawer {
             id: overviewOverlay
-            onClosedSignal: {
-                if (shellRoot.activeOverlay === "overview") shellRoot.activeOverlay = "";
+            sourceComponent: Component {
+                OverviewOverlay {
+                    onClosedSignal: {
+                        if (shellRoot.activeOverlay === "overview") shellRoot.activeOverlay = "";
+                    }
+                }
             }
         }
 
         // Game library, bottom drawer (Super+G)
-        GamesOverlay {
+        LazyDrawer {
             id: gamesOverlay
-            onClosedSignal: {
-                if (shellRoot.activeOverlay === "games") shellRoot.activeOverlay = "";
+            sourceComponent: Component {
+                GamesOverlay {
+                    onClosedSignal: {
+                        if (shellRoot.activeOverlay === "games") shellRoot.activeOverlay = "";
+                    }
+                }
             }
         }
 
         // Theme picker (system-wide themes via `atelier-theme`)
-        ThemeOverlay {
+        LazyDrawer {
             id: themeOverlay
-            onToastRequested: (msg, icon, clr) => toastPopup.showToast(msg, icon, clr)
-            onClosedSignal: {
-                if (shellRoot.activeOverlay === "theme") shellRoot.activeOverlay = "";
+            sourceComponent: Component {
+                ThemeOverlay {
+                    onToastRequested: (msg, icon, clr) => toastPopup.showToast(msg, icon, clr)
+                    onClosedSignal: {
+                        if (shellRoot.activeOverlay === "theme") shellRoot.activeOverlay = "";
+                    }
+                }
             }
         }
         // Control center: toggles, sliders, notification history (music lives in the top-edge drawer)
-        ControlCenter {
+        LazyDrawer {
             id: controlCenter
-            onRequestOverlay: (name) => shellRoot.toggleOverlay(name)
-            onClosedSignal: {
-                if (shellRoot.activeOverlay === "controlcenter") shellRoot.activeOverlay = "";
+            persistent: true
+            sourceComponent: Component {
+                ControlCenter {
+                    onRequestOverlay: (name) => shellRoot.toggleOverlay(name)
+                    onClosedSignal: {
+                        if (shellRoot.activeOverlay === "controlcenter") shellRoot.activeOverlay = "";
+                    }
+                }
             }
         }
         // 2. Native Quickshell Overlays (Mutually Exclusive Slide-Out Drawers)
-        WifiOverlay {
+        LazyDrawer {
             id: wifiOverlay
-            isLight: shellRoot.isLight
-            onToastRequested: (msg, icon, clr) => toastPopup.showToast(msg, icon, clr)
-            onClosedSignal: {
-                if (shellRoot.activeOverlay === "wifi") shellRoot.activeOverlay = "";
+            sourceComponent: Component {
+                WifiOverlay {
+                    isLight: shellRoot.isLight
+                    onToastRequested: (msg, icon, clr) => toastPopup.showToast(msg, icon, clr)
+                    onClosedSignal: {
+                        if (shellRoot.activeOverlay === "wifi") shellRoot.activeOverlay = "";
+                    }
+                }
             }
         }
-        BluetoothOverlay {
+        LazyDrawer {
             id: bluetoothOverlay
-            isLight: shellRoot.isLight
-            onToastRequested: (msg, icon, clr) => toastPopup.showToast(msg, icon, clr)
-            onClosedSignal: {
-                if (shellRoot.activeOverlay === "bluetooth") shellRoot.activeOverlay = "";
+            sourceComponent: Component {
+                BluetoothOverlay {
+                    isLight: shellRoot.isLight
+                    onToastRequested: (msg, icon, clr) => toastPopup.showToast(msg, icon, clr)
+                    onClosedSignal: {
+                        if (shellRoot.activeOverlay === "bluetooth") shellRoot.activeOverlay = "";
+                    }
+                }
             }
         }
-        PowerOverlay {
+        LazyDrawer {
             id: powerOverlay
-            isLight: shellRoot.isLight
-            onClosedSignal: {
-                if (shellRoot.activeOverlay === "power") shellRoot.activeOverlay = "";
+            sourceComponent: Component {
+                PowerOverlay {
+                    isLight: shellRoot.isLight
+                    onClosedSignal: {
+                        if (shellRoot.activeOverlay === "power") shellRoot.activeOverlay = "";
+                    }
+                }
             }
         }
-        LauncherOverlay {
+        LazyDrawer {
             id: launcherOverlay
-            isLight: shellRoot.isLight
-            onRequestOverlay: (name) => shellRoot.toggleOverlay(name)
-            onToastRequested: (msg, icon, clr) => toastPopup.showToast(msg, icon, clr)
-            onClosedSignal: {
-                if (shellRoot.activeOverlay === "launcher") shellRoot.activeOverlay = "";
+            persistent: true
+            sourceComponent: Component {
+                LauncherOverlay {
+                    isLight: shellRoot.isLight
+                    onRequestOverlay: (name) => shellRoot.toggleOverlay(name)
+                    onToastRequested: (msg, icon, clr) => toastPopup.showToast(msg, icon, clr)
+                    onClosedSignal: {
+                        if (shellRoot.activeOverlay === "launcher") shellRoot.activeOverlay = "";
+                    }
+                }
             }
         }
         // App grid (bar logo, Super+D)
-        AppsOverlay {
+        LazyDrawer {
             id: appsOverlay
-            isLight: shellRoot.isLight
-            onClosedSignal: {
-                if (shellRoot.activeOverlay === "apps") shellRoot.activeOverlay = "";
+            persistent: true
+            sourceComponent: Component {
+                AppsOverlay {
+                    isLight: shellRoot.isLight
+                    onClosedSignal: {
+                        if (shellRoot.activeOverlay === "apps") shellRoot.activeOverlay = "";
+                    }
+                }
             }
         }
         // Camera (Super+Shift+C): top drawer under the webcam; camera only on while it's open
-        CameraOverlay {
+        LazyDrawer {
             id: cameraOverlay
-            isLight: shellRoot.isLight
-            onClosedSignal: { if (shellRoot.activeOverlay === "camera") shellRoot.activeOverlay = ""; }
+            sourceComponent: Component {
+                CameraOverlay {
+                    isLight: shellRoot.isLight
+                    onClosedSignal: { if (shellRoot.activeOverlay === "camera") shellRoot.activeOverlay = ""; }
+                }
+            }
         }
-        ClipboardOverlay {
+        LazyDrawer {
             id: clipboardOverlay
-            isLight: shellRoot.isLight
-            onItemCopied: (msg) => toastPopup.showToast(msg, "󰅌", Atelier.blue)
-            onClosedSignal: {
-                if (shellRoot.activeOverlay === "clipboard") shellRoot.activeOverlay = "";
+            sourceComponent: Component {
+                ClipboardOverlay {
+                    isLight: shellRoot.isLight
+                    onItemCopied: (msg) => toastPopup.showToast(msg, "󰅌", Atelier.blue)
+                    onClosedSignal: {
+                        if (shellRoot.activeOverlay === "clipboard") shellRoot.activeOverlay = "";
+                    }
+                }
             }
         }
         // Music drawer (top edge: hover the middle of the top edge, Super+M)
-        MediaOverlay {
+        LazyDrawer {
             id: mediaOverlay
-            isLight: shellRoot.isLight
-            onClosedSignal: {
-                if (shellRoot.activeOverlay === "media") shellRoot.activeOverlay = "";
+            persistent: true
+            hold: item !== null && item.sleepAt > 0   // its sleep timer keeps running
+            sourceComponent: Component {
+                MediaOverlay {
+                    isLight: shellRoot.isLight
+                    onClosedSignal: {
+                        if (shellRoot.activeOverlay === "media") shellRoot.activeOverlay = "";
+                    }
+                }
             }
         }
-        KeybindsOverlay {
+        LazyDrawer {
             id: keybindsOverlay
-            isLight: shellRoot.isLight
-            onClosedSignal: {
-                if (shellRoot.activeOverlay === "keybinds") shellRoot.activeOverlay = "";
+            sourceComponent: Component {
+                KeybindsOverlay {
+                    isLight: shellRoot.isLight
+                    onClosedSignal: {
+                        if (shellRoot.activeOverlay === "keybinds") shellRoot.activeOverlay = "";
+                    }
+                }
             }
         }
-        SysMonOverlay {
+        LazyDrawer {
             id: sysMonOverlay
-            isLight: shellRoot.isLight
-            onClosedSignal: { if (shellRoot.activeOverlay === "sysmon") shellRoot.activeOverlay = ""; }
-        }
-        TimerOverlay {
-            id: timerOverlay
-            isLight: shellRoot.isLight
-            onClosedSignal: { if (shellRoot.activeOverlay === "timers") shellRoot.activeOverlay = ""; }
-        }
-        ColorPickerOverlay {
-            id: colorPickerOverlay
-            isLight: shellRoot.isLight
-            onClosedSignal: { if (shellRoot.activeOverlay === "colors") shellRoot.activeOverlay = ""; }
-        }
-        WindowSwitcher {
-            id: windowSwitcher
-            isLight: shellRoot.isLight
-            onClosedSignal: { if (shellRoot.activeOverlay === "switcher") shellRoot.activeOverlay = ""; }
-        }
-        CalendarOverlay {
-            id: calendarOverlay
-            isLight: shellRoot.isLight
-            onClosedSignal: {
-                if (shellRoot.activeOverlay === "calendar") shellRoot.activeOverlay = "";
+            sourceComponent: Component {
+                SysMonOverlay {
+                    isLight: shellRoot.isLight
+                    onClosedSignal: { if (shellRoot.activeOverlay === "sysmon") shellRoot.activeOverlay = ""; }
+                }
             }
         }
-        WallpaperOverlay {
+        LazyDrawer {
+            id: timerOverlay
+            sourceComponent: Component {
+                TimerOverlay {
+                    isLight: shellRoot.isLight
+                    onClosedSignal: { if (shellRoot.activeOverlay === "timers") shellRoot.activeOverlay = ""; }
+                }
+            }
+        }
+        LazyDrawer {
+            id: colorPickerOverlay
+            sourceComponent: Component {
+                ColorPickerOverlay {
+                    isLight: shellRoot.isLight
+                    onClosedSignal: { if (shellRoot.activeOverlay === "colors") shellRoot.activeOverlay = ""; }
+                }
+            }
+        }
+        LazyDrawer {
+            id: windowSwitcher
+            persistent: true
+            sourceComponent: Component {
+                WindowSwitcher {
+                    isLight: shellRoot.isLight
+                    onClosedSignal: { if (shellRoot.activeOverlay === "switcher") shellRoot.activeOverlay = ""; }
+                }
+            }
+        }
+        LazyDrawer {
+            id: calendarOverlay
+            sourceComponent: Component {
+                CalendarOverlay {
+                    isLight: shellRoot.isLight
+                    onClosedSignal: {
+                        if (shellRoot.activeOverlay === "calendar") shellRoot.activeOverlay = "";
+                    }
+                }
+            }
+        }
+        LazyDrawer {
             id: wallpaperOverlay
-            isLight: shellRoot.isLight
-            onWallpaperApplied: (name) => toastPopup.showToast("Wallpaper: " + name, "󰸉", Atelier.accent)
-            onToastRequested: (msg, icon, clr) => toastPopup.showToast(msg, icon, clr)
-            onClosedSignal: {
-                if (shellRoot.activeOverlay === "wallpaper") shellRoot.activeOverlay = "";
+            sourceComponent: Component {
+                WallpaperOverlay {
+                    isLight: shellRoot.isLight
+                    onWallpaperApplied: (name) => toastPopup.showToast("Wallpaper: " + name, "󰸉", Atelier.accent)
+                    onToastRequested: (msg, icon, clr) => toastPopup.showToast(msg, icon, clr)
+                    onClosedSignal: {
+                        if (shellRoot.activeOverlay === "wallpaper") shellRoot.activeOverlay = "";
+                    }
+                }
             }
         }
         // Emoji picker + GIF finder (bottom edge; Super+; / Super+Shift+;)
-        EmojiOverlay {
+        LazyDrawer {
             id: emojiOverlay
-            isLight: shellRoot.isLight
-            onToastRequested: (msg, icon, clr) => toastPopup.showToast(msg, icon, clr)
-            onClosedSignal: {
-                if (shellRoot.activeOverlay === "emoji" || shellRoot.activeOverlay === "gifs") shellRoot.activeOverlay = "";
+            sourceComponent: Component {
+                EmojiOverlay {
+                    isLight: shellRoot.isLight
+                    onToastRequested: (msg, icon, clr) => toastPopup.showToast(msg, icon, clr)
+                    onClosedSignal: {
+                        if (shellRoot.activeOverlay === "emoji" || shellRoot.activeOverlay === "gifs") shellRoot.activeOverlay = "";
+                    }
+                }
             }
         }
         // Settings (right-edge drawer; edits settings.json live)
-        SettingsApp {
+        LazyDrawer {
             id: settingsApp
-            isLight: shellRoot.isLight
-            onRequestOverlay: (name) => shellRoot.toggleOverlay(name)
-            onClosedSignal: {
-                if (shellRoot.activeOverlay === "settings") shellRoot.activeOverlay = "";
+            sourceComponent: Component {
+                SettingsApp {
+                    isLight: shellRoot.isLight
+                    onRequestOverlay: (name) => shellRoot.toggleOverlay(name)
+                    onClosedSignal: {
+                        if (shellRoot.activeOverlay === "settings") shellRoot.activeOverlay = "";
+                    }
+                }
             }
         }
         // Notification pop-ups (the shell is the notification daemon — see Notifs.qml)
@@ -434,6 +503,21 @@ ShellRoot {
     // 3. IPC Handlers for External CLI & Keybindings (Routed Through Controller)
     // IPC handlers call toggleOverlay without centerY — defaults to 0 (overlays fall back to screen center)
     Scope {
+        // Lazy drawers (components/LazyDrawer.qml), for the perf-audit skill:
+        //   qs ipc call drawers status | warmAll | dropAll
+        IpcHandler {
+            target: "drawers"
+            function status(): string {
+                return Object.keys(shellRoot.lazyDrawers).map(k => k + (shellRoot.lazyDrawers[k].item ? (shellRoot.lazyDrawers[k].persistent ? " persistent" : " loaded") : " -")).join("\n");
+            }
+            function warmAll(): void { for (const k in shellRoot.lazyDrawers) shellRoot.lazyDrawers[k].prefetch(); }
+            function dropAll(): void {
+                for (const k in shellRoot.lazyDrawers) {
+                    const d = shellRoot.lazyDrawers[k];
+                    if (!d.shown && !d.hold) d.active = false;
+                }
+            }
+        }
         IpcHandler {
             target: "wifi"
             function toggle() { shellRoot.toggleOverlay("wifi"); }
@@ -459,7 +543,7 @@ ShellRoot {
             target: "launcher"
             function search(query: string): void {
                 if (shellRoot.activeOverlay !== "launcher") shellRoot.toggleOverlay("launcher");
-                launcherOverlay.openWith(query);
+                launcherOverlay.call("openWith", query);
             }
             function toggle() { shellRoot.toggleOverlay("launcher"); }
             function open() { if (shellRoot.activeOverlay !== "launcher") shellRoot.toggleOverlay("launcher"); }
@@ -492,7 +576,7 @@ ShellRoot {
             function close(): void { if (shellRoot.activeOverlay === "sysmon") shellRoot.closeAllOverlays(); }
             function tab(t: string): void {
                 if (shellRoot.activeOverlay !== "sysmon") shellRoot.toggleOverlay("sysmon");
-                sysMonOverlay.setTab(t);
+                sysMonOverlay.call("setTab", t);
             }
         }
         IpcHandler {
@@ -502,7 +586,7 @@ ShellRoot {
             function close(): void { if (shellRoot.activeOverlay === "timers") shellRoot.closeAllOverlays(); }
             function tab(t: string): void {
                 if (shellRoot.activeOverlay !== "timers") shellRoot.toggleOverlay("timers");
-                timerOverlay.setTab(t);
+                timerOverlay.call("setTab", t);
             }
             // qs ipc call timers start "10m tea"  → returns the new timer's id (-1 = not understood)
             function start(spec: string): int {
@@ -529,12 +613,12 @@ ShellRoot {
             target: "switcher"
             function _go(d: int): void {
                 if (shellRoot.activeOverlay !== "switcher") { shellRoot.closeAllOverlays(); shellRoot.activeOverlay = "switcher"; }
-                windowSwitcher.step(d);
+                windowSwitcher.call("step", d);
             }
             function next(): void { _go(1); }
             function prev(): void { _go(-1); }
-            function commit(): void { windowSwitcher.commit(); }
-            function cancel(): void { windowSwitcher.cancel(); }
+            function commit(): void { windowSwitcher.call("commit"); }
+            function cancel(): void { windowSwitcher.call("cancel"); }
         }
         IpcHandler {
             target: "calendar"
@@ -550,8 +634,8 @@ ShellRoot {
             function open(): void { if (shellRoot.activeOverlay !== "emoji") shellRoot.toggleOverlay("emoji"); }
             function close(): void { if (shellRoot.activeOverlay === "emoji" || shellRoot.activeOverlay === "gifs") shellRoot.closeAllOverlays(); }
             // `qs ipc call emoji search party` / `qs ipc call emoji searchGifs cat`
-            function search(q: string): void { if (shellRoot.activeOverlay !== "emoji") shellRoot.toggleOverlay("emoji"); emojiOverlay.openSearch("emoji", q); }
-            function searchGifs(q: string): void { if (shellRoot.activeOverlay !== "gifs") shellRoot.toggleOverlay("gifs"); emojiOverlay.openSearch("gifs", q); }
+            function search(q: string): void { if (shellRoot.activeOverlay !== "emoji") shellRoot.toggleOverlay("emoji"); emojiOverlay.call("openSearch", "emoji", q); }
+            function searchGifs(q: string): void { if (shellRoot.activeOverlay !== "gifs") shellRoot.toggleOverlay("gifs"); emojiOverlay.call("openSearch", "gifs", q); }
         }
 
         IpcHandler {
@@ -582,7 +666,7 @@ ShellRoot {
             function close(): void { if (shellRoot.activeOverlay === "games") shellRoot.closeAllOverlays(); }
             function search(q: string): void {
                 if (shellRoot.activeOverlay !== "games") shellRoot.toggleOverlay("games");
-                gamesOverlay.query = q;
+                gamesOverlay.set("query", q);
             }
         }
 
@@ -653,7 +737,7 @@ ShellRoot {
             function toggle(): void { shellRoot.toggleOverlay("camera"); }
             function open(): void  { if (shellRoot.activeOverlay !== "camera") shellRoot.toggleOverlay("camera"); }
             function close(): void { if (shellRoot.activeOverlay === "camera") shellRoot.closeAllOverlays(); }
-            function gallery(): void { open(); cameraOverlay.showGallery(); }
+            function gallery(): void { open(); cameraOverlay.call("showGallery"); }
         }
 
         IpcHandler {
@@ -687,7 +771,7 @@ ShellRoot {
             function open(): void { if (shellRoot.activeOverlay !== "media") shellRoot.toggleOverlay("media"); }
             function close(): void { if (shellRoot.activeOverlay === "media") shellRoot.closeAllOverlays(); }
             // open on a tab: lyrics | output | recent | timer
-            function tab(name: string): void { mediaOverlay.tab = name; if (shellRoot.activeOverlay !== "media") shellRoot.toggleOverlay("media"); }
+            function tab(name: string): void { mediaOverlay.set("tab", name); if (shellRoot.activeOverlay !== "media") shellRoot.toggleOverlay("media"); }
         }
 
         IpcHandler {
@@ -771,7 +855,7 @@ ShellRoot {
             function toggle(): void { shellRoot.toggleOverlay("theme"); }      // open/close the picker
             function mode(): void { SysState.toggleTheme(); }                  // light <-> dark
             function cycle(): void { SysState.toggleTheme(); }
-            function apply(id: string): void { Quickshell.execDetached([themeOverlay.cli, "apply", id]); }
+            function apply(id: string): void { Quickshell.execDetached([Quickshell.env("HOME") + "/.local/bin/atelier-theme", "apply", id]); }
             function current(): string { return Atelier.themeId; }
         }
 
