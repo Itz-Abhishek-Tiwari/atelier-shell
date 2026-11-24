@@ -12,9 +12,9 @@ return {
     dwindle_preserve_split = true, dwindle_smart_split = true,
     master_orientation = "left", master_mfact = 0.55, master_new_on_top = false,
     scroll_column_width = 0.50,
-    shell_layout = "classic", titlebar_buttons = "left",   -- conf/traditional.lua
+    shell_layout = "atelier", titlebar_buttons = "left",   -- conf/traditional.lua
     shell_glass = 0.91,   -- shell surface opacity: blur threshold in conf/rules.lua
-    reserved = { top = 32, right = 9, bottom = 52, left = 9 },   -- shell frame: conf/monitors.lua
+    reserved = { top = 9, right = 9, bottom = 9, left = 42 },   -- shell frame: conf/monitors.lua
     -- Settings → Modes (atelier-mode.lua)
     modes = {
         dev = { opaque = true, blur = "light", shadows = true, animations = true, dim = false, anim_speed = 0.60 },
