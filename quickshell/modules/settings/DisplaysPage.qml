@@ -279,24 +279,40 @@ ColumnLayout {
         Variants {
             model: Quickshell.screens
             PanelWindow {
+                id: idWin
                 required property var modelData
                 screen: modelData
-                anchors { top: true; left: true }
-                margins { top: 40; left: 40 }
-                implicitWidth: idText.implicitWidth + 56
-                implicitHeight: idText.implicitHeight + 36
+                // no anchors = centred on that display; Overlay so the open Settings drawer and
+                // the bar can't cover it
+                implicitWidth: idCol.implicitWidth + 72
+                implicitHeight: idCol.implicitHeight + 48
                 color: "transparent"
                 exclusionMode: ExclusionMode.Ignore
+                WlrLayershell.layer: WlrLayer.Overlay
+                WlrLayershell.namespace: "quickshell-identify"
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
                 Rectangle {
                     anchors.fill: parent
-                    radius: 20
+                    radius: 28
                     color: Atelier.accentFill
-                    Text {
-                        id: idText
+                    Column {
+                        id: idCol
                         anchors.centerIn: parent
-                        text: parent.parent.modelData.name
-                        font.family: Atelier.font; font.pixelSize: 40; font.bold: true
-                        color: Atelier.onFill
+                        spacing: 4
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: idWin.modelData.name
+                            font.family: Atelier.font; font.pixelSize: 44; font.bold: true
+                            color: Atelier.onFill
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: idWin.modelData.width + " × " + idWin.modelData.height
+                                // the model, unless it's only a raw panel code ("0xD1ED")
+                                + (idWin.modelData.model && !/^0x[0-9a-f]+$/i.test(idWin.modelData.model) ? "  ·  " + idWin.modelData.model : "")
+                            font.family: Atelier.fontUi; font.pixelSize: 15
+                            color: Qt.alpha(Atelier.onFill, 0.8)
+                        }
                     }
                 }
             }

@@ -125,7 +125,7 @@ Scope {
         Item {
             id: frameShadow
             anchors.fill: parent
-            visible: !Perf.lean             // no frame shadow in Game mode (Settings → Modes)
+            visible: !Perf.lean && Settings.appearance.shellShadow   // off in Game mode (Settings → Modes) or by choice (Appearance)
             layer.enabled: true
             layer.effect: MultiEffect {
                 maskEnabled: true

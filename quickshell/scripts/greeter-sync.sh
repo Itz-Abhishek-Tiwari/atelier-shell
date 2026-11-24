@@ -8,6 +8,8 @@
 #   colors.json     <- ~/.config/atelier/theme.json
 #   wallpaper.jpg   <- the current wallpaper, scaled to 1920px (skipped when unchanged)
 #   faces/$USER     <- ~/.face
+#   lock.json       <- your lock-screen options (the login screen uses the same style)
+#   depth.png/.json <- the Depth style's subject cut-out for this wallpaper (when Depth is in use)
 #   fonts/          <- SpaceMono Nerd Font Propo (the shell's clock font), once
 # Prints one line per item; exits 1 if the folder isn't writable.
 set -u
@@ -49,6 +51,41 @@ if [ -n "$wp" ] && [ -f "$wp" ]; then
     fi
 else
     echo "wallpaper missing"
+fi
+
+# your lock-screen look: the login screen uses the same style with the same options
+settings="$HOME/.config/atelier/settings.json"
+if [ -f "$settings" ] && python3 -I - "$settings" "$DATA/lock.json.tmp.$$" <<'PY'
+import json, sys
+s = json.load(open(sys.argv[1]))
+keep = {
+    "lock": s.get("lock", {}), "lockStyle": s.get("lockStyle", {}),
+    "notifications": {"lockShowCount": s.get("notifications", {}).get("lockShowCount", True)},
+    "widgets": {k: s.get("widgets", {}).get(k, d) for k, d in (("weatherLocation", ""), ("weatherUnits", "metric"))},
+    "general": {k: s.get("general", {}).get(k, d) for k, d in (("clock24", False), ("animSpeed", 1))},
+    "appearance": {"rounding": s.get("appearance", {}).get("rounding", 24)},
+}
+json.dump(keep, open(sys.argv[2], "w"), indent=1)
+PY
+then chmod 644 "$DATA/lock.json.tmp.$$" && command mv -f "$DATA/lock.json.tmp.$$" "$DATA/lock.json" && echo "lock ok"
+else command rm -f "$DATA/lock.json.tmp.$$"; echo "lock missing"; fi
+
+# the Depth style's subject cut-out for this wallpaper (made and cached by the shell; reused here)
+style="$(python3 -I -c 'import json,sys; print(json.load(open(sys.argv[1])).get("lock",{}).get("theme",""))' "$settings" 2>/dev/null)"
+depth="$(dirname "$(readlink -f "$0")")/depth.py"
+if [ "$style" = "depth" ] && [ -n "$wp" ] && [ -x "$depth" ]; then
+    out="$(nice -n 15 "$depth" cutout "$wp" 2>/dev/null | tail -n1)"
+    cut="$(printf '%s' "$out" | python3 -I -c 'import json,sys; d=json.load(sys.stdin); print(d.get("cutout","") if d.get("ok") else "")' 2>/dev/null)"
+    if [ -n "$cut" ] && [ -f "$cut" ]; then
+        put "$cut" "$DATA/depth.png"
+        printf '%s' "$out" | python3 -I -c 'import json,sys; d=json.load(sys.stdin); json.dump({k: d.get(k) for k in ("ok","profile","ink","inkDark")}, sys.stdout)' > "$DATA/depth.json.tmp.$$" \
+            && chmod 644 "$DATA/depth.json.tmp.$$" && command mv -f "$DATA/depth.json.tmp.$$" "$DATA/depth.json"
+        echo "depth ok"
+    else
+        printf '{"ok": false}' > "$DATA/depth.json"; echo "depth none"
+    fi
+else
+    [ -f "$DATA/depth.json" ] && printf '{"ok": false}' > "$DATA/depth.json"
 fi
 
 face="$HOME/.face"

@@ -150,9 +150,22 @@ Item {
     readonly property bool haveCut: Settings.lock.depthEffect && DepthWall.ok && DepthWall.forWall === Wallpaper.current
         && DepthWall.cutout !== "" && cut.status === Image.Ready
 
+    // The subject's outline (64 columns, top of the subject 0..1, 1 = none) with thin things
+    // removed: a pole, a wire or an antenna is a tall spike one or two columns wide and used to
+    // decide where the clock went (it ended up floating at the height of a lamp post). An opening
+    // (erode then dilate over 3 columns) keeps anything at least 3 columns wide.
+    readonly property var profile: {
+        const p = DepthWall.profile || [];
+        const n = p.length;
+        if (n < 3) return p;
+        const e = [], o = [];
+        for (let i = 0; i < n; i++) e.push(Math.max(p[Math.max(0, i - 1)], p[i], p[Math.min(n - 1, i + 1)]));
+        for (let i = 0; i < n; i++) o.push(Math.min(e[Math.max(0, i - 1)], e[i], e[Math.min(n - 1, i + 1)]));
+        return o;
+    }
     // top of the subject (screen px) under the horizontal span [x0, x1]
     function subjectTop(x0, x1) {
-        const p = DepthWall.profile;
+        const p = c.profile;
         if (!p || p.length === 0) return height;
         const n = p.length;
         const a = Math.max(0, Math.floor((x0 - paintX) / paintW * n));
@@ -231,6 +244,17 @@ Item {
     // glass: the digits are frosted glass (the wallpaper, blurred, seen through them), tinted
     // with the clock colour, with a soft shadow and a thin light rim
     readonly property bool glass: Settings.lock.depthStyle === "glass"
+    readonly property real glassTint: Math.max(0, Math.min(0.7, Settings.lock.depthGlassTint ?? 0.2))
+    readonly property real glassFrost: Math.max(0.2, Math.min(1, Settings.lock.depthGlassFrost ?? 0.9))
+    // the small lines with the clock: date (long | short | off), weather, AM/PM (12-hour only)
+    readonly property string dateMode: Settings.lock.depthDate || "long"
+    readonly property bool showWeather: Settings.lock.depthWeather ?? true
+    readonly property string ampm: (Settings.lock.depthAmPm ?? true) ? Atelier.lockAmpm(c.now) : ""
+    readonly property string dateText: {
+        const d = dateMode === "off" ? "" : Qt.formatDate(c.now, dateMode === "short" ? "ddd d MMM" : "dddd, d MMMM");
+        const w = showWeather && c.temp ? c.temp : "";
+        return d && w ? d + "   ·   " + w : (d || w);
+    }
 
     // the clock at full size, never shown: measures it for the auto-fit
     Text {
@@ -294,7 +318,7 @@ Item {
             autoPaddingEnabled: false
             blurEnabled: true
             blurMax: 64
-            blur: 0.9
+            blur: c.glassFrost
         }
 
         // shade so the clock and the bottom row read on any picture
@@ -341,13 +365,13 @@ Item {
             Text {
                 id: dateLine
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: Qt.formatDate(c.now, "dddd, d MMMM") + (c.temp ? "   ·   " + c.temp : "")
+                // only holds the space: the visible date is drawn above the subject (dateTop)
+                text: c.dateText || " "
                 font.family: Atelier.fontUi
                 font.pixelSize: Math.round(c.height * 0.022)
                 font.weight: Font.Medium
                 font.letterSpacing: 0.6
-                color: c.ink
-                opacity: 0.85
+                visible: false
             }
 
             Text {
@@ -446,7 +470,7 @@ Item {
                     source: clock
                     colorization: 1.0
                     colorizationColor: c.ink
-                    opacity: 0.2
+                    opacity: c.glassTint
                 }
                 // rim
                 Text {
@@ -458,7 +482,8 @@ Item {
                     lineHeight: clock.lineHeight
                     color: "transparent"
                     style: Text.Outline
-                    styleColor: Qt.rgba(1, 1, 1, c.inkDark ? 0.5 : 0.75)
+                    // on a bright picture a white rim vanishes: a dark one there, a light one on dark
+                    styleColor: c.inkDark ? Qt.rgba(0, 0, 0, 0.32) : Qt.rgba(1, 1, 1, 0.75)
                 }
             }
         }
@@ -476,6 +501,46 @@ Item {
             // everywhere else, so this changes nothing but the clock's depth)
             visible: c.depthOn
             opacity: 1 - c.authT
+        }
+
+        // ── the date and AM/PM, above the subject (a twin of clockGroup's transform) ──
+        Item {
+            id: dateTop
+            // wider by `pad` on both sides (same centre, so it scales exactly like clockGroup):
+            // the layer below clips to this box and AM/PM sits past the digits
+            readonly property real pad: 160
+            x: clockGroup.x - pad; y: clockGroup.y
+            width: clockGroup.width + 2 * pad; height: clockGroup.height
+            scale: clockGroup.scale
+            opacity: clockGroup.opacity
+            layer.enabled: Settings.lock.depthShadow
+            layer.effect: MultiEffect {
+                shadowEnabled: true
+                shadowColor: c.inkDark ? "transparent" : Qt.alpha(Atelier.crust, 0.5)
+                shadowBlur: 0.8
+                shadowVerticalOffset: 2
+                autoPaddingEnabled: true
+            }
+            Text {
+                x: dateTop.pad + dateLine.x; y: dateLine.y
+                text: c.dateText
+                font: dateLine.font
+                color: c.ink
+                opacity: 0.9
+            }
+            // AM/PM beside the hours (top right of the digits), like the phone lock screens
+            Text {
+                visible: c.ampm !== ""
+                x: dateTop.pad + clock.x + clock.width + Math.round(clock.px * 0.05)
+                y: clock.y + Math.round(clock.px * 0.16)
+                text: c.ampm
+                font.family: Atelier.fontUi
+                font.pixelSize: Math.max(12, Math.round(clock.px * 0.13))
+                font.weight: Font.DemiBold
+                font.letterSpacing: 1.5
+                color: c.ink
+                opacity: 0.85
+            }
         }
     }
 

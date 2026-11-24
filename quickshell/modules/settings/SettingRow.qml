@@ -9,6 +9,9 @@ Item {
 
     property string label: ""
     property string description: ""
+    // a sub-option of the row above (its label starts with spaces): indented, with a guide line
+    readonly property bool sub: label.startsWith("  ")
+    readonly property int indent: sub ? 22 : 0
     default property alias control: slot.data
 
     Layout.fillWidth: true
@@ -19,13 +22,23 @@ Item {
         visible: row.y > 1
         anchors.top: parent.top
         anchors.left: parent.left
+        anchors.leftMargin: row.indent
         anchors.right: parent.right
         height: 1
         color: Atelier.outline
     }
 
+    Rectangle {   // the guide that ties a sub-option to its parent row
+        visible: row.sub
+        x: 6
+        anchors.verticalCenter: parent.verticalCenter
+        width: 2; height: Math.min(22, row.height - 20); radius: 1
+        color: Qt.alpha(Atelier.accent, 0.45)
+    }
+
     RowLayout {
         id: inner
+        anchors.leftMargin: row.indent
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
@@ -36,7 +49,7 @@ Item {
             spacing: 2
             Text {
                 Layout.fillWidth: true
-                text: row.label
+                text: row.label.trim()
                 font.family: Atelier.fontUi
                 font.pixelSize: 13
                 font.weight: Font.Medium

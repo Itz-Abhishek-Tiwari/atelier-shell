@@ -11,6 +11,8 @@ import Quickshell.Io
 Singleton {
     id: root
 
+    // the shell's glass opacity: the focused-window opacity when "Match windows" is on
+    readonly property real shellGlass: adapter.appearance.glassMatchWindows ? adapter.windows.activeOpacity : adapter.appearance.glass
     readonly property var general: adapter.general
     readonly property var appearance: adapter.appearance
     readonly property var bar: adapter.bar
@@ -62,7 +64,11 @@ Singleton {
                 property int barWidth: 44               // left bar
                 property int frame: 10                  // screen border thickness
                 property int rounding: 24               // frame inner corners + drawers
-                property real glass: 0.92               // opacity of bar/drawer surfaces
+                property real glass: 0.92               // opacity of bar/drawer surfaces (when not matching windows)
+                property bool glassMatchWindows: true   // the shell uses the focused window opacity, so both show the same blur
+                property string glassTone: "deep"       // deep (the theme's darkest colour) | base (its background colour, like most apps)
+                property bool shellBlur: true           // blur behind the bar and drawers
+                property bool shellShadow: true         // soft shadow under drawers and the frame
                 property string barPosition: "left"     // left | right | top | bottom
                 property bool linkRounding: true        // windows follow the shell's roundness (concentric)
                 property string wallTransition: "fade"  // none | fade | wipe | slide | grow | zoom | spread | outline | random
@@ -98,7 +104,12 @@ Singleton {
                 property string clockFont: "display"    // display (Inter Display) | mono | serif
                 property string clockWeight: "light"    // thin | light | regular | bold
                 property int clockSize: 132             // px at Medium size
-                property string clockColor: "text"      // text | accent
+                property string clockColor: "text"      // text | auto (stands out on the wallpaper) | accent | palette role | "#rrggbb"
+                property string dateColor: "text"       // same choices
+                property string glyphColor: "colourful" // colourful (one hue per line) | same choices as the clock
+                property bool glass: false              // the clock's digits are glass (iOS 26 style)
+                property real glassBlur: 0.7            // how frosted the glass is, 0.1 … 1
+                property real glassTint: 0.2            // how much of the clock colour shows in the glass, 0 … 0.85
                 property bool showAmPm: true            // 12-hour clock only
                 property bool leadingZero: false        // 09:15 instead of 9:15
                 property string textColor: "auto"       // auto (follows the wallpaper) | light | dark
@@ -202,6 +213,17 @@ Singleton {
                 property real inactiveOpacity: 0.90
                 property bool blur: true
                 property int blurPasses: 2
+                property int blurSize: 9                // blur radius per pass
+                property real blurVibrancy: 0.17        // colour saturation of what shows through
+                property real blurNoise: 0.012          // grain (hides banding)
+                property real blurContrast: 0.95
+                property real blurBrightness: 0.90
+                property bool blurBehind: false         // blur real windows behind (off = only the wallpaper, much cheaper)
+                property bool blurPopups: true          // menus and tooltips
+                property bool dimInactive: true
+                property real dimStrength: 0.06
+                property bool solidApps: true           // video, image viewers, games, creative apps stay opaque
+                property bool solidFullscreen: true     // fullscreen windows stay opaque
                 property bool shadow: true
                 property bool animations: true
 
@@ -247,6 +269,10 @@ Singleton {
                 property string searchUrl: "https://www.google.com/search?q="
                 property real osdSeconds: 1.6
                 property bool autoGameMode: true
+                property int pomoFocus: 25              // Timers → Focus (pomodoro), minutes
+                property int pomoShort: 5
+                property int pomoLong: 15
+                property int pomoEvery: 4               // a long break after this many focus rounds
             }
 
             property JsonObject input: JsonObject {     // Hyprland input (Settings → Keyboard & mouse)
@@ -287,8 +313,8 @@ Singleton {
             }
 
             property JsonObject lock: JsonObject {
-                // "atelier" = the shell's own lock screen (LockContent.qml); anything else is a
-                // qylock theme id (scripts/qylock.py), run as its own lock process
+                // atelier (LockContent.qml) | depth (DepthLock.qml) | a phone style (PhoneLock.qml):
+                // cupertino, hyper, harmony, oxygen, material, dot
                 property string theme: "atelier"
                 property string clock: "system"             // system (General → 24-hour clock) | 12 | 24, for every built-in style
                 // "depth": Samsung-style lock (modules/lock/DepthLock.qml), clock behind the subject
@@ -303,6 +329,11 @@ Singleton {
                 property bool depthEffect: true             // clock behind the subject (off = a plain big clock on top)
                 property string depthStyle: "solid"         // solid | glass (frosted digits)
                 property string depthColor: "auto"          // auto (from the wallpaper) | theme | white | black | theme role | "#rrggbb"
+                property real depthGlassTint: 0.2           // glass: how much of the clock colour shows, 0 … 0.7
+                property real depthGlassFrost: 0.9          // glass: how blurred the picture inside the digits is, 0.2 … 1
+                property string depthDate: "long"           // long ("Monday, 23 November") | short ("Mon 23 Nov") | off
+                property bool depthWeather: true            // the temperature after the date
+                property bool depthAmPm: true               // AM/PM beside the digits (12-hour clock only)
             }
 
             // the phone-inspired lock styles (modules/lock/PhoneLock.qml), each one's own options
@@ -435,13 +466,20 @@ Singleton {
             + "    rounding = " + Math.round(root.windowRounding) + ",\n"
             + "    active_opacity = " + w.activeOpacity.toFixed(2) + ", inactive_opacity = " + w.inactiveOpacity.toFixed(2) + ",\n"
             + "    blur = " + w.blur + ", blur_passes = " + Math.round(w.blurPasses) + ",\n"
+            + "    blur_size = " + Math.round(w.blurSize) + ", blur_vibrancy = " + w.blurVibrancy.toFixed(2)
+            + ", blur_noise = " + w.blurNoise.toFixed(3) + ", blur_contrast = " + w.blurContrast.toFixed(2)
+            + ", blur_brightness = " + w.blurBrightness.toFixed(2) + ",\n"
+            + "    blur_xray = " + !w.blurBehind + ", blur_popups = " + w.blurPopups
+            + ", dim_inactive = " + w.dimInactive + ", dim_strength = " + w.dimStrength.toFixed(2) + ",\n"
+            + "    solid_apps = " + w.solidApps + ", solid_fullscreen = " + w.solidFullscreen
+            + ", shell_blur = " + adapter.appearance.shellBlur + ",\n"
             + "    shadow = " + w.shadow + ", animations = " + w.animations + ",\n"
             + "    layout = \"" + w.layout + "\",\n"
             + "    dwindle_preserve_split = " + w.dwindlePreserveSplit + ", dwindle_smart_split = " + w.dwindleSmartSplit + ",\n"
             + "    master_orientation = \"" + w.masterOrientation + "\", master_mfact = " + w.masterFactor.toFixed(2)
             + ", master_new_on_top = " + w.masterNewOnTop + ",\n"
             + "    scroll_column_width = " + w.scrollColumnWidth.toFixed(2) + ",\n"
-            + "    shell_glass = " + Math.min(1, adapter.appearance.glass).toFixed(2) + ",   -- shell surface opacity: blur threshold in conf/rules.lua\n"
+            + "    shell_glass = " + Math.min(1, root.shellGlass).toFixed(2) + ",   -- shell surface opacity: blur threshold in conf/rules.lua\n"
             + "    reserved = { top = " + root._inset("top") + ", right = " + root._inset("right")
             + ", bottom = " + root._inset("bottom") + ", left = " + root._inset("left") + " },   -- shell frame: conf/monitors.lua\n"
             + "    -- Settings → Modes (atelier-mode.lua)\n" + root.luaModes
@@ -462,6 +500,7 @@ Singleton {
     // the parts last applied live, so only what changed is re-applied (a monitor re-apply can modeset)
     property string _appliedInput: ""
     property string _appliedMonitors: ""
+    property string _appliedReserved: ""
     property string _appliedBinds: ""
     property var _monitorOutputs: []
 
@@ -489,7 +528,12 @@ Singleton {
                 root._appliedInput = root.luaInput;
             }
             const outs = (adapter.displays.monitors || []).filter(x => x && x.output).map(x => String(x.output));
-            if (root.luaMonitors !== root._appliedMonitors) {
+            // the bar moved to another edge: the reserved area lives on the monitor rules, so it is
+            // only re-applied by re-applying them (without this, windows keep the old bar's space)
+            const resKey = ["top", "right", "bottom", "left"].map(e => root._inset(e)).join(",");
+            const resChanged = resKey !== root._appliedReserved;
+            root._appliedReserved = resKey;
+            if (root.luaMonitors !== root._appliedMonitors || (resChanged && !first)) {
                 const forget = root._monitorOutputs.filter(o => outs.indexOf(o) < 0);
                 if (!first) extra += "m.apply_monitors(t, " + root.lua(forget) + "); ";
                 root._appliedMonitors = root.luaMonitors;
@@ -503,12 +547,17 @@ Singleton {
                 'local t = dofile(os.getenv("HOME") .. "/.config/hypr/atelier-settings.lua"); ' + mode + extra + 'hl.config({ '
                 + 'general = { gaps_in = t.gaps_in, gaps_out = t.gaps_out }, '
                 + 'decoration = { rounding = t.rounding, active_opacity = t.active_opacity, inactive_opacity = t.inactive_opacity, '
-                + 'blur = { enabled = t.blur, passes = t.blur_passes }, shadow = { enabled = t.shadow } }, '
+                + 'dim_inactive = t.dim_inactive, dim_strength = t.dim_strength, '
+                + 'blur = { enabled = t.blur, passes = t.blur_passes, size = t.blur_size, vibrancy = t.blur_vibrancy, '
+                + 'noise = t.blur_noise, contrast = t.blur_contrast, brightness = t.blur_brightness, '
+                + 'xray = t.blur_xray, popups = t.blur_popups }, shadow = { enabled = t.shadow } }, '
                 + 'animations = { enabled = t.animations } }); '
                 + 'hl.config({ general = { layout = t.layout }, '
                 + 'dwindle = { preserve_split = t.dwindle_preserve_split, smart_split = t.dwindle_smart_split }, '
                 + 'master = { orientation = t.master_orientation, mfact = t.master_mfact, new_on_top = t.master_new_on_top }, '
                 + 'scrolling = { column_width = t.scroll_column_width } }); '
+                + 'if atelier_apply_solid then atelier_apply_solid(t) end; '
+                + 'if atelier_apply_shell_blur then atelier_apply_shell_blur(t) end; '
                 + 'if atelier_mode and atelier_mode ~= "normal" then m.apply(atelier_mode) end'];
             hyprEval.running = true;
         }

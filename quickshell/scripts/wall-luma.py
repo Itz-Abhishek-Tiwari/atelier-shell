@@ -4,7 +4,8 @@
     wall-luma.py <image> <screenW> <screenH> <x> <y> <w> <h>
 
 The wallpaper is drawn with PreserveAspectCrop (cover), so the region is mapped through the same
-crop. Prints JSON: {"luma": 0..1 mean perceived brightness, "spread": 0..1 how busy it is}.
+crop. Prints JSON: {"luma": 0..1 mean perceived brightness, "spread": 0..1 how busy it is,
+"rgb": [r, g, b] 0..1 mean colour (for picking a colour that stands out)}.
 """
 import json
 import sys
@@ -28,9 +29,10 @@ def main() -> None:
         )
         if box[2] <= box[0] or box[3] <= box[1]:
             raise SystemExit(1)
-        region = im.crop(box).convert("L").resize((64, 64))
-        st = ImageStat.Stat(region)
-        print(json.dumps({"luma": round(st.mean[0] / 255, 3), "spread": round(st.stddev[0] / 255, 3)}))
+        crop = im.crop(box).resize((64, 64))
+        st = ImageStat.Stat(crop.convert("L"))
+        rgb = [round(v / 255, 3) for v in ImageStat.Stat(crop).mean[:3]]
+        print(json.dumps({"luma": round(st.mean[0] / 255, 3), "spread": round(st.stddev[0] / 255, 3), "rgb": rgb}))
 
 
 if __name__ == "__main__":

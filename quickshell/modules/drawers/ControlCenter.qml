@@ -105,7 +105,7 @@ Item {
         { id: "dnd", group: "Focus & display", icon: Notifs.dnd ? "󰂛" : "󰂚", label: "Do Not Disturb", short: "Focus",
           sub: Notifs.dnd ? "Notifications are silenced" : "Off", on: Notifs.dnd, warn: false, details: "" },
         { id: "night", group: "Focus & display", icon: NightLight.active ? "󰖔" : "󰖙", label: "Night light", short: "Night",
-          sub: NightLight.status, on: NightLight.active, warn: false, details: "settings:appearance" },
+          sub: NightLight.status, on: NightLight.active, warn: false, details: "settings:displays" },
         { id: "awake", group: "Focus & display", icon: "󰅶", label: "Keep awake", short: "Awake",
           sub: Atelier.caffeine ? "The screen stays on" : "Off", on: Atelier.caffeine, warn: false, details: "" },
         { id: "record", group: "Focus & display", icon: "󰑋", label: "Screen recording", short: Recorder.recording ? Recorder.elapsedText : "Record",
@@ -330,6 +330,75 @@ Item {
             y: 12
             width: scroller.width - 44
             spacing: 20
+
+            // ── Weather: now, feels like, humidity, wind, and the next two days (click refreshes) ──
+            Rectangle {
+                id: wxCard
+                visible: Weather.ok
+                Layout.fillWidth: true
+                implicitHeight: wxCol.implicitHeight + 24
+                radius: 16
+                color: wxMa.containsMouse ? Atelier.containerHigh : Atelier.container
+                border.width: 1
+                border.color: Atelier.outline
+                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                readonly property var w: Weather.w
+                MouseArea { id: wxMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Weather.refresh() }
+                ColumnLayout {
+                    id: wxCol
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 10
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 12
+                        Text { text: Weather.glyph(wxCard.w.code || 0); font.family: Atelier.font; font.pixelSize: 34; color: Atelier.sapphire }
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 0
+                            Row {
+                                spacing: 2
+                                Text { text: wxCard.w.temp || ""; font.family: Atelier.font; font.pixelSize: 26; font.weight: Font.Bold; color: Atelier.text }
+                                Text { text: wxCard.w.unit || ""; topPadding: 5; font.family: Atelier.font; font.pixelSize: 12; color: Atelier.subtext }
+                            }
+                            Text { Layout.fillWidth: true; elide: Text.ElideRight; text: (wxCard.w.desc || "") + (wxCard.w.place ? "  ·  " + wxCard.w.place : "")
+                                   font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext }
+                        }
+                        ColumnLayout {
+                            spacing: 2
+                            Text { Layout.alignment: Qt.AlignRight; text: "Feels " + (wxCard.w.feels || "") + "°"; font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext1 }
+                            Text { Layout.alignment: Qt.AlignRight; text: "󰖎 " + (wxCard.w.humidity || "") + "%"; font.family: Atelier.font; font.pixelSize: 11; color: Atelier.sapphire }
+                            Text { Layout.alignment: Qt.AlignRight; text: "󰖝 " + (wxCard.w.wind || "") + " " + (wxCard.w.windUnit || ""); font.family: Atelier.font; font.pixelSize: 11; color: Atelier.teal }
+                        }
+                    }
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+                        Repeater {
+                            model: (wxCard.w.days || []).slice(0, 3)
+                            Rectangle {
+                                required property var modelData
+                                required property int index
+                                Layout.fillWidth: true
+                                Layout.preferredWidth: 1
+                                implicitHeight: 46
+                                radius: 12
+                                color: Atelier.containerHigh
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 8
+                                    Text { anchors.verticalCenter: parent.verticalCenter; text: Weather.glyph(modelData.code); font.family: Atelier.font; font.pixelSize: 18; color: Atelier.sapphire }
+                                    Column {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        Text { text: index === 0 ? "Today" : Qt.formatDate(new Date(modelData.date + "T12:00:00"), "ddd"); font.family: Atelier.fontUi; font.pixelSize: 10; color: Atelier.subtext }
+                                        Text { text: modelData.max + "° / " + modelData.min + "°"; font.family: Atelier.font; font.pixelSize: 11; color: Atelier.text }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             // ── iPhone (Tether): name, status, battery; click opens Tether ──────────
             Rectangle {

@@ -22,6 +22,14 @@ local M = {}
 M.defaults = {
     gaps_in = 5, gaps_out = 10, rounding = 14, active_opacity = 0.95, inactive_opacity = 0.90,
     blur = true, blur_passes = 2, shadow = true, animations = true,
+    -- blur look (Settings → Appearance → Windows)
+    blur_size = 9, blur_vibrancy = 0.17, blur_noise = 0.012, blur_contrast = 0.95, blur_brightness = 0.90,
+    blur_xray = true,            -- true: windows blur only the wallpaper (cheap); false: whatever is behind them
+    blur_popups = true,          -- menus and tooltips blur too
+    dim_inactive = true, dim_strength = 0.06,
+    solid_apps = true,           -- video, image viewers, games, creative apps stay opaque (rules.lua)
+    solid_fullscreen = true,     -- fullscreen windows stay opaque
+    shell_blur = true,           -- blur behind the shell's bar and drawers (rules.lua)
     layout = "dwindle", dwindle_preserve_split = true, dwindle_smart_split = false,
     master_orientation = "left", master_mfact = 0.55, master_new_on_top = false,
     scroll_column_width = 0.5,
@@ -137,7 +145,7 @@ function M.apply(mode)
         hl.config({
             general    = { allow_tearing = false },
             decoration = {
-                active_opacity = t.active_opacity, inactive_opacity = t.inactive_opacity, dim_inactive = true,
+                active_opacity = t.active_opacity, inactive_opacity = t.inactive_opacity, dim_inactive = t.dim_inactive,
                 blur = { enabled = t.blur, passes = t.blur_passes }, shadow = { enabled = t.shadow },
             },
             animations = { enabled = t.animations },

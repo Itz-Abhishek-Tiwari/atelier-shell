@@ -198,6 +198,7 @@ PanelWindow {
     // Both inks come from the theme palette (its lightest / darkest roles) so they stay tinted.
     property real luma: -1          // -1 = not measured yet → light text
     property real spread: 0.1       // how busy the area is; busier → stronger shadow
+    property color wallColor: Qt.rgba(0.2, 0.2, 0.2, 1)   // the wallpaper's mean colour behind the block
     readonly property bool onBright: w.textColor === "dark" || (w.textColor === "auto" && luma >= 0.6)
     readonly property color lightInk: Atelier.isLight ? Atelier.base : Atelier.text
     readonly property color darkInk: Atelier.isLight ? Atelier.text : Atelier.crust
@@ -216,7 +217,11 @@ PanelWindow {
         command: ["python3", "-I", Quickshell.shellDir + "/scripts/wall-luma.py", Wallpaper.current].concat(root.box.map(String))
         stdout: StdioCollector {
             onStreamFinished: {
-                try { const r = JSON.parse(text); root.luma = r.luma; root.spread = r.spread; } catch (e) {}
+                try {
+                    const r = JSON.parse(text);
+                    root.luma = r.luma; root.spread = r.spread;
+                    if (r.rgb) root.wallColor = Qt.rgba(r.rgb[0], r.rgb[1], r.rgb[2], 1);
+                } catch (e) {}
             }
         }
     }
@@ -231,13 +236,75 @@ PanelWindow {
     readonly property string clockFamily: w.clockFont === "mono" ? Atelier.font
         : w.clockFont === "serif" ? "Noto Serif" : "Inter Display"
     readonly property int clockWeight: ({ thin: Font.Thin, light: Font.Light, regular: Font.Normal, bold: Font.Bold })[w.clockWeight] ?? Font.Light
-    readonly property color clockInk: w.clockColor === "accent" ? Atelier.accent : ink
+    // ── Colours you pick (Settings → Widgets → Colours) ─────────────────────
+    // "text" = the ink above · "auto" = the theme colour that stands out most on the wallpaper
+    // behind the widget (the accent when it reads, since wallpaper themes take their accent from
+    // the wallpaper itself and it can vanish on it) · "accent" · a palette role · "#rrggbb"
+    readonly property var roles: ["accent", "blue", "sapphire", "sky", "teal", "green", "yellow", "peach", "red", "pink", "mauve", "lavender"]
+    readonly property color autoColor: {
+        const bg = root.wallColor;
+        if (Atelier.contrast(Atelier.accent, bg) >= 3) return Atelier.accent;
+        let best = root.ink, bestC = 0;
+        for (const r of roles) {
+            const c = Atelier.contrast(Atelier[r], bg);
+            if (c > bestC) { bestC = c; best = Atelier[r]; }
+        }
+        return bestC >= 3 ? best : root.ink;
+    }
+    function resolve(spec) {
+        if (!spec || spec === "text") return root.ink;
+        if (spec === "auto") return root.autoColor;
+        if (spec.startsWith("#")) return spec;
+        return Atelier[spec] !== undefined ? Atelier[spec] : root.ink;
+    }
+    readonly property color clockInk: resolve(w.clockColor)
+    readonly property color dateInk: w.dateColor === "text" ? inkSoft : resolve(w.dateColor)
+    readonly property bool glyphsColourful: w.glyphColor === "colourful"
+    readonly property color glyphInk: resolve(w.glyphColor)
     readonly property string dateText: {
         const f = ({ long: "dddd, d MMMM", short: "ddd d MMM", numeric: "dd/MM/yyyy", iso: "yyyy-MM-dd" })[w.dateFormat] || "dddd, d MMMM";
         const t = Qt.formatDate(root.now, f);
         return w.dateCaps ? t.toUpperCase() : t;
     }
     readonly property real shadowK: w.shadow === "strong" ? 1.6 : 1
+
+    // ── Glass clock (Settings → Desktop → Glass), iOS 26 style ─────────────
+    // The digits are glass: the wallpaper behind them, blurred and shifted a little (refraction),
+    // light falling on the top, a thin bright rim and a breath of the clock colour. Not compositor
+    // blur (that frosted every pixel of the text's soft shadow): the wallpaper itself, cropped to
+    // this window, blurred once by MultiEffect. Static until the wallpaper or the widget moves.
+    readonly property bool glassOn: w.glass
+    Item {
+        id: wallCrop
+        anchors.fill: parent
+        visible: false
+        clip: true
+        layer.enabled: root.glassOn
+        Image {
+            // the whole screen's wallpaper, shifted so this window's part lines up
+            x: -root.box[2]
+            y: -root.box[3]
+            width: root.box[0]
+            height: root.box[1]
+            source: root.glassOn && Wallpaper.current ? "file://" + Wallpaper.current : ""
+            fillMode: Image.PreserveAspectCrop
+            sourceSize.width: root.box[0]
+            sourceSize.height: root.box[1]
+            asynchronous: true
+            cache: false
+        }
+    }
+    MultiEffect {
+        id: wallBlur
+        anchors.fill: parent
+        source: wallCrop
+        visible: false
+        layer.enabled: root.glassOn
+        autoPaddingEnabled: false
+        blurEnabled: true
+        blurMax: 48
+        blur: Math.max(0.1, Math.min(1, root.w.glassBlur))
+    }
 
     ColumnLayout {
         id: column
@@ -264,7 +331,7 @@ PanelWindow {
             font.family: Atelier.fontUi; font.pixelSize: Math.round((root.w.dateCaps ? 13 : 15) * root.k)
             font.weight: root.w.dateCaps ? Font.DemiBold : Font.Medium
             font.letterSpacing: (root.w.dateCaps ? 3 : 0.3) * root.k
-            color: dateMa.containsMouse ? root.ink : root.inkSoft
+            color: dateMa.containsMouse ? Qt.lighter(root.dateInk, 1.1) : root.dateInk
             Behavior on color { ColorAnimation { duration: 150 } }
             MouseArea { id: dateMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.requestOverlay("calendar") }
         }
@@ -283,7 +350,78 @@ PanelWindow {
                 font.family: root.clockFamily; font.pixelSize: px; font.weight: root.clockWeight
                 font.letterSpacing: (root.w.clockFont === "display" ? -px / 44 : root.w.clockFont === "serif" ? -px / 90 : 0)
                 font.features: { "tnum": 1 }
-                color: root.clockInk
+                color: root.glassOn ? "white" : root.clockInk
+                // in glass mode only the shape (the mask) for the glass below
+                visible: !root.glassOn
+                layer.enabled: root.glassOn
+            }
+
+            // ── glass digits ──
+            Item {
+                id: glassDigits
+                visible: root.glassOn
+                anchors.fill: clock
+                // the blurred wallpaper right behind the digits
+                ShaderEffectSource {
+                    id: glassSrc
+                    anchors.fill: parent
+                    visible: false
+                    live: true
+                    sourceItem: root.glassOn ? wallBlur : null
+                    sourceRect: {
+                        const _ = root.box.join() + clock.width + clock.height + column.x + column.y;
+                        const p = clock.mapToItem(wallBlur, 0, 0);
+                        // shifted a little, so what's behind looks bent by the glass
+                        return Qt.rect(p.x + clock.width * 0.012, p.y - clock.height * 0.06, clock.width, clock.height);
+                    }
+                }
+                MultiEffect {
+                    anchors.fill: parent
+                    source: glassSrc
+                    maskEnabled: true
+                    maskSource: clock
+                    maskThresholdMin: 0.3
+                    maskSpreadAtMin: 0.3
+                    brightness: root.onBright ? -0.03 : 0.12
+                    saturation: 0.3
+                }
+                // light falling on the glass: bright at the top, gone by the middle
+                Rectangle {
+                    id: sheen
+                    anchors.fill: parent
+                    visible: false
+                    layer.enabled: root.glassOn
+                    gradient: Gradient {
+                        GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.45) }
+                        GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.06) }
+                        GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.0) }
+                    }
+                }
+                MultiEffect {
+                    anchors.fill: parent
+                    source: sheen
+                    maskEnabled: true
+                    maskSource: clock
+                    maskThresholdMin: 0.3
+                    maskSpreadAtMin: 0.3
+                }
+                // a breath of the clock colour
+                MultiEffect {
+                    anchors.fill: parent
+                    source: clock
+                    colorization: 1.0
+                    colorizationColor: root.clockInk
+                    opacity: Math.max(0, Math.min(0.85, root.w.glassTint))
+                }
+                // the rim
+                Text {
+                    anchors.fill: parent
+                    text: root.hourText + ":" + Qt.formatTime(root.now, "mm")
+                    font: clock.font
+                    color: "transparent"
+                    style: Text.Outline
+                    styleColor: Qt.rgba(1, 1, 1, root.onBright ? 0.45 : 0.7)
+                }
             }
             Text {
                 id: ampm
@@ -362,7 +500,8 @@ PanelWindow {
                 width: Math.round(16 * root.k)
                 horizontalAlignment: Text.AlignHCenter
                 text: ln.glyph; font.family: Atelier.font; font.pixelSize: Math.round(15 * root.k)
-                color: Qt.tint(root.ink, Qt.alpha(ln.tint, 0.7))   // keeps the hue, borrows the ink's contrast
+                // colourful: each line's own hue, mixed with the ink so it keeps its contrast
+                color: root.glyphsColourful ? Qt.tint(root.ink, Qt.alpha(ln.tint, 0.7)) : root.glyphInk
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter

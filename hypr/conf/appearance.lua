@@ -5,7 +5,7 @@
 -- (kitty: background_opacity 1.0, ghostty: background-opacity = 1) so nothing stacks on top.
 -- The only exceptions are in rules.lua: video/games/creative apps and fullscreen stay solid.
 --
--- The numbers come from the Settings app (Super+, → Windows), saved in ../atelier-settings.lua,
+-- The numbers come from the Settings app (Super+, → Appearance), saved in ../atelier-settings.lua,
 -- and are applied live. Defaults are in ../atelier-mode.lua.
 local lib   = require("conf.lib")
 local win   = lib.win
@@ -33,28 +33,29 @@ hl.config({
         -- one opacity for all windows
         active_opacity   = win.active_opacity,
         inactive_opacity = win.inactive_opacity,
-        dim_inactive     = true,          -- gentle focus cue
-        dim_strength     = 0.06,
+        dim_inactive     = win.dim_inactive,   -- gentle focus cue
+        dim_strength     = win.dim_strength,
 
         -- one blur for all windows (and the shell's popups)
         blur = {
             enabled           = win.blur,
             -- size 9 with 3 passes looks the same as size 7 with 4 passes for ~half the GPU
             -- work (measured); each extra pass roughly doubles the cost on this iGPU.
-            size              = 9,
+            size              = win.blur_size,
             passes            = win.blur_passes,
-            vibrancy          = 0.17,
+            vibrancy          = win.blur_vibrancy,
             new_optimizations = true,
             ignore_opacity    = true,
             -- xray: windows show the cached, pre-blurred wallpaper instead of re-blurring what is
             -- behind them on every redraw. Tiled windows only have the wallpaper behind them, so
             -- they look the same; this is what kept the GPU busy whenever VS Code (or any app)
             -- was redrawing in Normal mode. (Pop-ups still blur real windows: rules.lua.)
-            xray              = true,
-            noise             = 0.012,
-            contrast          = 0.95,
-            brightness        = 0.90,
-            popups            = true,
+            -- (Settings → Appearance → "Blur what's behind" turns it off: real blur, more GPU)
+            xray              = win.blur_xray,
+            noise             = win.blur_noise,
+            contrast          = win.blur_contrast,
+            brightness        = win.blur_brightness,
+            popups            = win.blur_popups,
         },
 
         shadow = {

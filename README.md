@@ -94,9 +94,10 @@ Not covered (do these by hand): the Android SDK/emulator images, the LastWave Ap
 
 ## Login screen (Quickshell instead of SDDM)
 
-The `greeter/` folder is a Quickshell login screen built on **greetd**. It looks like the lock
-screen (one glass panel over your blurred wallpaper: weather and sessions on the left, clock and
-password in the middle, system info and users on the right) and uses your theme colours.
+The `greeter/` folder is a Quickshell login screen built on **greetd**. It looks exactly like
+your lock screen: it loads the same style files (Atelier, Depth or a phone style, whichever
+Settings → Lock screen uses, with the same options), on your wallpaper and in your theme. A small
+pill in the top-left corner picks the person (F1) and the desktop session (F2).
 
 ```bash
 ./install-greeter.sh --demo             # preview it fullscreen (password: demo, Esc closes), changes nothing
@@ -107,10 +108,9 @@ sudo ./install-greeter.sh --quiet-boot  # hide kernel/systemd text at boot (edit
 sudo ./install-greeter.sh --uninstall   # switch back to SDDM and remove the greeter
 ```
 
-**Settings → Login screen** controls it after installing: layout (panel or minimal), greeting,
-which cards show, wallpaper blur and dim, and *Follow theme & wallpaper* (your colours, wallpaper
-and `~/.face` are copied over whenever they change). It also has Preview, Install/Update and
-Quiet boot buttons. This works without root because the installer gives you
+**Settings → Login screen** controls it after installing: *Follow your look* copies your colours,
+wallpaper, lock style and `~/.face` over whenever they change. It also has Preview, Install/Update
+and Quiet boot buttons. This works without root because the installer gives you
 `/var/lib/atelier-greeter`, where the greeter reads its options and pictures.
 
 Whatever the session prints at startup goes to `~/.local/state/atelier-session.log` instead of
@@ -160,12 +160,16 @@ qs ipc call mode set game|dev|normal      # also: cycle, toggleGame, toggleDev, 
 | Power menu | `SUPER + Backspace` |
 | Clipboard history | `SUPER + Shift + V` |
 | Emoji picker | `SUPER + ;` |
-| GIF finder (free GIPHY/Tenor key in Settings → General) | `SUPER + Shift + ;` |
+| GIF finder (free GIPHY/Tenor key in Settings → Tools) | `SUPER + Shift + ;` |
 | On-screen keyboard | `SUPER + /` |
 | Game library | `SUPER + G` |
 | Record screen (pick an area / stop) | `SUPER + Shift + R` (whole screen: `SUPER + Alt + R`, or `R` in the screenshot picker) |
 | Night light | `SUPER + Shift + N` (schedule and warmth in Settings → Appearance) |
 | Music drawer | hover the middle of the top screen edge, or `SUPER + M` |
+| System monitor (CPU, memory, GPU, network, apps with kill, battery health and charge limit) | `SUPER + Shift + M` |
+| Timers, stopwatch and pomodoro | `SUPER + Alt + T` (`qs ipc call timers start "10m tea"`) |
+| Colour picker (click any pixel, copies the hex; history drawer: `qs ipc call colorpicker toggle`) | `SUPER + Shift + X` |
+| Alt-Tab window switcher | hold `ALT`, tap `Tab` (`Shift + Tab` goes back); release `ALT` to switch |
 | Reload shell | `qs kill; quickshell -d` |
 | Reload Hyprland | automatic on save (avoid `hyprctl reload`: it makes the cursor hitch) |
 | List / apply theme | `atelier-theme list` / `atelier-theme apply tokyo-night` |

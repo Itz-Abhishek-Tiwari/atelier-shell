@@ -60,6 +60,12 @@ install_files() {
     install -d -m 755 "$DEST"
     install -m 644 "$REPO/greeter/shell.qml" "$DEST/shell.qml"
     install -m 755 "$REPO/greeter/session.sh" "$DEST/session.sh"
+    # the lock-screen styles (modules/lock = the shell's own files, through symlinks) and the
+    # stand-ins they read (config/, services/, components/); -L copies the real files
+    rm -rf "$DEST/config" "$DEST/services" "$DEST/components" "$DEST/modules" "$DEST/scripts"
+    cp -rL "$REPO/greeter/config" "$REPO/greeter/services" "$REPO/greeter/components" \
+           "$REPO/greeter/modules" "$REPO/greeter/scripts" "$DEST/"
+    chmod -R u=rwX,go=rX "$DEST"
     # older versions kept these next to shell.qml; they now live in $DATA
     rm -f "$DEST/colors.json" "$DEST/wallpaper"
     ok "Installed greeter UI to $DEST"

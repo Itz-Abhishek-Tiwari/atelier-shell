@@ -181,16 +181,20 @@ Item {
                 color: Atelier.containerHigh
                 Rectangle {
                     height: parent.height; radius: 3
-                    width: AirDrop.phase === "receiving" ? Math.max(6, parent.width * AirDrop.progress) : parent.width * 0.35
+                    readonly property bool sendKnown: AirDrop.phase !== "receiving" && AirDrop.sendProgress >= 0
+                    width: AirDrop.phase === "receiving" ? Math.max(6, parent.width * AirDrop.progress)
+                         : sendKnown ? Math.max(6, parent.width * AirDrop.sendProgress) : parent.width * 0.35
                     Behavior on width { NumberAnimation { duration: 240 } }
                     gradient: Gradient {
                         orientation: Gradient.Horizontal
                         GradientStop { position: 0; color: Qt.alpha(Atelier.blue, 0.55) }
                         GradientStop { position: 1; color: Atelier.blue }
                     }
-                    // sending has no progress from owly: a bar that slides
-                    SequentialAnimation on x {
-                        running: root.sendView && AirDrop.sendPhase === "sending" && root.visible; loops: Animation.Infinite
+                    // sending before owly reports bytes (the phone is still deciding): a bar that slides
+                    property real slide: 0
+                    x: sendKnown || AirDrop.phase === "receiving" ? 0 : slide
+                    SequentialAnimation on slide {
+                        running: root.sendView && AirDrop.sendPhase === "sending" && !parent.sendKnown && root.visible; loops: Animation.Infinite
                         NumberAnimation { from: 0; to: parent.width * 0.65; duration: 1100; easing.type: Easing.InOutSine }
                         NumberAnimation { from: parent.width * 0.65; to: 0; duration: 1100; easing.type: Easing.InOutSine }
                     }
