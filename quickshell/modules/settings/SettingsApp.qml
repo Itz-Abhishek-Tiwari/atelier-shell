@@ -1756,7 +1756,7 @@ Item {
                                 }
                                 SettingRow {
                                     label: "Switch back to SDDM"
-                                    description: "Removes the Atelier greeter. If a login ever fails: Ctrl+Alt+F3, sign in, run install-greeter.sh --uninstall."
+                                    description: "Removes the Atelier greeter. If a login ever fails: Ctrl+Alt+F3, sign in, run greeter/install.sh --uninstall."
                                     Chip { visible: Greeter.active; icon: "󰜺"; text: "Uninstall"; tint: Atelier.red; interactive: true; implicitHeight: 30
                                         onClicked: Greeter.runInstaller("--uninstall") }
                                 }

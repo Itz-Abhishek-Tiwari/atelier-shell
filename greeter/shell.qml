@@ -21,7 +21,7 @@ import qs.modules.lock
 // quickshell/scripts/greeter-sync.sh fills (Settings → Login screen runs it for you).
 //
 // Preview without touching your login (demo mode, password "demo", Esc closes):
-//     ./install-greeter.sh --demo
+//     greeter/install.sh --demo
 ShellRoot {
     id: root
 

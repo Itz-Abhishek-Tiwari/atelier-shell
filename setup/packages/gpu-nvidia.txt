@@ -1,0 +1,7 @@
+# Installed only when an NVIDIA GPU is detected (lspci). Hybrid laptops: everything runs on the
+# iGPU, `prime-run <app>` (local/bin/prime-run) offloads one app to the dGPU.
+nvidia-open-dkms
+nvidia-utils
+lib32-nvidia-utils
+nvidia-prime
+libva-nvidia-driver

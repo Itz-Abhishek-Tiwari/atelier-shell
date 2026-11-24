@@ -2,9 +2,9 @@
 # usage: greeter-sync.sh [data dir]      (default /var/lib/atelier-greeter)
 #
 # Copies what the login screen shows from your $HOME into its data folder (the greeter runs as
-# the `greeter` user and cannot read $HOME). install-greeter.sh makes that folder yours, so this
+# the `greeter` user and cannot read $HOME). greeter/install.sh makes that folder yours, so this
 # needs no root. Called by Settings → Login screen (automatically when the theme or wallpaper
-# changes) and by install-greeter.sh.
+# changes) and by greeter/install.sh.
 #   colors.json     <- ~/.config/atelier/theme.json
 #   wallpaper.jpg   <- the current wallpaper, scaled to 1920px (skipped when unchanged)
 #   faces/$USER     <- ~/.face

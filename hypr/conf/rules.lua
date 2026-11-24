@@ -84,7 +84,7 @@ hl.window_rule({
     keep_aspect_ratio = true,
 })
 
--- Android emulator (config-scripts/android-emulator.sh): the phone window and its side toolbar
+-- Android emulator (config/scripts/android-emulator.sh): the phone window and its side toolbar
 -- are separate windows that size themselves; tiled, the phone drew in a corner of a big empty
 -- tile. Floating at their own size, solid (no translucency over the phone screen), no shadow.
 hl.window_rule({
