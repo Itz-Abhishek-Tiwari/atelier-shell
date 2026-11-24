@@ -90,6 +90,7 @@ Singleton {
                 property bool showWorkspaces: true
                 property bool showTray: true
                 property bool showClock: true
+                property bool showPrivacy: true         // mic / camera / screen-share dots while an app uses them
                 property bool showStatus: true          // wifi / bluetooth / volume / battery / bell
                 property bool showPower: true
                 property bool openOnHover: true         // Caelestia-style: hover Wi-Fi/Bluetooth/clock (and the right edge for the OSD)

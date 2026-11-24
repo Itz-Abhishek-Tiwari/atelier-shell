@@ -58,16 +58,8 @@ Scope {
         }
     }
 
-    // weather fetched ahead of time (and every 20 min), so the lock shows it from the first
-    // frame instead of the date line jumping when it arrives
-    property string weather: ""
-    Process {
-        id: weatherProc
-        running: true
-        command: [Quickshell.shellDir + "/scripts/weather.sh", Settings.widgets.weatherLocation, Settings.widgets.weatherUnits]
-        stdout: StdioCollector { onStreamFinished: { const t = text.trim(); if (t) root.weather = t; } }
-    }
-    Timer { interval: 20 * 60 * 1000; repeat: true; running: true; onTriggered: weatherProc.running = true }
+    // the shared Weather service fetches ahead of time, so the lock shows it from the first frame
+    readonly property string weather: Weather.line
 
     // built-in looks: "depth" = DepthLock.qml (Samsung-style), a phone style = PhoneLock.qml,
     // "atelier" = LockContent.qml (also the fallback for an unknown id)

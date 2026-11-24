@@ -1029,6 +1029,8 @@ Item {
                                         anchors.fill: parent
                                         visible: vid.playbackState === MediaPlayer.StoppedState && win.shot && win.shot.thumb !== ""
                                         source: visible ? "file://" + win.shot.thumb : ""
+                                        sourceSize.width: 640; sourceSize.height: 640
+                                        asynchronous: true
                                         fillMode: Image.PreserveAspectFit
                                     }
                                     Rectangle {

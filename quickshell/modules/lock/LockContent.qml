@@ -49,12 +49,7 @@ Item {
     readonly property var btAdapter: Bluetooth.defaultAdapter
     readonly property var btConnected: Bluetooth.devices.values.filter(d => d.connected)
 
-    property string weather: ""
-    Process {
-        running: true
-        command: [Quickshell.shellDir + "/scripts/weather.sh", Settings.widgets.weatherLocation, Settings.widgets.weatherUnits]
-        stdout: StdioCollector { onStreamFinished: c.weather = text.trim() }
-    }
+    readonly property string weather: Weather.line
     readonly property string temp: (weather.match(/[+-]?\d+°[CF]?/) || [""])[0].replace("+", "")
     readonly property string condition: weather.replace(/[+-]?\d+°[CF]?/, "").trim()
 

@@ -56,7 +56,7 @@ ShellRoot {
         launcher: launcherOverlay, apps: appsOverlay, camera: cameraOverlay, clipboard: clipboardOverlay,
         media: mediaOverlay, keybinds: keybindsOverlay, sysmon: sysMonOverlay, timers: timerOverlay,
         colors: colorPickerOverlay, switcher: windowSwitcher, calendar: calendarOverlay,
-        wallpaper: wallpaperOverlay, emoji: emojiOverlay, settings: settingsApp })
+        wallpaper: wallpaperOverlay, emoji: emojiOverlay, settings: settingsApp, privacy: privacyOverlay })
 
     // Drawers are built on demand (components/LazyDrawer.qml). The bar's hover icons prefetch
     // theirs as soon as the pointer reaches them, so the hover-open itself never waits.
@@ -111,7 +111,7 @@ ShellRoot {
         shellRoot.lastCenterY = centerY || 0;
         activeOverlay = name;
         if (name === "emoji" || name === "gifs") emojiOverlay.open(name);        // two tabs of one drawer
-        else if (name === "wifi" || name === "bluetooth" || name === "calendar")  // placed by their bar icon
+        else if (name === "wifi" || name === "bluetooth" || name === "calendar" || name === "privacy")  // placed by their bar icon
             lazyDrawers[name].open(shellRoot.lastCenterY);
         else if (lazyDrawers[name]) lazyDrawers[name].open();
         else console.warn("openOverlay: no drawer", name);
@@ -156,6 +156,7 @@ ShellRoot {
                 onOpenPower: shellRoot.toggleOverlay("power")
                 onOpenLauncher: shellRoot.toggleOverlay("apps")   // bar logo → app grid (Super+Space is search)
                 onOpenCalendar: (centerY) => shellRoot.toggleOverlay("calendar", centerY)
+                onOpenPrivacy: (centerY) => shellRoot.toggleOverlay("privacy", centerY)
                 onOpenWallpaper: shellRoot.toggleOverlay("wallpaper")
                 onOpenControlCenter: shellRoot.toggleOverlay("controlcenter")
                 onHoverOpen: (name, centerY) => { shellRoot.barZones = zones(); shellRoot.hoverOverlay(name, centerY); }
@@ -290,6 +291,15 @@ ShellRoot {
                     onClosedSignal: {
                         if (shellRoot.activeOverlay === "bluetooth") shellRoot.activeOverlay = "";
                     }
+                }
+            }
+        }
+        LazyDrawer {
+            id: privacyOverlay
+            sourceComponent: Component {
+                PrivacyOverlay {
+                    isLight: shellRoot.isLight
+                    onClosedSignal: { if (shellRoot.activeOverlay === "privacy") shellRoot.activeOverlay = ""; }
                 }
             }
         }
@@ -523,6 +533,13 @@ ShellRoot {
             function toggle() { shellRoot.toggleOverlay("wifi"); }
             function open() { if (shellRoot.activeOverlay !== "wifi") shellRoot.toggleOverlay("wifi"); }
             function close() { if (shellRoot.activeOverlay === "wifi") shellRoot.closeAllOverlays(); }
+        }
+
+        IpcHandler {
+            target: "privacy"
+            function toggle() { shellRoot.toggleOverlay("privacy"); }
+            function open() { if (shellRoot.activeOverlay !== "privacy") shellRoot.toggleOverlay("privacy"); }
+            function close() { if (shellRoot.activeOverlay === "privacy") shellRoot.closeAllOverlays(); }
         }
 
         IpcHandler {

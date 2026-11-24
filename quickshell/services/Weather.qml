@@ -11,6 +11,8 @@ Singleton {
 
     property var w: ({ ok: false })
     readonly property bool ok: w.ok === true
+    // "24°C Clear": the one-line form the desktop widget and lock screens show
+    readonly property string line: ok ? w.temp + w.unit + " " + w.desc : ""
 
     // wttr.in condition code → Material Design glyph
     function glyph(code: int): string {

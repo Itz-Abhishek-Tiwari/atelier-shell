@@ -26,6 +26,7 @@ Item {
     signal openPower()
     signal openLauncher()
     signal openCalendar(real centerY)
+    signal openPrivacy(real centerY)
     signal openWallpaper()
     signal openControlCenter()
 
@@ -484,6 +485,64 @@ Item {
             }
         }
 
+        // Privacy: mic / camera / screen share in use (services/Privacy.qml)
+        Pill {
+            id: privacyPill
+            clickable: true
+            highlighted: bar.activeOverlay === "privacy"
+            onClicked: bar.openPrivacy(bar.centerOf(privacyPill))
+            Layout.alignment: bar.crossAlign
+            visible: Settings.bar.showPrivacy && Privacy.any
+            pad: 7
+            gap: bar.vertical ? 4 : 6
+            color: Qt.alpha(Atelier.peach, 0.18)
+            Text {
+                visible: Privacy.mic
+                text: "󰍬"
+                font.family: Atelier.font; font.pixelSize: 14
+                color: Atelier.peach
+            }
+            Text {
+                visible: Privacy.camera
+                text: "󰄀"
+                font.family: Atelier.font; font.pixelSize: 14
+                color: Atelier.green
+            }
+            Text {
+                visible: Privacy.screen
+                text: "󰍹"
+                font.family: Atelier.font; font.pixelSize: 14
+                color: Atelier.red
+            }
+        }
+        // which apps: a small popup beside the pill (the bar window would clip a plain item)
+        PopupWindow {
+            visible: privacyPill.hovered && privacyPill.visible && bar.activeOverlay !== "privacy"
+            anchor.item: privacyPill
+            anchor.edges: Atelier.barEdge === "left" ? Edges.Right : Atelier.barEdge === "right" ? Edges.Left
+                        : Atelier.barEdge === "top" ? Edges.Bottom : Edges.Top
+            anchor.gravity: anchor.edges
+            anchor.margins.left: 6; anchor.margins.right: 6; anchor.margins.top: 6; anchor.margins.bottom: 6
+            implicitWidth: privacyText.implicitWidth + 20
+            implicitHeight: privacyText.implicitHeight + 14
+            color: "transparent"
+            Rectangle {
+                anchors.fill: parent
+                radius: Atelier.radiusMd
+                color: Atelier.containerHigh
+                border.width: 1; border.color: Atelier.outline
+                Text {
+                    id: privacyText
+                    anchors.centerIn: parent
+                    text: Privacy.summary
+                    font.family: Atelier.fontUi
+                    font.pixelSize: Atelier.fsSm
+                    color: Atelier.text
+                    lineHeight: 1.25
+                }
+            }
+        }
+
         // Clock → calendar
         Pill {
             id: clockPill
@@ -684,6 +743,8 @@ Item {
         id: pill
         property bool highlighted: false
         property bool clickable: false
+        readonly property bool hovered: pillHover.hovered
+        HoverHandler { id: pillHover }
         property string hoverName: ""       // opens its drawer on hover (see setHover)
         property int pad: 5
         property int gap: 2
