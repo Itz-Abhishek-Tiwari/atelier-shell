@@ -67,8 +67,8 @@ PanelWindow {
     readonly property string greeting: hour >= 5 && hour < 12 ? "Good morning"
         : hour < 17 && hour >= 12 ? "Good afternoon" : hour < 21 && hour >= 17 ? "Good evening" : "Working late"
 
-    // ── Weather (wttr.in via scripts/weather.sh, cached 15 min) ─────────────
-    property string weatherRaw: ""
+    // ── Weather (the shared Weather service) ─────────────
+    readonly property string weatherRaw: Weather.line
     readonly property string temp: (weatherRaw.match(/[+-]?\d+°[CF]/) || [""])[0].replace("+", "")
     readonly property string condition: weatherRaw.replace(/[+-]?\d+°[CF]/, "").trim()
     readonly property string weatherIcon: {
@@ -81,16 +81,6 @@ PanelWindow {
         if (/cloud|overcast/.test(c)) return "󰖐";
         return night ? "󰖔" : "󰖙";
     }
-    Process {
-        id: weatherProc
-        running: true
-        command: [Quickshell.shellDir + "/scripts/weather.sh", Settings.widgets.weatherLocation, Settings.widgets.weatherUnits]
-        stdout: StdioCollector { onStreamFinished: if (text.trim()) root.weatherRaw = text.trim() }
-    }
-    // re-fetch when the location/units are changed in Settings
-    readonly property string _weatherKey: Settings.widgets.weatherLocation + "|" + Settings.widgets.weatherUnits
-    on_WeatherKeyChanged: { weatherProc.running = false; weatherProc.running = true; }
-    Timer { interval: 900000; running: true; repeat: true; onTriggered: weatherProc.running = true }
 
     // ── System (read straight from /proc; disk via df once a minute) ────────
     property real cpu: 0

@@ -93,14 +93,7 @@ Item {
     }
     readonly property var notifs: Settings.notifications.lockShowCount ? Notifs.list : []
 
-    // LockScreen keeps the weather fetched ahead of time; fetch here only if it can't
-    readonly property string weather: c.lockRoot.weather !== undefined && c.lockRoot.weather !== "" ? c.lockRoot.weather : ownWeather
-    property string ownWeather: ""
-    Process {
-        running: c.lockRoot.weather === undefined
-        command: [Quickshell.shellDir + "/scripts/weather.sh", Settings.widgets.weatherLocation, Settings.widgets.weatherUnits]
-        stdout: StdioCollector { onStreamFinished: c.ownWeather = text.trim() }
-    }
+    readonly property string weather: Weather.line
     readonly property string temp: (weather.match(/[+-]?\d+°[CF]?/) || [""])[0].replace("+", "")
 
     // ── Input: typing always goes to the password ───────────────────────────

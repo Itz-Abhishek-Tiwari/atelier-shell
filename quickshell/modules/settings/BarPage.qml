@@ -63,6 +63,8 @@ ColumnLayout {
             checked: Settings.bar.showTitle; onToggled: (v) => Settings.bar.showTitle = v }
         SettingSwitch { label: "System tray"; tint: Atelier.blue
             checked: Settings.bar.showTray; onToggled: (v) => Settings.bar.showTray = v }
+        SettingSwitch { label: "Privacy indicators"; description: "Dots when an app uses the microphone or camera, or the screen is shared"; tint: Atelier.blue
+            checked: Settings.bar.showPrivacy; onToggled: (v) => Settings.bar.showPrivacy = v }
         SettingSwitch { label: "Clock"; tint: Atelier.blue
             checked: Settings.bar.showClock; onToggled: (v) => Settings.bar.showClock = v }
         SettingSwitch { label: "Status icons"; description: "Wi-Fi, Bluetooth, volume, battery and the notification bell"; tint: Atelier.blue
