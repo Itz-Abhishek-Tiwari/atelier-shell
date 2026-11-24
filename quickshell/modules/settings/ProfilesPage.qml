@@ -54,7 +54,7 @@ ColumnLayout {
             RowLayout {
                 spacing: 8
                 Rectangle {
-                    implicitWidth: 180; implicitHeight: 34; radius: 17
+                    implicitWidth: 180; implicitHeight: 34; radius: Atelier.radiusLg
                     color: Atelier.containerHigh
                     border.width: 1
                     border.color: nameIn.activeFocus ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
@@ -62,13 +62,13 @@ ColumnLayout {
                         id: nameIn
                         anchors.fill: parent; anchors.leftMargin: 14; anchors.rightMargin: 14
                         verticalAlignment: Text.AlignVCenter
-                        font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.text
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.text
                         clip: true; selectByMouse: true
                         maximumLength: 40
                         onTextChanged: page.newName = text
                         onAccepted: saveChip.clicked()
                         Text { anchors.verticalCenter: parent.verticalCenter; visible: !nameIn.text; text: "e.g. Docked"
-                            font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext; opacity: 0.6 }
+                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext; opacity: 0.6 }
                     }
                 }
                 Chip {
@@ -98,7 +98,7 @@ ColumnLayout {
             visible: Profiles.list.length === 0
             Layout.topMargin: 14; Layout.bottomMargin: 14
             text: "No profiles yet. Save one above, e.g. “Laptop” and “Docked”."
-            font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext
+            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext
         }
         Repeater {
             model: Profiles.list
@@ -119,21 +119,21 @@ ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 12
                         Rectangle {
-                            implicitWidth: 34; implicitHeight: 34; radius: 10
+                            implicitWidth: 34; implicitHeight: 34; radius: Atelier.radiusSm
                             color: pr.isActive ? Atelier.accentFill : Qt.alpha(Atelier.accent, 0.14)
                             Text { anchors.centerIn: parent; text: page.ruleFor(pr.modelData.name) ? "󰍹" : "󰒓"
-                                font.family: Atelier.font; font.pixelSize: 15; color: pr.isActive ? Atelier.onFill : Atelier.accent }
+                                font.family: Atelier.font; font.pixelSize: Atelier.fsXl; color: pr.isActive ? Atelier.onFill : Atelier.accent }
                         }
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 2
                             Text { text: pr.modelData.name + (pr.isActive ? "  ·  in use" : ""); elide: Text.ElideRight; Layout.fillWidth: true
-                                font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium; color: Atelier.text }
+                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.Medium; color: Atelier.text }
                             Text {
                                 Layout.fillWidth: true; elide: Text.ElideRight
                                 text: [page.when(pr.modelData.saved), pr.modelData.theme, pr.modelData.wallpaper ? pr.modelData.wallpaper.split("/").pop() : ""]
                                     .filter(x => x).join(" · ")
-                                font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
                             }
                         }
                         Chip { icon: "󰄬"; text: "Use"; tint: Atelier.green; interactive: true; implicitHeight: 30

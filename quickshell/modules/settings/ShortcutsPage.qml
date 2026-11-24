@@ -149,7 +149,7 @@ ColumnLayout {
             RowLayout {
                 spacing: 8
                 Rectangle {
-                    implicitWidth: 200; implicitHeight: 34; radius: 17
+                    implicitWidth: 200; implicitHeight: 34; radius: Atelier.radiusLg
                     color: Atelier.containerHigh
                     border.width: 1
                     border.color: q.activeFocus ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
@@ -157,11 +157,11 @@ ColumnLayout {
                         id: q
                         anchors.fill: parent; anchors.leftMargin: 14; anchors.rightMargin: 14
                         verticalAlignment: Text.AlignVCenter
-                        font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.text
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.text
                         clip: true
                         onTextChanged: page.query = text
                         Text { anchors.verticalCenter: parent.verticalCenter; visible: !q.text; text: "Name or keys"
-                            font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext; opacity: 0.6 }
+                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext; opacity: 0.6 }
                     }
                 }
                 Chip { visible: Object.keys(page.overrides).length > 0; icon: "󰦛"; text: "Reset all"; tint: Atelier.red
@@ -183,7 +183,7 @@ ColumnLayout {
             visible: page.custom.length === 0
             Layout.topMargin: 12; Layout.bottomMargin: 4
             text: "Run any command from a key combination"
-            font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext
+            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext
         }
         Repeater {
             model: page.custom
@@ -250,14 +250,14 @@ ColumnLayout {
     Text {
         visible: page.binds.length === 0
         text: "Shortcuts appear here once Hyprland has loaded conf/keybinds.lua"
-        font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext
+        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext
     }
     Text {
         Layout.fillWidth: true
         Layout.leftMargin: 4
         wrapMode: Text.Wrap
         text: "Click the keys to record new ones, Esc cancels. Combos Hyprland already uses never reach this window, so turn the other shortcut off first. Groups like Super + 1 … 0 stay as they are in hypr/conf/keybinds.lua."
-        font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
     }
 
     // keycaps of a combo; click to record a new one
@@ -268,7 +268,7 @@ ColumnLayout {
         signal clicked()
         implicitWidth: Math.max(96, capsRow.implicitWidth + 16)
         implicitHeight: 32
-        radius: 10
+        radius: Atelier.radiusSm
         color: active ? Qt.alpha(Atelier.accent, 0.16) : (kbMa.containsMouse && enabled ? Atelier.containerHigh : "transparent")
         border.width: 1
         border.color: active ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
@@ -277,8 +277,8 @@ ColumnLayout {
             id: capsRow
             anchors.centerIn: parent
             spacing: 4
-            Text { visible: kb.active; text: "Press keys…"; font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.accent }
-            Text { visible: !kb.active && kb.combo === ""; text: "Off"; font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext }
+            Text { visible: kb.active; text: "Press keys…"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.accent }
+            Text { visible: !kb.active && kb.combo === ""; text: "Off"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext }
             Repeater {
                 model: kb.active ? [] : page.caps(kb.combo)
                 Rectangle {
@@ -286,7 +286,7 @@ ColumnLayout {
                     implicitWidth: Math.max(22, t.implicitWidth + 12); implicitHeight: 22; radius: 6
                     color: Atelier.containerHigh
                     border.width: 1; border.color: Atelier.outline
-                    Text { id: t; anchors.centerIn: parent; text: modelData; font.family: Atelier.font; font.pixelSize: 10; color: Atelier.text }
+                    Text { id: t; anchors.centerIn: parent; text: modelData; font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; color: Atelier.text }
                 }
             }
         }
@@ -302,7 +302,7 @@ ColumnLayout {
         property bool mono: false
         signal committed(string text)
         implicitHeight: 32
-        radius: 16
+        radius: Atelier.radiusMd
         color: Atelier.containerHigh
         border.width: 1
         border.color: fin.activeFocus ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
@@ -310,13 +310,13 @@ ColumnLayout {
             id: fin
             anchors.fill: parent; anchors.leftMargin: 12; anchors.rightMargin: 12
             verticalAlignment: Text.AlignVCenter
-            font.family: f.mono ? Atelier.font : Atelier.fontUi; font.pixelSize: 12; color: Atelier.text
+            font.family: f.mono ? Atelier.font : Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.text
             clip: true; selectByMouse: true
             text: f.text
             onEditingFinished: if (text !== f.text) f.committed(text)
             Connections { target: f; function onTextChanged() { if (!fin.activeFocus) fin.text = f.text; } }
             Text { anchors.verticalCenter: parent.verticalCenter; visible: !fin.text && !fin.activeFocus; text: f.placeholder
-                font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext; opacity: 0.6 }
+                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext; opacity: 0.6 }
         }
     }
 }

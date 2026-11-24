@@ -62,7 +62,7 @@ ColumnLayout {
             label: "Try it"
             description: "Hold a key here to feel the repeat settings"
             Rectangle {
-                implicitWidth: 220; implicitHeight: 34; radius: 17
+                implicitWidth: 220; implicitHeight: 34; radius: Atelier.radiusLg
                 color: Atelier.containerHigh
                 border.width: 1
                 border.color: tryIn.activeFocus ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
@@ -70,7 +70,7 @@ ColumnLayout {
                     id: tryIn
                     anchors.fill: parent; anchors.leftMargin: 14; anchors.rightMargin: 14
                     verticalAlignment: Text.AlignVCenter
-                    font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.text
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.text
                     clip: true; selectByMouse: true
                 }
             }

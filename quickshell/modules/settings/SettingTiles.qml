@@ -43,12 +43,12 @@ Item {
         anchors.top: parent.top
         anchors.topMargin: 12
         spacing: 2
-        Text { text: root.label; font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium; color: Atelier.text }
+        Text { text: root.label; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.Medium; color: Atelier.text }
         Text {
             Layout.fillWidth: true
             visible: text.length > 0
             text: root.description
-            font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
             wrapMode: Text.Wrap
         }
     }
@@ -75,7 +75,7 @@ Item {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     height: root.tileHeight
-                    radius: 10
+                    radius: Atelier.radiusSm
                     color: Atelier.containerHigh
                     border.width: tile.on ? 2 : 1
                     border.color: tile.on ? Atelier.accent : (ma.containsMouse ? Qt.alpha(Atelier.text, 0.25) : Atelier.outline)
@@ -96,7 +96,7 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: tile.modelData.label
                     font.family: Atelier.fontUi
-                    font.pixelSize: 12
+                    font.pixelSize: Atelier.fsMd
                     font.weight: tile.on ? Font.DemiBold : Font.Normal
                     color: tile.on ? Atelier.text : Atelier.subtext1
                 }

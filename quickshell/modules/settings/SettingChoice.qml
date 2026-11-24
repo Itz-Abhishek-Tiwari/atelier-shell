@@ -14,7 +14,7 @@ SettingRow {
     Rectangle {
         implicitWidth: seg.implicitWidth + 6
         implicitHeight: 32
-        radius: 16
+        radius: Atelier.radiusMd
         color: Atelier.containerHigh
 
         Row {
@@ -37,7 +37,7 @@ SettingRow {
                         anchors.centerIn: parent
                         text: modelData.label
                         font.family: Atelier.fontUi
-                        font.pixelSize: 11
+                        font.pixelSize: Atelier.fsSm
                         font.weight: Font.DemiBold
                         color: parent.on ? Atelier.onFill : Atelier.text
                     }

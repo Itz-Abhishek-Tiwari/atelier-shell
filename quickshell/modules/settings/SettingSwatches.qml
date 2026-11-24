@@ -67,13 +67,13 @@ Item {
                 Layout.fillWidth: true
                 spacing: 2
                 Text { Layout.fillWidth: true; text: root.label; elide: Text.ElideRight
-                       font.family: Atelier.fontUi; font.pixelSize: 13; font.weight: Font.Medium; color: Atelier.text }
+                       font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.Medium; color: Atelier.text }
                 Text { Layout.fillWidth: true; text: root.hovered ? root.currentLabel : (root.description || root.currentLabel)
-                       wrapMode: Text.Wrap; font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext }
+                       wrapMode: Text.Wrap; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
             }
             // custom hex
             Rectangle {
-                implicitWidth: 92; implicitHeight: 30; radius: 15
+                implicitWidth: 92; implicitHeight: 30; radius: Atelier.radiusLg
                 color: Atelier.containerHigh
                 border.width: 1
                 border.color: hex.activeFocus || root.value.startsWith("#") ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
@@ -87,7 +87,7 @@ Item {
                         id: hex
                         anchors.verticalCenter: parent.verticalCenter
                         width: 58
-                        font.family: Atelier.font; font.pixelSize: 11; color: Atelier.text
+                        font.family: Atelier.font; font.pixelSize: Atelier.fsSm; color: Atelier.text
                         maximumLength: 7
                         selectByMouse: true
                         text: root.value.startsWith("#") ? root.value.toUpperCase() : ""
@@ -103,7 +103,7 @@ Item {
             }
             // pick from the screen
             Rectangle {
-                implicitWidth: 30; implicitHeight: 30; radius: 15
+                implicitWidth: 30; implicitHeight: 30; radius: Atelier.radiusLg
                 color: root.awaitingPick ? Qt.alpha(Atelier.accent, 0.16) : (pkMa.containsMouse ? Atelier.containerHigh : "transparent")
                 Text { anchors.centerIn: parent; text: "󰈊"; font.family: Atelier.font; font.pixelSize: 14
                        color: root.awaitingPick ? Atelier.accent : (pkMa.containsMouse ? Atelier.text : Atelier.subtext) }
@@ -133,9 +133,9 @@ Item {
                     Rectangle {
                         id: dot
                         anchors.centerIn: parent
-                        width: 20; height: 20; radius: 10
+                        width: 20; height: 20; radius: Atelier.radiusSm
                         scale: swMa.containsMouse && !sw.on ? 1.15 : 1
-                        Behavior on scale { NumberAnimation { duration: 180; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+                        Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
                         border.width: 1
                         border.color: Atelier.outline
                         color: sw.id_ === "text" ? Atelier.text
@@ -146,7 +146,7 @@ Item {
                             anchors.centerIn: parent
                             visible: sw.id_ === "auto" || sw.id_ === "text"
                             text: sw.id_ === "auto" ? "A" : "T"
-                            font.family: Atelier.fontUi; font.pixelSize: 10; font.weight: Font.Bold
+                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMicro; font.weight: Font.Bold
                             color: sw.id_ === "text" ? Atelier.base : Atelier.text
                         }
                     }

@@ -212,22 +212,22 @@ ColumnLayout {
                     x: at.x + 2; y: at.y + 2
                     width: b.w * arr.frame.k - 4; height: b.h * arr.frame.k - 4
                     z: dragMa.drag.active ? 10 : (sel ? 2 : 1)
-                    radius: 10
+                    radius: Atelier.radiusSm
                     color: dragMa.pressed ? Qt.alpha(Atelier.accent, 0.30) : Qt.alpha(Atelier.accent, sel ? 0.22 : 0.10)
                     border.width: sel ? 2 : 1
                     border.color: Qt.alpha(Atelier.accent, sel ? 0.9 : 0.5)
-                    Behavior on x { enabled: !dragMa.pressed; NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                    Behavior on y { enabled: !dragMa.pressed; NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                    Behavior on x { enabled: !dragMa.pressed; NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
+                    Behavior on y { enabled: !dragMa.pressed; NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
 
                     Column {
                         anchors.centerIn: parent
                         spacing: 2
                         Text { anchors.horizontalCenter: parent.horizontalCenter; text: box.b.name
-                            font.family: Atelier.font; font.pixelSize: 12; font.bold: true; color: Atelier.text }
+                            font.family: Atelier.font; font.pixelSize: Atelier.fsMd; font.bold: true; color: Atelier.text }
                         Text { anchors.horizontalCenter: parent.horizontalCenter; visible: box.height > 44
                             text: box.live ? box.live.x + ", " + box.live.y
                                 : box.b.mon.width + "×" + box.b.mon.height + (box.b.mon.scale !== 1 ? " · " + (Math.round(box.b.mon.scale * 100) / 100) + "×" : "")
-                            font.family: Atelier.font; font.pixelSize: 10; color: Atelier.subtext }
+                            font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; color: Atelier.subtext }
                     }
                     MouseArea {
                         id: dragMa
@@ -257,7 +257,7 @@ ColumnLayout {
                 visible: page.enabledCount <= 1
                 anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter
                 text: "Connect another display to arrange them by dragging"
-                font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
             }
         }
         SettingRow {
@@ -310,7 +310,7 @@ ColumnLayout {
                             text: idWin.modelData.width + " × " + idWin.modelData.height
                                 // the model, unless it's only a raw panel code ("0xD1ED")
                                 + (idWin.modelData.model && !/^0x[0-9a-f]+$/i.test(idWin.modelData.model) ? "  ·  " + idWin.modelData.model : "")
-                            font.family: Atelier.fontUi; font.pixelSize: 15
+                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl
                             color: Qt.alpha(Atelier.onFill, 0.8)
                         }
                     }
@@ -322,7 +322,7 @@ ColumnLayout {
     Text {
         visible: page.mons.length === 0
         text: "Looking for displays…"
-        font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext
+        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext
     }
 
     // ── one card per output ─────────────────────────────────────────────────
@@ -425,7 +425,7 @@ ColumnLayout {
         Layout.leftMargin: 4
         wrapMode: Text.Wrap
         text: "Displays you plug in later use their best mode automatically until you change them here. Settings are remembered per connector (eDP-1, HDMI-A-1…)."
-        font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext
+        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
     }
 
     // ‹ value › picker for long lists (resolutions, refresh rates)
@@ -444,7 +444,7 @@ ColumnLayout {
                 Layout.minimumWidth: 110
                 horizontalAlignment: Text.AlignHCenter
                 text: st.idx >= 0 ? st.options[st.idx].label : st.value.replace("x", " × ")
-                font.family: Atelier.font; font.pixelSize: 12; color: Atelier.text
+                font.family: Atelier.font; font.pixelSize: Atelier.fsMd; color: Atelier.text
             }
             Chip { icon: "󰅂"; tint: Atelier.accent; interactive: st.idx > 0; implicitHeight: 30
                 opacity: interactive ? 1 : 0.35

@@ -59,12 +59,12 @@ ColumnLayout {
                     text: page.classic
                         ? "Windows float and overlap, with title bars (close · maximise · minimise). A menu bar along the top names the focused app; a dock along the bottom holds your apps."
                         : "Windows tile: every new window takes a share of the screen and nothing overlaps. The bar runs down the side; everything opens from the keyboard or the bar."
-                    font.family: Atelier.fontUi; font.pixelSize: 12; color: Atelier.subtext
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext
                 }
                 Text {
                     visible: page.inUse
                     text: "󰄬  In use"
-                    font.family: Atelier.fontUi; font.pixelSize: 12; font.weight: Font.DemiBold; color: Atelier.accent
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; color: Atelier.accent
                 }
                 PrimaryButton {
                     visible: !page.inUse
@@ -156,7 +156,7 @@ ColumnLayout {
             visible: Settings.windows.layout === "monocle"
             Layout.fillWidth: true
             text: "Monocle has no options: every window is full-size and you switch between them."
-            font.family: Atelier.fontUi; font.pixelSize: 11; color: Atelier.subtext; wrapMode: Text.Wrap
+            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext; wrapMode: Text.Wrap
         }
     }
 
