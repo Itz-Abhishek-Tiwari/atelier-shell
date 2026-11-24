@@ -12,4 +12,6 @@ return {
     -- plain, tight dark shadow (no coloured glow)
     shadow            = 0x5511111b,
     shadow_inactive   = 0x3311111b,
+    cursor            = "Bibata-Modern-Ice",
+    cursor_size       = 24,
 }

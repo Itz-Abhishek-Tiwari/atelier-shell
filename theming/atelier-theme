@@ -133,6 +133,20 @@ def icon_theme(t):
     return icons
 
 
+# Bibata cursors: the white one (Ice) on dark themes, the black one (Classic) on light themes,
+# so the pointer always stands out. A palette may name its own with "cursor".
+CURSOR_SIZE = 24
+
+
+def cursor_theme(t):
+    want = t.get("cursor") or ("Bibata-Modern-Ice" if t["variant"] == "dark" else "Bibata-Modern-Classic")
+    icon_dirs = [HOME / ".local/share/icons", HOME / ".icons", Path("/usr/share/icons")]
+    for name in (want, "Bibata-Modern-Classic"):
+        if any((d / name / "cursors").is_dir() for d in icon_dirs):
+            return name
+    return "Adwaita"
+
+
 # UI fonts for Qt/KDE apps (the terminal font made every Qt app's labels monospace)
 UI_FONT = ("Inter", 10)
 MONO_FONT = ("JetBrainsMono Nerd Font", 10)
@@ -213,6 +227,8 @@ return {{
     -- plain, tight dark shadow (no coloured glow)
     shadow            = 0x55{hex6(c['crust'])},
     shadow_inactive   = 0x33{hex6(c['crust'])},
+    cursor            = "{cursor_theme(t)}",
+    cursor_size       = {CURSOR_SIZE},
 }}
 """)
     # Recolour the running compositor without a full `hyprctl reload` (a reload re-runs the
@@ -1138,7 +1154,23 @@ def t_zed(t, c):
         f.truncate()
 
 
-TARGETS = [t_quickshell, t_hyprland, t_kitty, t_ghostty, t_vscode, t_gtk, t_qt, t_starship, t_zsh, t_btop,
+def t_cursor(t, c):
+    """Pointer theme everywhere: the compositor (live), GTK/GNOME, and XWayland/other apps."""
+    name = cursor_theme(t)
+    run("hyprctl", "setcursor", name, str(CURSOR_SIZE))
+    for ini in (CONF / "gtk-3.0/settings.ini", CONF / "gtk-4.0/settings.ini"):
+        if ini.exists():
+            s = ini.read_text()
+            for k, v in (("gtk-cursor-theme-name", name), ("gtk-cursor-theme-size", str(CURSOR_SIZE))):
+                s = re.sub(rf"(?m)^{k}=.*$", f"{k}={v}", s) if re.search(rf"(?m)^{k}=", s) else s.rstrip() + f"\n{k}={v}\n"
+            ini.write_text(s)
+    run("gsettings", "set", "org.gnome.desktop.interface", "cursor-theme", name)
+    run("gsettings", "set", "org.gnome.desktop.interface", "cursor-size", str(CURSOR_SIZE))
+    # apps that only read the XDG "default" cursor theme (XWayland, some toolkits)
+    write(HOME / ".icons/default/index.theme", f"[Icon Theme]\nName=Default\nInherits={name}\n")
+
+
+TARGETS = [t_quickshell, t_hyprland, t_cursor, t_kitty, t_ghostty, t_vscode, t_gtk, t_qt, t_starship, t_zsh, t_btop,
            t_spotify, t_discord, t_nvim, t_zed]
 
 

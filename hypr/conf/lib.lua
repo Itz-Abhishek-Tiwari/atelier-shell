@@ -28,6 +28,8 @@ M.theme = M.load_table(M.CONF .. "/theme.lua") or {   -- fallback: Catppuccin Mo
     groupbar_text     = "rgba(cdd6f4ff)",
     shadow            = 0x6611111b,
     shadow_inactive   = 0x3311111b,
+    cursor            = "Bibata-Modern-Ice",
+    cursor_size       = 24,
 }
 
 return M
