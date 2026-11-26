@@ -20,7 +20,7 @@ return {
         dev = { opaque = true, blur = "light", shadows = true, animations = true, dim = false, anim_speed = 0.60 },
         game = { opaque = true, blur = "off", shadows = false, animations = false, tearing = true },
         saver = { opaque = true, blur = "off", shadows = false, animations = false, dim = false },
-        showcase = { window_style = "bubble", workspace_style = "off", blur_passes = 2, strength = 0.65, duration = 0, on_open = false, on_close = false, on_move = true },
+        showcase = { window_style = "construction", workspace_style = "off", blur_passes = 2, strength = 0.65, duration = 0, on_open = false, on_close = false, on_move = true },
     },
     -- Settings → Keyboard & mouse (conf/input.lua)
     input = { ["kb_layout"] = "us", ["kb_variant"] = "", ["kb_options"] = "", ["repeat_rate"] = 25, ["repeat_delay"] = 600, ["numlock_by_default"] = false, ["sensitivity"] = 0, ["accel_profile"] = "adaptive", ["natural_scroll"] = false, ["scroll_factor"] = 1.35, ["left_handed"] = false, ["follow_mouse"] = 1, ["touchpad"] = { ["natural_scroll"] = true, ["scroll_factor"] = 0.45, ["tap_to_click"] = true, ["clickfinger_behavior"] = true, ["disable_while_typing"] = true, ["drag_lock"] = 0 } },
