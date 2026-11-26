@@ -235,7 +235,7 @@ get_devices()
                     // Title: Bluetooth
                     Text {
                         text: "Bluetooth"
-                        font.family: btOverlayRoot.fontMono
+                        font.family: Atelier.fontUi
                         font.pixelSize: Atelier.fsXl
                         font.bold: true
                         color: btOverlayRoot.colText
@@ -248,7 +248,7 @@ get_devices()
 
                         Text {
                             text: "Enabled"
-                            font.family: btOverlayRoot.fontMono
+                            font.family: Atelier.fontUi
                             font.pixelSize: Atelier.fsLg
                             color: btOverlayRoot.colText
                             Layout.fillWidth: true
@@ -264,7 +264,7 @@ get_devices()
 
                         Text {
                             text: "Discovering"
-                            font.family: btOverlayRoot.fontMono
+                            font.family: Atelier.fontUi
                             font.pixelSize: Atelier.fsLg
                             color: btOverlayRoot.colText
                             Layout.fillWidth: true
@@ -285,7 +285,7 @@ get_devices()
                         text: connCount > 0
                             ? btOverlayRoot.deviceList.length + " devices (" + connCount + " connected)"
                             : btOverlayRoot.deviceList.length + " devices available"
-                        font.family: btOverlayRoot.fontMono
+                        font.family: Atelier.fontUi
                         font.pixelSize: Atelier.fsSm
                         color: btOverlayRoot.colSubtext
                     }
@@ -340,7 +340,7 @@ get_devices()
                                 // Device Name
                                 Text {
                                     text: modelData.name
-                                    font.family: btOverlayRoot.fontMono
+                                    font.family: Atelier.fontUi
                                     font.pixelSize: Atelier.fsMd
                                     font.bold: modelData.connected
                                     color: modelData.connected ? btOverlayRoot.colPrimary : btOverlayRoot.colText
@@ -411,7 +411,7 @@ get_devices()
 
                             Text {
                                 text: "Open settings"
-                                font.family: btOverlayRoot.fontMono
+                                font.family: Atelier.fontUi
                                 font.pixelSize: Atelier.fsMd
                                 font.bold: true
                                 color: Atelier.accent

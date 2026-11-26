@@ -349,7 +349,7 @@ Item {
 
                     Text {
                         text: "Password for " + wifiOverlayRoot.selectedSsid
-                        font.family: wifiOverlayRoot.fontMono
+                        font.family: Atelier.fontUi
                         font.pixelSize: Atelier.fsLg
                         font.bold: true
                         color: wifiOverlayRoot.colText
@@ -360,7 +360,7 @@ Item {
                     Text {
                         visible: wifiOverlayRoot.errorText !== ""
                         text: wifiOverlayRoot.errorText
-                        font.family: wifiOverlayRoot.fontMono
+                        font.family: Atelier.fontUi
                         font.pixelSize: Atelier.fsSm
                         color: Atelier.red
                         Layout.fillWidth: true
@@ -380,7 +380,7 @@ Item {
                             anchors.leftMargin: 12
                             anchors.rightMargin: 40
                             verticalAlignment: TextInput.AlignVCenter
-                            font.family: wifiOverlayRoot.fontMono
+                            font.family: Atelier.fontUi
                             font.pixelSize: Atelier.fsLg
                             color: wifiOverlayRoot.colText
                             echoMode: wifiOverlayRoot.showPassword ? TextInput.Normal : TextInput.Password
@@ -389,7 +389,7 @@ Item {
 
                             Text {
                                 text: "Enter Wi-Fi password..."
-                                font.family: wifiOverlayRoot.fontMono
+                                font.family: Atelier.fontUi
                                 font.pixelSize: Atelier.fsMd
                                 color: wifiOverlayRoot.colSubtext
                                 opacity: 0.6
@@ -416,7 +416,7 @@ Item {
                             Text {
                                 anchors.centerIn: parent
                                 text: wifiOverlayRoot.showPassword ? "\u{F06D1}" : "\u{F0208}"   // eye-off / eye
-                                font.family: wifiOverlayRoot.fontMono
+                                font.family: Atelier.fontUi
                                 font.pixelSize: Atelier.fsXl
                                 color: wifiOverlayRoot.showPassword ? wifiOverlayRoot.colPrimary : wifiOverlayRoot.colSubtext
                             }
@@ -447,7 +447,7 @@ Item {
                             Text {
                                 anchors.centerIn: parent
                                 text: "Cancel"
-                                font.family: wifiOverlayRoot.fontMono
+                                font.family: Atelier.fontUi
                                 font.pixelSize: Atelier.fsMd
                                 color: wifiOverlayRoot.colSubtext
                             }
@@ -470,7 +470,7 @@ Item {
                             Text {
                                 anchors.centerIn: parent
                                 text: "Connect"
-                                font.family: wifiOverlayRoot.fontMono
+                                font.family: Atelier.fontUi
                                 font.pixelSize: Atelier.fsMd
                                 font.bold: true
                                 color: wifiOverlayRoot.colOnPrimary
@@ -495,7 +495,7 @@ Item {
                     // Title: Wireless
                     Text {
                         text: "Wireless"
-                        font.family: wifiOverlayRoot.fontMono
+                        font.family: Atelier.fontUi
                         font.pixelSize: Atelier.fsXl
                         font.bold: true
                         color: wifiOverlayRoot.colText
@@ -508,7 +508,7 @@ Item {
 
                         Text {
                             text: "Enabled"
-                            font.family: wifiOverlayRoot.fontMono
+                            font.family: Atelier.fontUi
                             font.pixelSize: Atelier.fsLg
                             color: wifiOverlayRoot.colText
                             Layout.fillWidth: true
@@ -524,7 +524,7 @@ Item {
                             : (wifiOverlayRoot.scannedNetworks.length === 0 || wifiOverlayRoot.scanRetries > 0)
                                 ? (wifiOverlayRoot.scanRetries >= 8 ? "No networks found" : "Scanning…")
                                 : wifiOverlayRoot.scannedNetworks.length + " networks available"
-                        font.family: wifiOverlayRoot.fontMono
+                        font.family: Atelier.fontUi
                         font.pixelSize: Atelier.fsSm
                         color: wifiOverlayRoot.colSubtext
                     }
@@ -588,7 +588,7 @@ Item {
                                 // SSID Name
                                 Text {
                                     text: modelData.ssid + (wifiOverlayRoot.busySsid === modelData.ssid ? "  · connecting…" : "")
-                                    font.family: wifiOverlayRoot.fontMono
+                                    font.family: Atelier.fontUi
                                     font.pixelSize: Atelier.fsMd
                                     font.bold: modelData.inUse
                                     color: modelData.inUse ? wifiOverlayRoot.colPrimary : wifiOverlayRoot.colText
@@ -671,7 +671,7 @@ Item {
 
                             Text {
                                 text: "Open settings"
-                                font.family: wifiOverlayRoot.fontMono
+                                font.family: Atelier.fontUi
                                 font.pixelSize: Atelier.fsMd
                                 font.bold: true
                                 color: Atelier.accent
