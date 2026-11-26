@@ -36,13 +36,21 @@ PanelWindow {
     readonly property int pad: 40                     // room for the shadow around the text
     readonly property int gutter: Math.round(w.gutter * k)   // distance from the frame's inner edge
 
-    // an unanchored axis is centred by layer-shell; otherwise anchor that edge
-    anchors { left: atLeft; right: atRight; top: atTop; bottom: atBottom }
+    // Nudge from that spot (Settings → Desktop → Fine tune): + is right / down, in px.
+    readonly property int offX: Math.round(w.offsetX || 0)
+    readonly property int offY: Math.round(w.offsetY || 0)
+    readonly property real screenW: root.screen ? root.screen.width : 1920
+    readonly property real screenH: root.screen ? root.screen.height : 1080
+    // an unanchored axis is centred by layer-shell; once it is nudged, that axis is anchored to the
+    // left / top edge at the centred spot plus the nudge (layer-shell ignores margins on a free axis)
+    readonly property bool anchorL: atLeft || (!atRight && offX !== 0)
+    readonly property bool anchorT: atTop || (!atBottom && offY !== 0)
+    anchors { left: anchorL; right: atRight; top: anchorT; bottom: atBottom }
     margins {
-        left: Atelier.insetLeft + gutter - pad
-        right: Atelier.insetRight + gutter - pad
-        top: Atelier.insetTop + gutter - pad
-        bottom: Atelier.insetBottom + gutter - pad
+        left: atLeft ? Atelier.insetLeft + gutter - pad + offX : anchorL ? Math.round((screenW - implicitWidth) / 2) + offX : 0
+        right: Atelier.insetRight + gutter - pad - offX
+        top: atTop ? Atelier.insetTop + gutter - pad + offY : anchorT ? Math.round((screenH - implicitHeight) / 2) + offY : 0
+        bottom: Atelier.insetBottom + gutter - pad - offY
     }
     implicitWidth: column.implicitWidth + 2 * pad
     implicitHeight: column.implicitHeight + 2 * pad
@@ -191,8 +199,8 @@ PanelWindow {
     readonly property var box: {
         const sw = root.screen ? root.screen.width : 1920, sh = root.screen ? root.screen.height : 1080;
         const w = root.implicitWidth, h = root.implicitHeight;
-        const x = atLeft ? root.margins.left : atRight ? sw - root.margins.right - w : (sw - w) / 2;
-        const y = atTop ? root.margins.top : atBottom ? sh - root.margins.bottom - h : (sh - h) / 2;
+        const x = anchorL ? root.margins.left : atRight ? sw - root.margins.right - w : (sw - w) / 2;
+        const y = anchorT ? root.margins.top : atBottom ? sh - root.margins.bottom - h : (sh - h) / 2;
         return [sw, sh, x, y, w, h].map(Math.round);
     }
     readonly property string _lumaKey: Wallpaper.current + "|" + box.join(",")

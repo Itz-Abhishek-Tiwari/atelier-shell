@@ -48,6 +48,13 @@ Singleton {
         e[pluginId] = msg;
         loadErrors = e;
     }
+    // where the user moved a plugin's desktop widget: {h, v, margin, x, y}, any key may be missing (Settings → Plugins)
+    function layoutOf(uid) { return get("_layout", uid, null) || ({}); }
+    function setLayout(uid, patch) {
+        const cur = Object.assign({}, layoutOf(uid), patch);
+        for (const k in cur) if (cur[k] === undefined) delete cur[k];
+        set("_layout", uid, Object.keys(cur).length ? cur : null);
+    }
     function run(cmd) { Quickshell.execDetached(cmd); }
     function notify(title, body) { Quickshell.execDetached(["notify-send", "-a", "Plugin", title, body || ""]); }
 

@@ -13,12 +13,26 @@ Instantiator {
     delegate: PanelWindow {
         id: win
         required property var modelData
-        readonly property string h: modelData.hAlign || "right"
-        readonly property string v: modelData.vAlign || "top"
-        readonly property int m: modelData.margin !== undefined ? modelData.margin : 40
+        // where the user put it (Settings → Plugins → Desktop widgets) wins over the plugin's own manifest
+        readonly property var pos: Plugins.layoutOf(modelData.uid)
+        readonly property string h: pos.h || modelData.hAlign || "right"
+        readonly property string v: pos.v === "middle" ? "center" : (pos.v || (modelData.vAlign === "middle" ? "center" : modelData.vAlign) || "top")
+        readonly property int m: pos.margin !== undefined ? pos.margin : (modelData.margin !== undefined ? modelData.margin : 40)
+        readonly property int offX: Math.round(pos.x || 0)      // + = right
+        readonly property int offY: Math.round(pos.y || 0)      // + = down
+        readonly property real sw: win.screen ? win.screen.width : 1920
+        readonly property real sh: win.screen ? win.screen.height : 1080
 
-        anchors { left: h === "left"; right: h === "right"; top: v === "top"; bottom: v === "bottom" }
-        margins { left: Atelier.insetLeft + m; right: Atelier.insetRight + m; top: Atelier.insetTop + m; bottom: Atelier.insetBottom + m }
+        // a free axis is centred by layer-shell; once nudged it is anchored at the centred spot + the nudge
+        readonly property bool aL: h === "left" || (h !== "right" && offX !== 0)
+        readonly property bool aT: v === "top" || (v !== "bottom" && offY !== 0)
+        anchors { left: aL; right: h === "right"; top: aT; bottom: v === "bottom" }
+        margins {
+            left: h === "left" ? Atelier.insetLeft + m + offX : aL ? Math.round((sw - implicitWidth) / 2) + offX : 0
+            right: Atelier.insetRight + m - offX
+            top: v === "top" ? Atelier.insetTop + m + offY : aT ? Math.round((sh - implicitHeight) / 2) + offY : 0
+            bottom: Atelier.insetBottom + m - offY
+        }
         implicitWidth: Math.max(1, ld.item ? ld.item.implicitWidth : 1)
         implicitHeight: Math.max(1, ld.item ? ld.item.implicitHeight : 1)
         color: "transparent"

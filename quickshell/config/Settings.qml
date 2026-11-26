@@ -120,6 +120,8 @@ Singleton {
                 property string vAlign: "bottom"        // top | middle | bottom
                 property string hAlign: "left"          // left | center | right
                 property int gutter: 64                 // px from the frame's inner edge
+                property int offsetX: 0                 // fine tune: nudge from that spot, px, + = right
+                property int offsetY: 0                 // + = down
                 property string clockFont: "display"    // display (Inter Display) | mono | serif
                 property string clockWeight: "light"    // thin | light | regular | bold
                 property int clockSize: 132             // px at Medium size
