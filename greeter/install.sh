@@ -64,7 +64,7 @@ install_files() {
     # stand-ins they read (config/, services/, components/); -L copies the real files
     rm -rf "$DEST/config" "$DEST/services" "$DEST/components" "$DEST/modules" "$DEST/scripts"
     cp -rL "$REPO/greeter/config" "$REPO/greeter/services" "$REPO/greeter/components" \
-           "$REPO/greeter/modules" "$REPO/greeter/scripts" "$DEST/"
+           "$REPO/greeter/modules" "$DEST/"
     chmod -R u=rwX,go=rX "$DEST"
     # older versions kept these next to shell.qml; they now live in $DATA
     rm -f "$DEST/colors.json" "$DEST/wallpaper"
