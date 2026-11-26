@@ -800,6 +800,8 @@ Item {
             }
         }
 
+        PluginBarItems {}
+
         // Power → session
         BarIcon {
             Layout.alignment: bar.crossAlign

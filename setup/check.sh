@@ -29,6 +29,8 @@ for f in "${py[@]}"; do
     python3 -I -c "import ast,sys; ast.parse(open(sys.argv[1]).read(), sys.argv[1])" "$f" 2>/dev/null || { fail "syntax: $f"; pyfail=1; }
 done
 [ $pyfail -eq 0 ] && ok "syntax: ${#py[@]} files"
+python3 -I quickshell/scripts/plugins-scan.py examples/plugins 2>/dev/null | python3 -I -c "import json,sys; json.load(sys.stdin)" \
+    && ok "plugin scanner outputs valid JSON" || fail "quickshell/scripts/plugins-scan.py does not output JSON"
 
 echo "Lua (Hyprland config)"
 luafail=0

@@ -317,6 +317,8 @@ Item {
             onClicked: bar.openNotifications()
         }
 
+        PluginBarItems {}
+
         Cell {
             visible: Settings.bar.showPower
             active: bar.activeOverlay === "power"
