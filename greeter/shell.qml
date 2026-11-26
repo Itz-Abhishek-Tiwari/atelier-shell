@@ -10,14 +10,14 @@ import qs.modules.lock
 
 // Atelier login screen: a Quickshell greeter for greetd that looks exactly like your lock
 // screen. It loads the SAME style files (modules/lock → the shell's quickshell/modules/lock):
-// Atelier, Depth or one of the phone styles, whichever Settings → Lock screen uses, with the
+// Atelier or one of the phone styles, whichever Settings → Lock screen uses, with the
 // same options. A small pill in the top-left corner picks the person and the desktop session.
 //
 //   greetd -> cage -> quickshell -p /etc/greetd/atelier-greeter/shell.qml -> session.sh -> session
 //
 // Self-contained on purpose: at login this runs as the `greeter` system user, so it cannot read
 // your $HOME or the main shell. config/ and services/ here are small stand-ins for the shell's
-// Atelier, Settings, Wallpaper, DepthWall… fed from /var/lib/atelier-greeter, which
+// Atelier, Settings, Wallpaper… fed from /var/lib/atelier-greeter, which
 // quickshell/scripts/greeter-sync.sh fills (Settings → Login screen runs it for you).
 //
 // Preview without touching your login (demo mode, password "demo", Esc closes):
@@ -199,9 +199,8 @@ ShellRoot {
     readonly property var phoneStyles: ["cupertino", "hyper", "harmony", "oxygen", "material", "dot"]
     readonly property string style: Settings.lock.theme
     Component { id: atelierUi; LockContent { lockRoot: greeterAuth } }
-    Component { id: depthUi; DepthLock { lockRoot: greeterAuth } }
     Component { id: phoneUi; PhoneLock { lockRoot: greeterAuth } }
-    function uiFor(t) { return t === "depth" ? depthUi : phoneStyles.indexOf(t) >= 0 ? phoneUi : atelierUi; }
+    function uiFor(t) { return phoneStyles.indexOf(t) >= 0 ? phoneUi : atelierUi; }
 
     // ═══ Windows ═════════════════════════════════════════════════════════════
     // Real login: one kiosk window in cage (cage makes it fullscreen; decorations are off

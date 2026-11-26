@@ -6,7 +6,7 @@ import Quickshell.Io
 // Everything the login screen knows, read from its data folder (it runs as the `greeter` user
 // and can't read your home). quickshell/scripts/greeter-sync.sh fills that folder:
 //   colors.json   your theme              lock.json     your lock-screen options
-//   wallpaper.jpg your wallpaper          depth.png/json  the Depth style's subject cut-out
+//   wallpaper.jpg your wallpaper
 //   faces/<user>  avatars                 fonts/        the clock font
 // The lock styles (modules/lock, the same files as the shell's lock screen) read it through the
 // small stand-ins in config/ and services/.
@@ -53,16 +53,6 @@ Singleton {
         watchChanges: true
         onFileChanged: reload()
         onLoaded: { try { root.s = JSON.parse(text()); } catch (e) { console.log("greeter: bad lock.json, using defaults"); } }
-    }
-
-    // ── the Depth style's cut-out for this wallpaper ──
-    property var depth: ({})
-    FileView {
-        path: root.dataDir + "/depth.json"
-        printErrors: false
-        watchChanges: true
-        onFileChanged: reload()
-        onLoaded: { try { root.depth = JSON.parse(text()); } catch (e) { root.depth = {}; } }
     }
 
     // ── the clock font (SpaceMono, copied over once) ──

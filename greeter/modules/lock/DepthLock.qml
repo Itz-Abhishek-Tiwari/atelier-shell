@@ -1,1 +1,0 @@
-../../../quickshell/modules/lock/DepthLock.qml
