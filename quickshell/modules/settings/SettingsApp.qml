@@ -258,6 +258,18 @@ Item {
                     contentHeight: sideCol.implicitHeight
                     boundsBehavior: Flickable.StopAtBounds
                     SmoothWheel { flickable: sideScroll }
+                    // a soft fade at the bottom while more pages are hidden below (the list scrolls)
+                    Rectangle {
+                        parent: sideScroll
+                        z: 10
+                        anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom
+                        height: 30
+                        visible: sideScroll.contentHeight > sideScroll.height + 1 && !sideScroll.atYEnd
+                        gradient: Gradient {
+                            GradientStop { position: 0; color: "transparent" }
+                            GradientStop { position: 1; color: Qt.alpha(Atelier.crust, 0.9) }
+                        }
+                    }
 
                     ColumnLayout {
                         id: sideCol
