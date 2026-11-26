@@ -364,7 +364,7 @@ Singleton {
 
             property JsonObject lock: JsonObject {
                 // atelier (LockContent.qml) | a phone style (PhoneLock.qml):
-                // cupertino, hyper, harmony, oxygen, material, dot, terminal, analog, aurora
+                // cupertino, hyper, harmony, oxygen, material, dot, terminal, analog, aurora, poster, flip, split, hud
                 property string theme: "atelier"
                 property string clock: "system"             // system (General → 24-hour clock) | 12 | 24, for every built-in style
             }
@@ -679,8 +679,12 @@ Singleton {
         { id: "oxygen",    name: "Oxygen",    note: "OnePlus OxygenOS-style" },
         { id: "material",  name: "Material",  note: "Pixel, Material You-style" },
         { id: "dot",       name: "Dot",       note: "Nothing OS-style" },
-        { id: "terminal",  name: "Terminal",  note: "A shell window with live info" },
-        { id: "analog",    name: "Analog",    note: "A calm clock face with hands" },
-        { id: "aurora",    name: "Aurora",    note: "Thin clock over drifting glows" }
+        { id: "terminal",  name: "Terminal",  note: "Full-screen terminal, pixel clock" },
+        { id: "analog",    name: "Analog",    note: "Designer wall clock, paper white" },
+        { id: "aurora",    name: "Aurora",    note: "Night sky, mountains, aurora" },
+        { id: "poster",    name: "Poster",    note: "Huge flat-colour numerals" },
+        { id: "flip",      name: "Flip",      note: "Flip-card clock that really flips" },
+        { id: "split",     name: "Split",     note: "Slanted panel, clear wallpaper" },
+        { id: "hud",       name: "HUD",       note: "Thin-lined dashboard grid" }
     ]
 }

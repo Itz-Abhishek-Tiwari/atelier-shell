@@ -201,7 +201,7 @@ ShellRoot {
     }
 
     // ── the style in use on your lock screen ─────────────────────────────────
-    readonly property var phoneStyles: ["cupertino", "hyper", "harmony", "oxygen", "material", "dot", "terminal", "analog", "aurora"]
+    readonly property var phoneStyles: ["cupertino", "hyper", "harmony", "oxygen", "material", "dot", "terminal", "analog", "aurora", "poster", "flip", "split", "hud"]
     readonly property string style: Settings.lock.theme
     Component { id: atelierUi; LockContent { lockRoot: greeterAuth } }
     Component { id: phoneUi; PhoneLock { lockRoot: greeterAuth } }
