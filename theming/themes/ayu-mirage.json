@@ -3,7 +3,7 @@
   "name": "Ayu Mirage",
   "variant": "dark",
   "accent": "peach",
-  "pair": "",
+  "pair": "ayu-light",
   "description": "Warm dusk, amber accent",
   "vscode": {
     "theme": "Ayu Mirage",

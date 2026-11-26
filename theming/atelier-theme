@@ -124,13 +124,106 @@ def resolved(t):
     return c
 
 
+ICON_DIR = HOME / ".local/share/icons"
+COLLOID_FOLDER = "#60c0f0"      # the one folder colour in Colloid's default (blue) variant
+
+
 def icon_theme(t):
-    """The theme's icon set (a Colloid variant) if installed, else plain Colloid-Dark/Light."""
+    """Atelier-Dark/-Light: Colloid with its folders recoloured to the palette's accent (built
+    by atelier_icons). Without Colloid: the palette's own icon set, else Colloid-Dark/Light."""
+    built = atelier_icons(t)
+    if built:
+        return built
     icons = t.get("icons") or ""
-    icon_dirs = [HOME / ".local/share/icons", HOME / ".icons", Path("/usr/share/icons")]
+    icon_dirs = [ICON_DIR, HOME / ".icons", Path("/usr/share/icons")]
     if not icons or not any((d / icons).is_dir() for d in icon_dirs):
         icons = "Colloid-Dark" if t["variant"] == "dark" else "Colloid-Light"
     return icons
+
+
+def _recolour_tree(src, out, colour):
+    """Mirror directory `src` at `out`: a subtree with no folder-blue icon becomes one symlink,
+    an icon with it is written recoloured, any other file links to the original."""
+    def has_blue(d):
+        for p in d.rglob("*.svg"):
+            try:
+                if COLLOID_FOLDER in p.read_text().lower():
+                    return True
+            except (OSError, UnicodeDecodeError):
+                pass
+        return False
+    out.mkdir(parents=True, exist_ok=True)
+    for p in sorted(src.iterdir()):
+        try:
+            real = p.resolve(strict=True)
+        except OSError:
+            continue                                      # dangling link
+        if real.is_dir():
+            if p.is_symlink() and real.parent == src:
+                os.symlink(os.readlink(p), out / p.name)  # sibling alias (scalable -> 64 ...)
+            elif has_blue(real):
+                _recolour_tree(real, out / p.name, colour)
+            else:
+                os.symlink(os.path.relpath(real, out), out / p.name)
+            continue
+        text = ""
+        if p.suffix == ".svg":
+            try:
+                text = real.read_text()
+            except (OSError, UnicodeDecodeError):
+                pass
+        if COLLOID_FOLDER in text.lower():
+            (out / p.name).write_text(re.sub(COLLOID_FOLDER, colour, text, flags=re.I))
+        else:
+            try:
+                os.link(real, out / p.name)               # a hard link costs no disk block
+            except OSError:
+                os.symlink(os.path.relpath(real, out), out / p.name)
+
+
+def atelier_icons(t):
+    """(Re)build ~/.local/share/icons/Atelier-<Variant> from Colloid-<Variant>, like Colloid's
+    own colour variants: places/ and apps/ copied with the folder blue replaced by the accent,
+    every other category a symlink. Skipped when the colour is unchanged. Returns the name or ''."""
+    dark = t["variant"] == "dark"
+    base_name = "Colloid-Dark" if dark else "Colloid-Light"
+    base = ICON_DIR / base_name
+    if not (base / "index.theme").is_file():
+        return ""
+    c = resolved(t)
+    # straight accent on dark; on light a touch softer so folders don't shout on white
+    colour = "#" + hex6(c["accent"] if dark else mix(c["accent"], c["base"], 0.12)).lower()
+    name = "Atelier-Dark" if dark else "Atelier-Light"
+    dest = ICON_DIR / name
+    stamp = f"{base_name} {colour} 5"
+    if (dest / ".atelier-stamp").is_file() and (dest / ".atelier-stamp").read_text() == stamp:
+        return name
+    tmp = ICON_DIR / f".{name}.atelier-tmp"
+    shutil.rmtree(tmp, ignore_errors=True)
+    tmp.mkdir(parents=True)
+    for entry in sorted(base.iterdir()):
+        n = entry.name
+        if n in ("icon-theme.cache", "index.theme"):
+            continue
+        cat = n.split("@")[0]
+        if cat in ("places", "apps") and "@" not in n:
+            _recolour_tree(entry.resolve(), tmp / n, colour)
+        elif entry.is_symlink():
+            os.symlink(os.readlink(entry), tmp / n)       # @2x/@3x -> sibling, same layout
+        else:
+            os.symlink(f"../{base_name}/{n}", tmp / n)
+    idx = (base / "index.theme").read_text()
+    (tmp / "index.theme").write_text(re.sub(r"(?m)^Name=.*$", f"Name={name}", idx, count=1))
+    (tmp / ".atelier-stamp").write_text(stamp)
+    if shutil.which("gtk-update-icon-cache"):
+        run("gtk-update-icon-cache", "-f", "-q", "-t", str(tmp))
+    old = ICON_DIR / f".{name}.atelier-old"
+    shutil.rmtree(old, ignore_errors=True)
+    if dest.exists():
+        dest.rename(old)
+    tmp.rename(dest)
+    shutil.rmtree(old, ignore_errors=True)
+    return name
 
 
 # Bibata cursors: the white one (Ice) on dark themes, the black one (Classic) on light themes,

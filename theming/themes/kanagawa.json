@@ -3,7 +3,7 @@
   "name": "Kanagawa",
   "variant": "dark",
   "accent": "sapphire",
-  "pair": "",
+  "pair": "kanagawa-lotus",
   "description": "Ink and indigo, after the great wave",
   "vscode": {
     "theme": "Kanagawa",

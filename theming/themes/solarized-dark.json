@@ -3,7 +3,7 @@
   "name": "Solarized Dark",
   "variant": "dark",
   "accent": "blue",
-  "pair": "",
+  "pair": "solarized-light",
   "description": "The classic, precise and easy on the eyes",
   "vscode": {
     "theme": "Solarized Dark",

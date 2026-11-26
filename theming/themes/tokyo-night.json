@@ -3,7 +3,7 @@
   "name": "Tokyo Night",
   "variant": "dark",
   "accent": "blue",
-  "pair": "",
+  "pair": "tokyo-night-day",
   "description": "Neon city lights, blue accent",
   "colors": {
     "base": "#1a1b26",
