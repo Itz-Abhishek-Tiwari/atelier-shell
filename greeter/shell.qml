@@ -198,7 +198,7 @@ ShellRoot {
         }
     }
 
-    // ── weather for the styles that show it (wttr.in, like scripts/weather.sh) ──
+    // ── weather for the styles that show it (wttr.in) ──
     Process {
         id: weatherProc
         running: true
