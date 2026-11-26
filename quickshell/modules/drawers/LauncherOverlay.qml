@@ -405,7 +405,7 @@ Item {
                             Text {
                                 Layout.fillWidth: true
                                 text: row.modelData.title
-                                font.family: launchRoot.fontMono
+                                font.family: Atelier.fontUi
                                 font.pixelSize: row.modelData.kind === "calc" ? 15 : 13
                                 font.bold: true
                                 color: launchRoot.colText
@@ -416,7 +416,7 @@ Item {
                                 Layout.fillWidth: true
                                 visible: text.length > 0
                                 text: row.modelData.subtitle || ""
-                                font.family: launchRoot.fontMono
+                                font.family: Atelier.fontUi
                                 font.pixelSize: Atelier.fsMicro
                                 color: launchRoot.colSubtext
                                 opacity: 0.8
@@ -427,7 +427,7 @@ Item {
                         Text {
                             Layout.alignment: Qt.AlignVCenter
                             text: row.isCurrent ? row.modelData.tag + "  ↵" : row.modelData.tag
-                            font.family: launchRoot.fontMono
+                            font.family: Atelier.fontUi
                             font.pixelSize: Atelier.fsMicro
                             color: row.isCurrent ? launchRoot.colMauve : launchRoot.colSubtext
                             opacity: row.isCurrent ? 1 : 0.6
@@ -453,7 +453,7 @@ Item {
                     anchors.centerIn: parent
                     visible: launchRoot.results.length === 0
                     text: launchRoot.query.trim().length > 1 ? "No results" : "Type a command, sum, or app"
-                    font.family: launchRoot.fontMono
+                    font.family: Atelier.fontUi
                     font.pixelSize: Atelier.fsMd
                     color: launchRoot.colSubtext
                     opacity: 0.7
@@ -477,7 +477,7 @@ Item {
                         var c = launchRoot.query.trim()[0];
                         return c === "=" ? "󰃬" : c === "?" ? "󰖟" : c === ">" ? "󱓞" : c === "$" ? "󰆍" : "󰍉";
                     }
-                    font.family: launchRoot.fontMono
+                    font.family: Atelier.fontUi
                     font.pixelSize: 18
                     color: launchRoot.colMauve
                     Layout.alignment: Qt.AlignVCenter
@@ -486,7 +486,7 @@ Item {
                 TextInput {
                     id: searchInput
                     Layout.fillWidth: true
-                    font.family: launchRoot.fontMono
+                    font.family: Atelier.fontUi
                     font.pixelSize: 14
                     font.bold: true
                     color: launchRoot.colText
@@ -498,7 +498,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: !searchInput.text
                         text: "Search apps, actions, or calculate…"
-                        font.family: launchRoot.fontMono
+                        font.family: Atelier.fontUi
                         font.pixelSize: Atelier.fsLg
                         color: launchRoot.colSubtext
                         opacity: 0.6
@@ -519,7 +519,7 @@ Item {
                     visible: !searchInput.text
                     Layout.alignment: Qt.AlignVCenter
                     text: "= calc   ? web   > actions   $ run"
-                    font.family: launchRoot.fontMono
+                    font.family: Atelier.fontUi
                     font.pixelSize: Atelier.fsMicro
                     color: launchRoot.colSubtext
                     opacity: 0.55
