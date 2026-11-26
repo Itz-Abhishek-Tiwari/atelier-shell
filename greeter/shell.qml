@@ -192,7 +192,12 @@ ShellRoot {
         running: true
         command: ["sh", "-c", "for i in 1 2 3 4 5; do w=$(curl -s --max-time 4 \"wttr.in/$(printf '%s' \"$1\" | sed 's/ /+/g')?$2&format=%t+%C\" 2>/dev/null); case \"$w\" in *°*) printf '%s' \"$w\"; exit 0;; esac; sleep 3; done",
             "sh", Settings.widgets.weatherLocation || "", Settings.widgets.weatherUnits === "imperial" ? "u" : "m"]
-        stdout: StdioCollector { onStreamFinished: greeterAuth.weather = text.trim().length < 40 ? text.trim() : "" }
+        stdout: StdioCollector {
+            onStreamFinished: {
+                greeterAuth.weather = text.trim().length < 40 ? text.trim() : "";
+                Weather.line = greeterAuth.weather;
+            }
+        }
     }
 
     // ── the style in use on your lock screen ─────────────────────────────────

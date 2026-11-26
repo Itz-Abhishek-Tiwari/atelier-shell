@@ -15,6 +15,16 @@ Singleton {
     readonly property string fontUi: "Inter"
     readonly property int rounding: Settings.appearance.rounding
 
+    // Type scale and corner radii: keep the same numbers as quickshell/config/Atelier.qml
+    readonly property int fsMicro: 10
+    readonly property int fsSm: 11
+    readonly property int fsMd: 12
+    readonly property int fsLg: 13
+    readonly property int fsXl: 15
+    readonly property int radiusSm: 10
+    readonly property int radiusMd: 14
+    readonly property int radiusLg: 18
+
     // the lock's own clock setting (12 / 24 / follow the system)
     readonly property bool clock24: !!Settings.general.clock24
     readonly property bool lockClock24: Settings.lock.clock === "24" ? true : Settings.lock.clock === "12" ? false : clock24
