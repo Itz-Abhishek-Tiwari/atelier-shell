@@ -56,7 +56,7 @@ ShellRoot {
         launcher: launcherOverlay, apps: appsOverlay, camera: cameraOverlay, clipboard: clipboardOverlay,
         media: mediaOverlay, keybinds: keybindsOverlay, sysmon: sysMonOverlay, timers: timerOverlay,
         colors: colorPickerOverlay, switcher: windowSwitcher, calendar: calendarOverlay,
-        wallpaper: wallpaperOverlay, emoji: emojiOverlay, ports: portsOverlay, settings: settingsApp, privacy: privacyOverlay })
+        wallpaper: wallpaperOverlay, emoji: emojiOverlay, ports: portsOverlay, software: softwareOverlay, settings: settingsApp, privacy: privacyOverlay })
 
     // Drawers are built on demand (components/LazyDrawer.qml). The bar's hover icons prefetch
     // theirs as soon as the pointer reaches them, so the hover-open itself never waits.
@@ -431,6 +431,15 @@ ShellRoot {
             }
         }
         LazyDrawer {
+            id: softwareOverlay
+            sourceComponent: Component {
+                SoftwareOverlay {
+                    isLight: shellRoot.isLight
+                    onClosedSignal: { if (shellRoot.activeOverlay === "software") shellRoot.activeOverlay = ""; }
+                }
+            }
+        }
+        LazyDrawer {
             id: colorPickerOverlay
             sourceComponent: Component {
                 ColorPickerOverlay {
@@ -625,6 +634,12 @@ ShellRoot {
             function toggle(): void { shellRoot.toggleOverlay("ports"); }
             function open(): void { if (shellRoot.activeOverlay !== "ports") shellRoot.toggleOverlay("ports"); }
             function close(): void { if (shellRoot.activeOverlay === "ports") shellRoot.closeAllOverlays(); }
+        }
+        IpcHandler {
+            target: "software"
+            function toggle(): void { shellRoot.toggleOverlay("software"); }
+            function open(): void { if (shellRoot.activeOverlay !== "software") shellRoot.toggleOverlay("software"); }
+            function close(): void { if (shellRoot.activeOverlay === "software") shellRoot.closeAllOverlays(); }
         }
         IpcHandler {
             target: "timers"
