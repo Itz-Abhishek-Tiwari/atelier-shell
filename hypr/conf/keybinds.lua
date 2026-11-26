@@ -61,6 +61,7 @@ bind("mouse:276",       hl.dsp.exec_cmd("vesktop"),          "Apps · Discord @ 
 bind(mainMod .. " + SPACE",         hl.dsp.exec_cmd(qs .. "launcher toggle"),      "Shell · Launcher")
 bind(mainMod .. " + D",             hl.dsp.exec_cmd(qs .. "apps toggle"),          "Shell · App grid")
 bind(mainMod .. " + C",             hl.dsp.exec_cmd(qs .. "controlcenter toggle"), "Shell · Control center")
+bind(mainMod .. " + N",             hl.dsp.exec_cmd(qs .. "notifications toggle"), "Shell · Notifications")
 bind(mainMod .. " + Shift + slash", hl.dsp.exec_cmd(qs .. "keybinds toggle"),      "Shell · Keyboard shortcuts")
 bind(mainMod .. " + comma",         hl.dsp.exec_cmd(qs .. "settings toggle"),      "Shell · Settings")
 bind(mainMod .. " + Shift + C",     hl.dsp.exec_cmd(qs .. "camera toggle"),        "Shell · Camera")
@@ -75,6 +76,7 @@ bind(mainMod .. " + slash",         hl.dsp.exec_cmd(qs .. "keyboard toggle"),   
 bind(mainMod .. " + BackSpace",     hl.dsp.exec_cmd(qs .. "power toggle"),         "Shell · Power menu")
 bind(mainMod .. " + Shift + M",     hl.dsp.exec_cmd(qs .. "sysmon toggle"),        "Shell · System monitor")
 bind(mainMod .. " + Alt + T",       hl.dsp.exec_cmd(qs .. "timers toggle"),        "Shell · Timers & pomodoro")
+bind(mainMod .. " + Alt + O",       hl.dsp.exec_cmd(qs .. "ports toggle"),         "Shell · Listening ports")
 bind(mainMod .. " + Shift + X",     hl.dsp.exec_cmd(qs .. "colorpicker pick"),     "Shell · Pick a colour")
 -- Alt+Tab window switcher: hold Alt, tap Tab; letting go of Alt focuses the highlighted window
 bind("ALT + Tab",                   hl.dsp.exec_cmd(qs .. "switcher next"),        "Windows · Switch window @ Alt + Tab")
@@ -86,6 +88,8 @@ bind("Ctrl + Alt + W",              hl.dsp.exec_cmd("killall waybar || waybar"))
 -- Modes & look
 bind(mainMod .. " + Shift + G", hl.dsp.exec_cmd(qs .. "mode toggleGame"),   "Modes · Game mode")
 bind(mainMod .. " + Shift + D", hl.dsp.exec_cmd(qs .. "mode toggleDev"),    "Modes · Programming mode")
+bind(mainMod .. " + Shift + B", hl.dsp.exec_cmd(qs .. "mode toggleSaver"),  "Modes · Battery saver")
+bind(mainMod .. " + Shift + A", hl.dsp.exec_cmd(qs .. "mode toggleShowcase"), "Modes · Showcase")
 bind(mainMod .. " + Shift + T", hl.dsp.exec_cmd(HOME .. "/.local/bin/atelier-theme toggle-mode"), "Modes · Light / dark")
 bind(mainMod .. " + Shift + N", hl.dsp.exec_cmd(qs .. "nightlight toggle"), "Modes · Night light")
 bind(mainMod .. " + Shift + F", hl.dsp.exec_cmd(HOME .. "/.config/scripts/focus_mode.py"), "Modes · Focus mode")
@@ -154,6 +158,7 @@ bind("Shift + Print",           hl.dsp.exec_cmd(qs .. "screenshot screen"), "Cap
 bind(mainMod .. " + Alt + P",   hl.dsp.exec_cmd(qs .. "screenshot screen"), "Capture · Screenshot the screen")
 bind(mainMod .. " + Shift + R", hl.dsp.exec_cmd(qs .. "record toggle"),     "Capture · Record an area / stop")
 bind(mainMod .. " + Alt + R",   hl.dsp.exec_cmd(qs .. "record screen"),     "Capture · Record the screen")
+bind(mainMod .. " + Alt + Shift + R",   hl.dsp.exec_cmd(qs .. "record gif"),        "Capture · Record an area as GIF")
 
 -- Media
 bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       "Media · Next track",     { locked = true })

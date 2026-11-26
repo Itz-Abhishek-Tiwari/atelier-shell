@@ -2,18 +2,18 @@
 return {
     name              = "wallpaper-dark",
     -- active: mauve flowing into red at 45 deg (NamiConfig style); inactive: muted grey
-    active_border     = { "rgba(bcb3fbee)", "rgba(fa9fb4ee)" },
-    inactive_border   = "rgba(2f3f4faa)",
-    group_active      = { "rgba(bcb3fbee)", "rgba(fa9fb4ee)" },
-    group_inactive    = "rgba(2f3f4faa)",
-    groupbar_active   = "rgba(bcb3fbcc)",
-    groupbar_inactive = "rgba(23324299)",
-    groupbar_text     = "rgba(d4e7fcff)",
+    active_border     = { "rgba(beb2faee)", "rgba(fa9fb4ee)" },
+    inactive_border   = "rgba(303e4faa)",
+    group_active      = { "rgba(beb2faee)", "rgba(fa9fb4ee)" },
+    group_inactive    = "rgba(303e4faa)",
+    groupbar_active   = "rgba(beb2facc)",
+    groupbar_inactive = "rgba(24314299)",
+    groupbar_text     = "rgba(d5e6fcff)",
     -- plain, tight dark shadow (no coloured glow)
-    shadow            = 0x55010917,
-    shadow_inactive   = 0x33010917,
+    shadow            = 0x55020917,
+    shadow_inactive   = 0x33020917,
     -- window title bars (Traditional layout, conf/traditional.lua): the theme's surface and ink
-    titlebar = { bg = "rgba(0a1827ff)", text = "rgba(b4c6dbff)", inactive = "rgba(2f3f4fff)",
+    titlebar = { bg = "rgba(0b1827ff)", text = "rgba(b5c6dbff)", inactive = "rgba(303e4fff)",
                  close = "rgba(fa9fb4ff)", min = "rgba(d8db84ff)", max = "rgba(7ad4a5ff)" },
     cursor            = "Bibata-Modern-Ice",
     cursor_size       = 24,
