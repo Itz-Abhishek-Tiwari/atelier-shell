@@ -52,11 +52,11 @@ ShellRoot {
 
     // every lazy drawer by name (the `drawers` IPC target)
     readonly property var lazyDrawers: ({ overview: overviewOverlay, games: gamesOverlay, theme: themeOverlay,
-        controlcenter: controlCenter, wifi: wifiOverlay, bluetooth: bluetoothOverlay, power: powerOverlay,
+        controlcenter: controlCenter, notifications: notificationCenter, wifi: wifiOverlay, bluetooth: bluetoothOverlay, power: powerOverlay,
         launcher: launcherOverlay, apps: appsOverlay, camera: cameraOverlay, clipboard: clipboardOverlay,
         media: mediaOverlay, keybinds: keybindsOverlay, sysmon: sysMonOverlay, timers: timerOverlay,
         colors: colorPickerOverlay, switcher: windowSwitcher, calendar: calendarOverlay,
-        wallpaper: wallpaperOverlay, emoji: emojiOverlay, settings: settingsApp, privacy: privacyOverlay })
+        wallpaper: wallpaperOverlay, emoji: emojiOverlay, ports: portsOverlay, settings: settingsApp, privacy: privacyOverlay })
 
     // Drawers are built on demand (components/LazyDrawer.qml). The bar's hover icons prefetch
     // theirs as soon as the pointer reaches them, so the hover-open itself never waits.
@@ -159,6 +159,8 @@ ShellRoot {
                 onOpenPrivacy: (centerY) => shellRoot.toggleOverlay("privacy", centerY)
                 onOpenWallpaper: shellRoot.toggleOverlay("wallpaper")
                 onOpenControlCenter: shellRoot.toggleOverlay("controlcenter")
+                onOpenNotifications: shellRoot.toggleOverlay("notifications")
+                onOpenMedia: shellRoot.toggleOverlay("media")
                 onHoverOpen: (name, centerY) => { shellRoot.barZones = zones(); shellRoot.hoverOverlay(name, centerY); }
                 onHoverTargetChanged: {
                     shellRoot.barHover = hoverTarget;
@@ -266,6 +268,16 @@ ShellRoot {
                     onClosedSignal: {
                         if (shellRoot.activeOverlay === "controlcenter") shellRoot.activeOverlay = "";
                     }
+                }
+            }
+        }
+        // Notification history: its own drawer on the left edge, apart from the control center
+        LazyDrawer {
+            id: notificationCenter
+            sourceComponent: Component {
+                NotificationCenter {
+                    isLight: shellRoot.isLight
+                    onClosedSignal: { if (shellRoot.activeOverlay === "notifications") shellRoot.activeOverlay = ""; }
                 }
             }
         }
@@ -407,6 +419,15 @@ ShellRoot {
             }
         }
         LazyDrawer {
+            id: portsOverlay
+            sourceComponent: Component {
+                PortsOverlay {
+                    isLight: shellRoot.isLight
+                    onClosedSignal: { if (shellRoot.activeOverlay === "ports") shellRoot.activeOverlay = ""; }
+                }
+            }
+        }
+        LazyDrawer {
             id: colorPickerOverlay
             sourceComponent: Component {
                 ColorPickerOverlay {
@@ -483,7 +504,7 @@ ShellRoot {
         // Volume / brightness OSD (one slider that updates in place)
         Osd {
             id: osd
-            suppressed: shellRoot.activeOverlay === "controlcenter"
+            suppressed: shellRoot.activeOverlay === "controlcenter" || shellRoot.activeOverlay === "notifications"
         }
         ToastPopup {
             id: toastPopup
@@ -595,6 +616,12 @@ ShellRoot {
                 if (shellRoot.activeOverlay !== "sysmon") shellRoot.toggleOverlay("sysmon");
                 sysMonOverlay.call("setTab", t);
             }
+        }
+        IpcHandler {
+            target: "ports"
+            function toggle(): void { shellRoot.toggleOverlay("ports"); }
+            function open(): void { if (shellRoot.activeOverlay !== "ports") shellRoot.toggleOverlay("ports"); }
+            function close(): void { if (shellRoot.activeOverlay === "ports") shellRoot.closeAllOverlays(); }
         }
         IpcHandler {
             target: "timers"
@@ -732,12 +759,11 @@ ShellRoot {
             target: "lock"
             function lock(): void { shellRoot.closeAllOverlays(); lockScreen.lock(); }
             function preview(): void { shellRoot.closeAllOverlays(); lockScreen.preview(); }   // try the design, no real lock
-            // try a built-in style without switching to it: cupertino, hyper, harmony, oxygen, material, dot, depth, atelier
+            // try a built-in style without switching to it: cupertino, hyper, harmony, oxygen, material, dot, atelier
             function previewStyle(style: string): void { shellRoot.closeAllOverlays(); lockScreen.previewStyle(style); }
             function isLocked(): bool { return lockScreen.isLocked; }
             function previewAuth(): void { shellRoot.closeAllOverlays(); lockScreen.previewAuth(); }
             function stopPreview(): void { lockScreen.stopPreview(); }
-            function edit(): void { shellRoot.closeAllOverlays(); lockScreen.edit(); }       // Depth lock editor (preview only)
             // no unlock() on purpose: only the password can unlock
         }
 
@@ -798,6 +824,8 @@ ShellRoot {
             function window(): void { if (!Recorder.recording) shellRoot.toggleOverlay("record-window"); }
             function screen(): void { if (!Recorder.recording) shellRoot.toggleOverlay("record-screen"); }
             function stop(): void { Recorder.stop(); }
+            // short screen clip → GIF, copied to the clipboard (pick a region, press again to stop)
+            function gif(): void { if (!Recorder.recording) { Recorder.gifNext = true; shellRoot.toggleOverlay("record"); } }
             function isRecording(): bool { return Recorder.recording; }
             function last(): string { return Recorder.lastPath; }
         }
@@ -847,20 +875,25 @@ ShellRoot {
             function cycle(): void { Perf.cycle(); }
             function toggleGame(): void { Perf.toggleGame(); }
             function toggleDev(): void { Perf.toggleDev(); }
+            function toggleSaver(): void { Perf.toggleSaver(); }
+            function toggleShowcase(): void { Perf.toggleShowcase(); }
             function get(): string { return Perf.mode; }
         }
 
         Connections {
             target: Perf
             function onSwitched(mode, automatic) {
-                const icon = mode === "game" ? "󰊗" : mode === "dev" ? "󰅩" : "󰍹";
-                const clr = mode === "game" ? Atelier.peach : mode === "dev" ? Atelier.sapphire : Atelier.green;
+                const icon = mode === "game" ? "󰊗" : mode === "dev" ? "󰅩" : mode === "saver" ? "󰌪" : mode === "showcase" ? "󰔉" : "󰍹";
+                const clr = mode === "game" ? Atelier.peach : mode === "dev" ? Atelier.sapphire : mode === "saver" ? Atelier.yellow : mode === "showcase" ? Atelier.mauve : Atelier.green;
                 toastPopup.showToast((automatic ? "Auto: " : "") + Perf.label + (mode === "normal" ? " restored" : " on"), icon, clr);
             }
         }
 
         IpcHandler {
             target: "notifications"
+            function toggle(): void { shellRoot.toggleOverlay("notifications"); }
+            function open(): void { if (shellRoot.activeOverlay !== "notifications") shellRoot.toggleOverlay("notifications"); }
+            function close(): void { if (shellRoot.activeOverlay === "notifications") shellRoot.closeAllOverlays(); }
             function clear(): void { Notifs.clearAll(); }
             function toggleDnd(): void { Notifs.dnd = !Notifs.dnd; }
             function isDnd(): bool { return Notifs.dnd; }
@@ -888,7 +921,8 @@ ShellRoot {
             // open on the Wallhaven tab; a topic id (nature, space, …) or any search words
             function wallhaven(what: string): void {
                 if (shellRoot.activeOverlay !== "wallpaper") shellRoot.toggleOverlay("wallpaper");
-                const w = wallpaperOverlay;
+                const w = wallpaperOverlay.ensure();      // the Loader, not the drawer: build it first
+                if (!w) return;
                 const t = w.topics.find(x => x.id === what);
                 w.whTopic = t ? t.id : "";
                 w.whQuery = t ? "" : what;

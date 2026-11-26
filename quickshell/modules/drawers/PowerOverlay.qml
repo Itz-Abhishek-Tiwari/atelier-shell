@@ -31,7 +31,7 @@ Item {
     readonly property color colRed:     Atelier.red
     readonly property color colText:    Atelier.text
     readonly property color colSubtext: Atelier.subtext
-    readonly property color colSurface: Qt.alpha(Atelier.text, 0.06)
+    readonly property color colSurface: Atelier.container
     readonly property color colSurf0: Atelier.container
 
     signal closedSignal()
@@ -202,7 +202,7 @@ Item {
                         border.width: 1
                         border.color: isActive
                             ? Qt.rgba(modelData.accent.r, modelData.accent.g, modelData.accent.b, 0.6)
-                            : (powerRoot.Qt.alpha(Atelier.text, 0.06))
+                            : Atelier.container
                         scale: btnMa.pressed ? 0.90 : (btnMa.containsMouse ? 1.06 : 1.0)
 
                         Behavior on radius { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }

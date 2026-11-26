@@ -202,13 +202,14 @@ Singleton {
     // where segments meet). The 1.21 sets the bounce: higher = springier.
     readonly property var curveElastic: [0.38, 1.21, 0.22, 1, 1, 1]
     readonly property var curveSmooth: [0.05, 0.7, 0.1, 1, 1, 1]      // M3 emphasizedDecel, no overshoot
-    readonly property var curveOpen: Perf.mode === "normal" ? curveElastic : curveSmooth   // drawers, popups, indicators
+    readonly property var curveOpen: Perf.mode === "normal" || Perf.showcase ? curveElastic : curveSmooth   // drawers, popups, indicators
     readonly property var curveClose: [0.3, 0, 0.8, 0.15, 1, 1]       // emphasizedAccel
     readonly property var curveStandard: [0.2, 0, 0, 1, 1, 1]         // standard (hovers, colours)
-    readonly property real modeSpeed: Perf.game ? 1.9 : Perf.dev ? 1.3 : 1
+    readonly property real modeSpeed: Perf.game || Perf.saver ? 1.9 : Perf.dev ? 1.3 : 1
     readonly property real speed: Math.max(0.25, Settings.general.animSpeed) * modeSpeed    // 2 = twice as fast
-    readonly property int durOpen: Math.round(500 / speed)             // Caelestia's expressiveDefaultSpatial
-    readonly property int durClose: Math.round(200 / speed)
-    readonly property int durFast: Math.round(180 / speed)       // hovers, colour changes
-    readonly property int durMedium: Math.round(300 / speed)     // small moves (indicators, toggles)
+    // Battery saver: nothing animates (every duration is 0, so state changes are instant)
+    readonly property int durOpen: Perf.saver ? 0 : Math.round(500 / speed)             // Caelestia's expressiveDefaultSpatial
+    readonly property int durClose: Perf.saver ? 0 : Math.round(200 / speed)
+    readonly property int durFast: Perf.saver ? 0 : Math.round(180 / speed)       // hovers, colour changes
+    readonly property int durMedium: Perf.saver ? 0 : Math.round(300 / speed)     // small moves (indicators, toggles)
 }

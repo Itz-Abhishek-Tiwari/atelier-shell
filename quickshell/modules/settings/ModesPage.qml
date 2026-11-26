@@ -13,28 +13,100 @@ ColumnLayout {
     Layout.fillWidth: true
     spacing: 20
 
+    // which mode's options are shown below the cards (follows the active mode, Normal has none)
+    property string editing: Perf.mode !== "normal" ? Perf.mode : "dev"
+    Connections { target: Perf; function onModeChanged() { if (Perf.mode !== "normal") modesPage.editing = Perf.mode; } }
+
     readonly property var blurOpts: [{ id: "off", label: "Off" }, { id: "light", label: "Light" }, { id: "normal", label: "Your usual" }]
     readonly property var powerOpts: [{ id: "performance", label: "Performance" }, { id: "balanced", label: "Balanced" },
                                       { id: "power-saver", label: "Power saver" }, { id: "unchanged", label: "Don't change" }]
+    readonly property var windowStyles: [{ id: "liquid", label: "Liquid" }, { id: "cloth", label: "Cloth" }, { id: "paper", label: "Paper" },
+                                         { id: "swarm", label: "Swarm" }, { id: "bubble", label: "Bubble" }, { id: "smoke", label: "Smoke" },
+                                         { id: "burn", label: "Burn" }, { id: "construction", label: "Construction" }]
+    readonly property var workspaceStyles: [{ id: "off", label: "Off" }, { id: "rotation", label: "Rotation" }, { id: "planet_hop", label: "Planet hop" },
+                                            { id: "cube", label: "Cube" }, { id: "lava", label: "Lava" }]
     // must match the defaults in config/Settings.qml (modes)
     readonly property var defaults: ({
         dev:  { Opaque: true, Dim: false, Blur: "light", Shadows: true, Animations: true, AnimSpeed: 0.6,
                 Power: "performance", Caffeine: true, Dnd: false },
         game: { Opaque: true, Blur: "off", Shadows: false, Animations: false, Tearing: true,
-                Power: "performance", Caffeine: true, Dnd: true, HideWidgets: true, LeanShell: true }
+                Power: "performance", Caffeine: true, Dnd: true, HideWidgets: true, LeanShell: true },
+        saver: { Opaque: true, Dim: false, Blur: "off", Shadows: false,
+                 Power: "power-saver", Caffeine: false, Dnd: false, HideWidgets: true, LeanShell: true },
+        showcase: { WindowStyle: "liquid", WorkspaceStyle: "off", Strength: 0.65, Duration: 0, OnOpen: true, OnClose: true, OnMove: false, BlurPasses: 2, Power: "performance", Caffeine: false, Dnd: false }
     })
     function reset(m) { const d = defaults[m]; for (const k in d) Settings.modes[m + k] = d[k]; }
     function isDefault(m) { const d = defaults[m]; for (const k in d) if (Settings.modes[m + k] !== d[k]) return false; return true; }
 
+    // ── the modes: one card each, click to switch ─────────────────────────────
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: 10
+        Repeater {
+            model: Perf.info
+            Rectangle {
+                id: card
+                required property var modelData
+                readonly property bool on: Perf.mode === modelData.id
+                Layout.fillWidth: true
+                Layout.preferredWidth: 1
+                implicitHeight: 128
+                radius: Atelier.radiusLg
+                color: on ? Qt.alpha(modelData.tint, Atelier.isLight ? 0.16 : 0.20) : (cardMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+                border.width: on ? 2 : 1
+                border.color: on ? Qt.alpha(modelData.tint, 0.65) : Atelier.outline
+                scale: cardMa.pressed ? 0.97 : 1
+                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    spacing: 6
+                    Rectangle {
+                        width: 38; height: 38; radius: Atelier.radiusMd
+                        color: Qt.alpha(card.modelData.tint, card.on ? 0.30 : 0.16)
+                        Text { anchors.centerIn: parent; text: card.modelData.icon; font.family: Atelier.font; font.pixelSize: 20; color: card.modelData.tint }
+                    }
+                    Text { text: card.modelData.label; width: parent.width; elide: Text.ElideRight
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; color: Atelier.text }
+                    Text { text: card.modelData.blurb; width: parent.width; wrapMode: Text.Wrap; maximumLineCount: 2; elide: Text.ElideRight
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
+                }
+                // GPU cost: five small pips along the bottom edge
+                Row {
+                    anchors.right: parent.right; anchors.top: parent.top
+                    anchors.margins: 12
+                    spacing: 2
+                    Repeater {
+                        model: 5
+                        Rectangle { required property int index
+                            width: 4; height: 10; radius: 2
+                            color: index < card.modelData.cost ? card.modelData.tint : Qt.alpha(Atelier.subtext, 0.25) }
+                    }
+                }
+                MouseArea { id: cardMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                    onClicked: Perf.set(card.modelData.id) }
+            }
+        }
+    }
+    Text {
+        Layout.leftMargin: 4
+        text: "The bars on each card show how hard the mode works the GPU. Normal is your own look from Appearance and Windows."
+        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
+        wrapMode: Text.Wrap; Layout.fillWidth: true
+    }
+
+    // ── which mode to customise ───────────────────────────────────────────────
     SettingCard {
-        title: "Current mode"; icon: "󰊗"; tint: Atelier.sapphire
-        SettingChoice { label: "Mode"; tint: Atelier.sapphire
-            description: "Normal is your own look from Appearance and Windows"
-            options: [{ id: "normal", label: "Normal" }, { id: "dev", label: "Programming" }, { id: "game", label: "Game" }]
-            value: Perf.mode; onPicked: (id) => Perf.set(id) }
+        title: "Customise"
+        SettingChoice { label: "Mode"; description: "Everything below applies to the mode you pick here"
+            options: [{ id: "dev", label: "Programming" }, { id: "game", label: "Game" }, { id: "saver", label: "Saver" }, { id: "showcase", label: "Showcase" }]
+            value: modesPage.editing; onPicked: (id) => modesPage.editing = id }
     }
 
     SettingCard {
+        visible: modesPage.editing === "dev"
         title: "Programming mode"; icon: "󰅩"; tint: Atelier.teal
         SettingSwitch { label: "Opaque windows"; description: "Crisp text, nothing blurred behind windows"; tint: Atelier.teal
             checked: Settings.modes.devOpaque; onToggled: (v) => Settings.modes.devOpaque = v }
@@ -63,6 +135,7 @@ ColumnLayout {
     }
 
     SettingCard {
+        visible: modesPage.editing === "game"
         title: "Game mode"; icon: "󰊴"; tint: Atelier.red
         SettingSwitch { label: "Opaque windows"; tint: Atelier.red
             checked: Settings.modes.gameOpaque; onToggled: (v) => Settings.modes.gameOpaque = v }
@@ -88,6 +161,101 @@ ColumnLayout {
             visible: !modesPage.isDefault("game")
             label: "Back to the defaults"
             Chip { icon: "󰑓"; text: "Reset"; tint: Atelier.red; interactive: true; implicitHeight: 30; onClicked: modesPage.reset("game") }
+        }
+    }
+
+    SettingCard {
+        visible: modesPage.editing === "saver"
+        title: "Battery saver"; icon: "󰌪"; tint: Atelier.yellow
+        SettingRow { label: "Best battery life"; description: "Opaque windows, no blur, shadows, animations or dimming, the power-saver profile, and no desktop widget. Nothing is blended or animated, so the GPU can rest." }
+        SettingSwitch { label: "Opaque windows"; description: "Nothing is blended"; tint: Atelier.yellow
+            checked: Settings.modes.saverOpaque; onToggled: (v) => Settings.modes.saverOpaque = v }
+        SettingSwitch { label: "Dim unfocused windows"; tint: Atelier.yellow
+            checked: Settings.modes.saverDim; onToggled: (v) => Settings.modes.saverDim = v }
+        SettingChoice { label: "Blur"; tint: Atelier.yellow
+            options: modesPage.blurOpts; value: Settings.modes.saverBlur; onPicked: (id) => Settings.modes.saverBlur = id }
+        SettingSwitch { label: "Window shadows"; tint: Atelier.yellow
+            checked: Settings.modes.saverShadows; onToggled: (v) => Settings.modes.saverShadows = v }
+        SettingRow { label: "Animations"; description: "Always off in this mode: windows, the shell and wallpaper changes are instant" }
+        SettingChoice { label: "Power profile"; tint: Atelier.yellow
+            options: modesPage.powerOpts; value: Settings.modes.saverPower; onPicked: (id) => Settings.modes.saverPower = id }
+        SettingSwitch { label: "Keep the screen awake"; description: "Off saves battery"; tint: Atelier.yellow
+            checked: Settings.modes.saverCaffeine; onToggled: (v) => Settings.modes.saverCaffeine = v }
+        SettingSwitch { label: "Do Not Disturb"; tint: Atelier.yellow
+            checked: Settings.modes.saverDnd; onToggled: (v) => Settings.modes.saverDnd = v }
+        SettingSwitch { label: "Hide the desktop widget"; description: "It is not drawn or refreshed"; tint: Atelier.yellow
+            checked: Settings.modes.saverHideWidgets; onToggled: (v) => Settings.modes.saverHideWidgets = v }
+        SettingSwitch { label: "Lighter shell"; description: "No shadows on the bar and drawers, solid instead of glass"; tint: Atelier.yellow
+            checked: Settings.modes.saverLeanShell; onToggled: (v) => Settings.modes.saverLeanShell = v }
+        SettingRow {
+            visible: !modesPage.isDefault("saver")
+            label: "Back to the defaults"
+            Chip { icon: "󰑓"; text: "Reset"; tint: Atelier.yellow; interactive: true; implicitHeight: 30; onClicked: modesPage.reset("saver") }
+        }
+    }
+
+    SettingCard {
+        visible: modesPage.editing === "showcase"
+        title: "Showcase mode"; icon: "󰔉"; tint: Atelier.mauve
+        SettingRow { label: "Everything on, looks first"; description: "Full blur, shadows and glass, plus the hyprimate plugin's shader animations on windows. Costs battery and GPU; this mode is for showing the desktop off, and is not kept across logins. Build the plugin once with setup/hyprimate.sh." }
+        Item {   // the style picker: eight pills wrap onto lines instead of overflowing a row
+            id: stylePick
+            Layout.fillWidth: true
+            implicitHeight: pickCol.implicitHeight + 24
+            Rectangle { visible: stylePick.y > 1; anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right; height: 1; color: Atelier.outline }
+            ColumnLayout {
+                id: pickCol
+                anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top; anchors.topMargin: 12
+                spacing: 8
+                ColumnLayout {
+                    spacing: 2
+                    Text { text: "Window animation"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.Medium; color: Atelier.text }
+                    Text { Layout.fillWidth: true; wrapMode: Text.Wrap
+                        text: "How windows open, close and move. Measured here: Liquid costs least, Bubble most. A shorter Duration and no Moving windows are cheaper still."
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
+                }
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    Repeater {
+                        model: modesPage.windowStyles
+                        ChoicePill {
+                            required property var modelData
+                            label: modelData.label
+                            on: Settings.modes.showcaseWindowStyle === modelData.id
+                            onClicked: Settings.modes.showcaseWindowStyle = modelData.id
+                        }
+                    }
+                }
+            }
+        }
+        SettingSlider { label: "Strength"; description: "How much windows deform. Liquid, cloth, bubble and smoke only"
+            from: 0; to: 100; step: 5; decimals: 0; suffix: "%"; tint: Atelier.mauve
+            value: Settings.modes.showcaseStrength * 100; onMoved: (v) => Settings.modes.showcaseStrength = v / 100 }
+        SettingSlider { label: "Duration"; description: "0 = the style's own timing"
+            from: 0; to: 3000; step: 100; decimals: 0; suffix: " ms"; tint: Atelier.mauve
+            value: Settings.modes.showcaseDuration; onMoved: (v) => Settings.modes.showcaseDuration = Math.round(v) }
+        SettingSwitch { label: "Opening windows"; tint: Atelier.mauve
+            checked: Settings.modes.showcaseOnOpen; onToggled: (v) => Settings.modes.showcaseOnOpen = v }
+        SettingSwitch { label: "Closing windows"; tint: Atelier.mauve
+            checked: Settings.modes.showcaseOnClose; onToggled: (v) => Settings.modes.showcaseOnClose = v }
+        SettingSwitch { label: "Moving windows"; description: "Redrawn every frame while you drag, the costliest effect"; tint: Atelier.mauve
+            checked: Settings.modes.showcaseOnMove; onToggled: (v) => Settings.modes.showcaseOnMove = v }
+        SettingChoice { label: "Workspace transition"; tint: Atelier.mauve
+            options: modesPage.workspaceStyles; value: Settings.modes.showcaseWorkspaceStyle; onPicked: (id) => Settings.modes.showcaseWorkspaceStyle = id }
+        SettingSlider { label: "Blur passes"; description: "Your Windows setting is used if it is higher"
+            from: 1; to: 6; step: 1; decimals: 0; tint: Atelier.mauve
+            value: Settings.modes.showcaseBlurPasses; onMoved: (v) => Settings.modes.showcaseBlurPasses = Math.round(v) }
+        SettingChoice { label: "Power profile"; tint: Atelier.mauve
+            options: modesPage.powerOpts; value: Settings.modes.showcasePower; onPicked: (id) => Settings.modes.showcasePower = id }
+        SettingSwitch { label: "Keep the screen awake"; tint: Atelier.mauve
+            checked: Settings.modes.showcaseCaffeine; onToggled: (v) => Settings.modes.showcaseCaffeine = v }
+        SettingSwitch { label: "Do Not Disturb"; tint: Atelier.mauve
+            checked: Settings.modes.showcaseDnd; onToggled: (v) => Settings.modes.showcaseDnd = v }
+        SettingRow {
+            visible: !modesPage.isDefault("showcase")
+            label: "Back to the defaults"
+            Chip { icon: "󰑓"; text: "Reset"; tint: Atelier.mauve; interactive: true; implicitHeight: 30; onClicked: modesPage.reset("showcase") }
         }
     }
 

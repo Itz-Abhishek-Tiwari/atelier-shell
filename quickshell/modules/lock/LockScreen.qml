@@ -61,21 +61,17 @@ Scope {
     // the shared Weather service fetches ahead of time, so the lock shows it from the first frame
     readonly property string weather: Weather.line
 
-    // built-in looks: "depth" = DepthLock.qml (Samsung-style), a phone style = PhoneLock.qml,
-    // "atelier" = LockContent.qml (also the fallback for an unknown id)
+    // built-in looks: a phone style = PhoneLock.qml, "atelier" = LockContent.qml (also the
+    // fallback for an unknown id, e.g. the removed "depth")
     readonly property var phoneStyles: ["cupertino", "hyper", "harmony", "oxygen", "material", "dot"]
-    function isBuiltin(t) { return !t || t === "atelier" || t === "depth" || phoneStyles.indexOf(t) >= 0; }
+    function isBuiltin(t) { return !t || t === "atelier" || phoneStyles.indexOf(t) >= 0; }
     // the preview can show another style than the one in use (Settings → a card's Preview)
     property string previewTheme: ""
     readonly property string lockTheme: Settings.lock.theme
     readonly property string shownTheme: previewing && previewTheme ? previewTheme : lockTheme
-    readonly property bool depthStyle: lockTheme === "depth"
-    // touching DepthWall here keeps it alive, so it cuts out each new wallpaper ahead of time
-    readonly property bool depthReady: depthStyle && DepthWall.ok
     Component { id: glassUi; LockContent { lockRoot: root } }
-    Component { id: depthUi; DepthLock { lockRoot: root } }
     Component { id: phoneUi; PhoneLock { lockRoot: root } }
-    function uiFor(t) { return t === "depth" ? depthUi : phoneStyles.indexOf(t) >= 0 ? phoneUi : glassUi; }
+    function uiFor(t) { return phoneStyles.indexOf(t) >= 0 ? phoneUi : glassUi; }
 
     function lock() {
         if (locked) return;
@@ -95,10 +91,7 @@ Scope {
     onPreviewingChanged: if (!previewing) previewTheme = ""
     // preview helpers (only ever affect the preview window, never a real lock)
     function previewAuth() { preview(); authMode = true; }
-    function stopPreview() { if (previewing) { previewing = false; editing = false; resetState(); } }
-    // the Depth lock's editor: the live preview with a customise sheet (never a real lock)
-    property bool editing: false
-    function edit() { resetState(); editing = true; previewing = true; }
+    function stopPreview() { if (previewing) { previewing = false; resetState(); } }
 
     function resetState() {
         authMode = false;
@@ -193,11 +186,10 @@ Scope {
             anchors.fill: parent
             focus: true
             active: root.previewing
-            sourceComponent: root.editing ? depthUi : root.uiFor(root.shownTheme)
+            sourceComponent: root.uiFor(root.shownTheme)
             onLoaded: {
                 item.isPreview = true;
                 if (item.variant !== undefined) item.variant = Qt.binding(() => root.shownTheme);
-                if (root.editing) item.editing = Qt.binding(() => root.editing);
             }
         }
     }

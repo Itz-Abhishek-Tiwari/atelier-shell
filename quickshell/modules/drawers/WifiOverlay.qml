@@ -442,7 +442,7 @@ Item {
                             Layout.fillWidth: true
                             height: 34
                             radius: Atelier.radiusMd
-                            color: cancelMa.containsMouse ? Qt.alpha(Atelier.text, 0.08) : "transparent"
+                            color: cancelMa.containsMouse ? Atelier.hover : "transparent"
 
                             Text {
                                 anchors.centerIn: parent

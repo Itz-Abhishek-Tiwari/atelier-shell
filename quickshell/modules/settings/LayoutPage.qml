@@ -80,7 +80,7 @@ ColumnLayout {
         Item {
             readonly property bool classic: parent.option.id === "classic"
             readonly property color ink: parent.selected ? Atelier.accent : Atelier.overlay1
-            Rectangle { anchors.fill: parent; radius: 6; color: Qt.alpha(Atelier.text, 0.05) }
+            Rectangle { anchors.fill: parent; radius: 6; color: Atelier.container }
             // atelier: two tiled windows side by side
             Rectangle { visible: !parent.classic; x: 6; y: 6; width: parent.width / 2 - 9; height: parent.height - 12; radius: 4
                         color: "transparent"; border.width: 1.5; border.color: parent.ink }
@@ -88,7 +88,7 @@ ColumnLayout {
                         color: "transparent"; border.width: 1.5; border.color: parent.ink }
             // traditional: overlapping windows with title bars + a dock
             Rectangle { visible: parent.classic; x: 8; y: 6; width: parent.width * 0.55; height: parent.height * 0.5; radius: 4
-                        color: Qt.alpha(Atelier.text, 0.06); border.width: 1.5; border.color: parent.ink
+                        color: Atelier.container; border.width: 1.5; border.color: parent.ink
                         Rectangle { width: parent.width; height: 5; radius: 3; color: parent.border.color } }
             Rectangle { visible: parent.classic; x: parent.width * 0.38; y: parent.height * 0.24; width: parent.width * 0.52; height: parent.height * 0.45; radius: 4
                         color: Atelier.surface; border.width: 1.5; border.color: parent.ink

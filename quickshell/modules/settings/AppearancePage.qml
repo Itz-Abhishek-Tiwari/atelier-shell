@@ -132,36 +132,8 @@ ColumnLayout {
         title: "Wallpaper transition"; icon: "󰸉"; tint: Atelier.blue
         SettingChoice { label: "Style"; description: "How a new wallpaper appears"; tint: Atelier.blue
             options: [{ id: "none", label: "None" }, { id: "fade", label: "Fade" }, { id: "wipe", label: "Wipe" },
-                      { id: "slide", label: "Slide" }, { id: "grow", label: "Grow" }, { id: "zoom", label: "Zoom" }, { id: "spread", label: "Spread" }, { id: "outline", label: "Outline" }]
+                      { id: "slide", label: "Slide" }, { id: "grow", label: "Grow" }, { id: "zoom", label: "Zoom" }, { id: "spread", label: "Spread" }]
             value: Settings.appearance.wallTransition; onPicked: (id) => Settings.appearance.wallTransition = id }
-        // Outline needs each wallpaper's subject cut out once (scripts/wallfx.py)
-        SettingRow {
-            id: fxRow
-            visible: ["outline", "random"].includes(Settings.appearance.wallTransition)
-            property var st: ({})
-            readonly property bool busy: warmProc.running
-            label: "Outline maps"
-            description: !st.installed ? "The cut-out model isn't installed yet (about 1 GB)."
-                : busy ? "Preparing… " + (st.prepared || 0) + " of " + (st.total || 0) + " (in the background, at low priority)"
-                : (st.prepared || 0) + " of " + (st.total || 0) + " wallpapers prepared. New ones play Spread once while theirs is made."
-            Chip {
-                visible: !!fxRow.st.installed
-                icon: "󰑐"; text: fxRow.busy ? "Preparing…" : "Prepare all"; tint: Atelier.accent
-                interactive: !fxRow.busy && (fxRow.st.prepared || 0) < (fxRow.st.total || 0); implicitHeight: 30
-                onClicked: warmProc.running = true
-            }
-            Process {
-                id: fxStatus
-                command: ["python3", Quickshell.shellDir + "/scripts/wallfx.py", "status"]
-                stdout: StdioCollector { onStreamFinished: { try { fxRow.st = JSON.parse(text); } catch (e) {} } }
-            }
-            Process { id: warmProc; command: ["nice", "-n", "15", "python3", Quickshell.shellDir + "/scripts/wallfx.py", "warm"]; onExited: fxStatus.running = true }
-            Timer {
-                interval: fxRow.busy ? 3000 : 20000; repeat: true; triggeredOnStart: true
-                running: fxRow.visible && win.visible && win.page === "appearance"
-                onTriggered: fxStatus.running = true
-            }
-        }
         SettingSwitch { label: "Surprise me"; description: "Pick a different style each time"; tint: Atelier.blue
             checked: Settings.appearance.wallTransition === "random"
             onToggled: (v) => Settings.appearance.wallTransition = v ? "random" : "fade" }

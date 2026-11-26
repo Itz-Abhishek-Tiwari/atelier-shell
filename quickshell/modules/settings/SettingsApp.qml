@@ -52,7 +52,7 @@ Item {
           keys: "traditional classic layout floating title bar buttons menu bar global menu dock shelf magnify trash downloads file manager nautilus" },
         { id: "windows",       group: "Workspace",   icon: "󰖲", label: "Windows",           sub: "Tiling, gaps, corners and animations",
           keys: "windows tiling layout dwindle master scrolling monocle gaps rounding corners animations hyprland" },
-        { id: "modes",         group: "Workspace",   icon: "󰊗", label: "Modes",             sub: "Normal, Programming and Game mode",
+        { id: "modes",         group: "Workspace",   icon: "󰊗", label: "Modes",             sub: "Normal, Programming, Game, Battery saver and Showcase",
           keys: "modes performance game programming dev developer blur opacity opaque shadows animations tearing power profile do not disturb dnd caffeine awake widgets auto detect steam games mode" },
         { id: "shortcuts",     group: "Workspace",   icon: "󰘳", label: "Shortcuts",         sub: "Change keys and add your own",
           keys: "shortcuts keybinds keybindings hotkeys keys bind rebind custom command" },
@@ -70,6 +70,8 @@ Item {
           keys: "power battery sleep suspend idle dim lock screen off caffeine awake low critical charger alerts" },
         { id: "phone",         group: "Hardware",    icon: "󰏲", label: "iPhone",            sub: "Use your iPhone as a webcam",
           keys: "iphone phone camera webcam droidcam usb hotspot wifi" },
+        { id: "installer",     group: "System",      icon: "󰏓", label: "Install & remove",  sub: "Get apps from Arch and the AUR, remove them",
+          keys: "install installer uninstall uninstaller remove delete apps applications software store packages package pacman aur yay paru download get" },
         { id: "storage",       group: "System",      icon: "󰋊", label: "Storage",           sub: "Disk use, clean up, drives",
           keys: "storage disk space clean trash cache folders drives usb sd card eject" },
         { id: "profiles",      group: "System",      icon: "󰆓", label: "Backup & profiles", sub: "Save, switch and back up your setup",
@@ -422,6 +424,8 @@ Item {
                         PhonePage { win: win; visible: win.page === "phone" }
 
                         StoragePage { win: win; visible: win.page === "storage" }
+
+                        InstallerPage { win: win; visible: win.page === "installer" }
 
                         // ═════════ Hardware + Profiles (own files) ═════════
                         ColumnLayout {

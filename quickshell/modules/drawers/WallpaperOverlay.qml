@@ -48,6 +48,7 @@ Item {
     property bool whLoading: false
     property bool whMore: false
     property string whError: ""
+    property var whPendingArgs: null                // newest search waiting for the running one to end
     property var progress: ({})                    // id → 0..1 while a download runs
 
     readonly property var sorts: [
@@ -104,23 +105,44 @@ Item {
 
     Process {
         id: wallhavenProc
+        // One search at a time, never killed mid-way (a killed one printed nothing, which showed up
+        // as "Couldn't read Wallhaven's answer"): a newer search waits here until this one exits.
+        onExited: {
+            if (!wallRoot.whPendingArgs) return;
+            command = wallRoot.whPendingArgs;
+            wallRoot.whPendingArgs = null;
+            running = true;
+        }
         stdout: StdioCollector {
             onStreamFinished: {
+                if (wallRoot.whPendingArgs) return;     // a newer search is queued: this answer is stale
                 let d = null;
                 try { d = JSON.parse(text.trim()); } catch (e) {}
                 const more = wallRoot.whMore;
                 wallRoot.whLoading = false;
                 wallRoot.whMore = false;
-                if (!d) { wallRoot.whError = "Couldn't read Wallhaven's answer"; return; }
+                if (!d) {
+                    wallRoot.whError = "Couldn't read Wallhaven's answer";
+                    if (more && wallRoot.whPage > 1) wallRoot.whPage--;    // retry this page, don't skip it
+                    return;
+                }
                 wallRoot.whError = d.error || "";
+                if (more && d.error && wallRoot.whPage > 1) wallRoot.whPage--;
                 wallRoot.whLastPage = d.last_page || 1;
                 if (d.seed) wallRoot.whSeed = d.seed;
                 if (more) {
+                    // swapping the model resets a GridView to the top: put scroll and selection back
+                    const y = grid.contentY, ci = grid.currentIndex;
+                    scrollAnim.stop();
                     const seen = new Set(wallRoot.wallhavenWallpapers.map(w => w.id));
                     wallRoot.wallhavenWallpapers = wallRoot.wallhavenWallpapers.concat((d.items || []).filter(w => !seen.has(w.id)));
+                    grid.currentIndex = ci;
+                    grid.contentY = y;
+                    if (!d.error) fillTimer.restart();
                 } else {
                     wallRoot.wallhavenWallpapers = d.items || [];
                     if (wallRoot.activeTab === "wallhaven") { grid.currentIndex = 0; grid.positionViewAtBeginning(); }
+                    if (!d.error) fillTimer.restart();
                 }
             }
         }
@@ -188,7 +210,7 @@ Item {
 
     // reset = a new search (page 1); otherwise the next page of the current one
     function searchWallhaven(reset) {
-        if (reset) { whPage = 1; whSeed = ""; whError = ""; whLoading = true; wallhavenWallpapers = []; }
+        if (reset) { whPage = 1; whSeed = ""; whError = ""; whLoading = true; whMore = false; wallhavenWallpapers = []; }
         else whMore = true;
         const topic = topics.find(t => t.id === whTopic);
         const q = whQuery !== "" ? whQuery : (topic ? topic.q : "");
@@ -196,9 +218,15 @@ Item {
         if (q) args.push("q=" + q);
         if (whColor) args.push("color=" + whColor);
         if (whSeed && !reset) args.push("seed=" + whSeed);
-        wallhavenProc.running = false;
+        if (wallhavenProc.running) { whPendingArgs = args; return; }
         wallhavenProc.command = args;
         wallhavenProc.running = true;
+    }
+    // a page that doesn't fill the view (or leaves it at the end) would never fire atYEnd again
+    Timer {
+        id: fillTimer
+        interval: 120
+        onTriggered: if (grid.contentHeight <= grid.height + 4 || grid.atYEnd) wallRoot.loadMore()
     }
     function loadMore() {
         if (activeTab === "wallhaven" && !whLoading && !whMore && whPage < whLastPage) { whPage++; searchWallhaven(false); }
@@ -608,7 +636,7 @@ Item {
                     columns: 4
                     property real pulse: 0.6
                     SequentialAnimation on pulse {
-                        running: parent.visible && wallRoot.visible
+                        running: parent.visible && wallRoot.visible && !Perf.saver
                         loops: Animation.Infinite
                         NumberAnimation { to: 1; duration: 700; easing.type: Easing.InOutSine }
                         NumberAnimation { to: 0.6; duration: 700; easing.type: Easing.InOutSine }
