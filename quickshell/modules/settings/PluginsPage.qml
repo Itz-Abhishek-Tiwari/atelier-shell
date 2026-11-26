@@ -84,6 +84,42 @@ ColumnLayout {
         }
     }
 
+    // each desktop widget a plugin adds can be put somewhere else than where its author placed it
+    SettingCard {
+        title: "Desktop widgets"; icon: "󰕮"; tint: Atelier.mauve
+        visible: Plugins.desktopWidgets.length > 0
+        Repeater {
+            model: Plugins.desktopWidgets
+            delegate: ColumnLayout {
+                id: wrow
+                required property var modelData
+                Layout.fillWidth: true
+                spacing: 0
+                readonly property var pos: Plugins.layoutOf(modelData.uid)
+                readonly property string curH: pos.h || modelData.hAlign || "right"
+                readonly property string curV: pos.v || modelData.vAlign || "top"
+                SettingRow {
+                    label: wrow.modelData.pluginName + " · " + wrow.modelData.id
+                    description: "Click where it should sit"
+                    RowLayout {
+                        spacing: 10
+                        Chip { visible: Object.keys(wrow.pos).length > 0; icon: "󰑐"; text: "Reset"; tint: Atelier.subtext; interactive: true; implicitHeight: 30
+                               onClicked: Plugins.set("_layout", wrow.modelData.uid, null) }
+                        PositionPad { h: wrow.curH; v: wrow.curV
+                            onPicked: (hh, vv) => Plugins.setLayout(wrow.modelData.uid, { h: hh, v: vv }) }
+                    }
+                }
+                SettingSlider { label: "Distance from edges"; from: 0; to: 240; step: 4; suffix: " px"
+                    value: wrow.pos.margin !== undefined ? wrow.pos.margin : (wrow.modelData.margin !== undefined ? wrow.modelData.margin : 40)
+                    onMoved: (v) => Plugins.setLayout(wrow.modelData.uid, { margin: Math.round(v) }) }
+                SettingSlider { label: "Nudge left / right"; from: -600; to: 600; step: 10; suffix: " px"
+                    value: wrow.pos.x || 0; onMoved: (v) => Plugins.setLayout(wrow.modelData.uid, { x: Math.round(v) }) }
+                SettingSlider { label: "Nudge up / down"; from: -400; to: 400; step: 10; suffix: " px"
+                    value: wrow.pos.y || 0; onMoved: (v) => Plugins.setLayout(wrow.modelData.uid, { y: Math.round(v) }) }
+            }
+        }
+    }
+
     SettingCard {
         title: "Installed"; icon: "󰏓"; tint: Atelier.accent
         visible: installed.count > 0

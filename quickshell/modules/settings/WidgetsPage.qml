@@ -21,45 +21,22 @@ ColumnLayout {
             enabled: Settings.widgets.enabled; opacity: enabled ? 1 : 0.5
             label: "Position"
             description: "Click where it should sit"
-            Rectangle {
-                id: posPad
-                implicitWidth: 168; implicitHeight: 100
-                radius: Atelier.radiusSm
-                color: Atelier.containerHigh
-                border.width: 1; border.color: Atelier.outline
-                readonly property var hs: ["left", "center", "right"]
-                readonly property var vs: ["top", "middle", "bottom"]
-                Grid {
-                    anchors.fill: parent; anchors.margins: 6
-                    columns: 3; spacing: 4
-                    Repeater {
-                        model: 9
-                        Rectangle {
-                            required property int index
-                            readonly property string h: posPad.hs[index % 3]
-                            readonly property string v: posPad.vs[Math.floor(index / 3)]
-                            readonly property bool on: Settings.widgets.hAlign === h && Settings.widgets.vAlign === v
-                            width: (posPad.width - 12 - 8) / 3; height: (posPad.height - 12 - 8) / 3
-                            radius: 4
-                            color: on ? Atelier.fill(Atelier.accent) : (cellMa.containsMouse ? Qt.alpha(Atelier.text, 0.10) : "transparent")
-                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                            Rectangle { visible: !parent.on; anchors.centerIn: parent; width: 4; height: 4; radius: 2; color: Qt.alpha(Atelier.text, 0.3) }
-                            Column {   // the widget, as three lines of text
-                                visible: parent.on
-                                anchors.centerIn: parent; spacing: 2
-                                Rectangle { width: 22; height: 5; radius: 2; color: Atelier.onFill }
-                                Rectangle { width: 14; height: 2; radius: 1; color: Qt.alpha(Atelier.onFill, 0.7) }
-                            }
-                            MouseArea { id: cellMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                                onClicked: { Settings.widgets.hAlign = parent.h; Settings.widgets.vAlign = parent.v; } }
-                        }
-                    }
-                }
+            PositionPad {
+                h: Settings.widgets.hAlign; v: Settings.widgets.vAlign
+                onPicked: (hh, vv) => { Settings.widgets.hAlign = hh; Settings.widgets.vAlign = vv; }
             }
         }
         SettingSlider { enabled: Settings.widgets.enabled; opacity: enabled ? 1 : 0.5
             label: "Distance from edges"; from: 16; to: 240; step: 8; suffix: " px"
             value: Settings.widgets.gutter; onMoved: (v) => Settings.widgets.gutter = Math.round(v) }
+        SettingSlider { enabled: Settings.widgets.enabled; opacity: enabled ? 1 : 0.5
+            label: "Nudge left / right"; description: "Fine tune from that spot, e.g. to clear a desktop icon"
+            from: -600; to: 600; step: 10; suffix: " px"
+            value: Settings.widgets.offsetX; onMoved: (v) => Settings.widgets.offsetX = Math.round(v) }
+        SettingSlider { enabled: Settings.widgets.enabled; opacity: enabled ? 1 : 0.5
+            label: "Nudge up / down"
+            from: -400; to: 400; step: 10; suffix: " px"
+            value: Settings.widgets.offsetY; onMoved: (v) => Settings.widgets.offsetY = Math.round(v) }
         SettingSlider { enabled: Settings.widgets.enabled; opacity: enabled ? 1 : 0.5
             label: "Opacity"; from: 30; to: 100; step: 5; suffix: "%"
             value: Math.round(Settings.widgets.opacity * 100); onMoved: (v) => Settings.widgets.opacity = v / 100 }
