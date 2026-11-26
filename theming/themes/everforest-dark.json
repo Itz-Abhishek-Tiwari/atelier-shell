@@ -3,7 +3,7 @@
   "name": "Everforest Dark",
   "variant": "dark",
   "accent": "green",
-  "pair": "",
+  "pair": "everforest-light",
   "description": "Calm forest greens",
   "colors": {
     "base": "#2d353b",

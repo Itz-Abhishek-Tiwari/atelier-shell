@@ -3,7 +3,7 @@
   "name": "One Dark",
   "variant": "dark",
   "accent": "blue",
-  "pair": "",
+  "pair": "one-light",
   "description": "Editor-grade neutrals, cool blue accent",
   "vscode": {
     "theme": "One Dark Pro",
