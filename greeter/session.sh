@@ -14,9 +14,11 @@ log="$log_dir/atelier-session.log"
 # never block the login over a log file
 ( : >>"$log" ) 2>/dev/null || log=/dev/null
 
-# GPU choice (system/gpu/atelier-gpu): "amd" lets only the AMD card reach Hyprland so the NVIDIA
-# dGPU can power down. Anything else, or no AMD card found, leaves Hyprland on all GPUs.
-if [ "$(cat "$HOME/.config/atelier/gpu" 2>/dev/null)" = "amd" ]; then
+# GPU choice: the login screen's GPU pill (ATELIER_GPU) or, without it, the file written by
+# system/gpu/atelier-gpu. "amd" lets only the AMD card reach Hyprland so the NVIDIA dGPU can
+# power down. Anything else, or no AMD card found, leaves Hyprland on all GPUs.
+gpu="${ATELIER_GPU:-$(cat "$HOME/.config/atelier/gpu" 2>/dev/null)}"
+if [ "$gpu" = "amd" ]; then
     for c in /sys/class/drm/card[0-9]*; do
         if [ "$(cat "$c/device/vendor" 2>/dev/null)" = "0x1002" ]; then
             export AQ_DRM_DEVICES="/dev/dri/${c##*/}"
