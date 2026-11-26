@@ -187,6 +187,7 @@ qs ipc call mode set game|dev|saver|showcase|normal      # also: cycle, toggleGa
 | System monitor (CPU, memory, GPU, network, apps with kill, battery health and charge limit) | `SUPER + Shift + M` |
 | Timers, stopwatch and pomodoro | `SUPER + Alt + T` (`qs ipc call timers start "10m tea"`) |
 | Colour picker (click any pixel, copies the hex; history drawer: `qs ipc call colorpicker toggle`) | `SUPER + Shift + X` |
+| Software: find, install and remove apps (Arch repos + AUR; same as Settings → Install & remove) | launcher → "Software", or `qs ipc call software toggle` |
 | Alt-Tab window switcher | hold `ALT`, tap `Tab` (`Shift + Tab` goes back); release `ALT` to switch |
 | Reload shell | `qs kill; quickshell -d` |
 | Reload Hyprland | automatic on save (avoid `hyprctl reload`: it makes the cursor hitch) |

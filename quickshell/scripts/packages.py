@@ -3,6 +3,7 @@
 
     packages.py search <words>   JSON: repo matches (pacman -Ss, instant), best first
     packages.py aur <words>      JSON: AUR matches (the AUR web API, the same query yay sends)
+    packages.py info <names>     JSON: those repo packages, in the order given (pacman -Si; unknown names skipped)
     packages.py installed        JSON: packages you installed on purpose (pacman -Qe), with the
                                  app name/icon of their .desktop entry, size, date, AUR flag
     packages.py helper           the AUR helper in use ("yay", "paru" or "")
@@ -69,6 +70,27 @@ def search(words):
         elif cur is not None and line.startswith(" "):
             cur["desc"] = (cur["desc"] + " " + line.strip()).strip()
     return _rank(res, words)
+
+
+def info(names):
+    """Repo packages by exact name, in the order asked (the drawer's "popular" list)."""
+    names = [n for n in names if re.match(r"^[a-z0-9@._+-]+$", n)]
+    if not names:
+        return []
+    have = set(run("pacman", "-Qq").split())
+    found = {}
+    for block in run("pacman", "-Si", *names, timeout=30).split("\n\n"):
+        f = {}
+        for line in block.splitlines():
+            m = re.match(r"^([A-Za-z ]+?)\s*:\s(.*)$", line)
+            if m:
+                f[m.group(1)] = m.group(2).strip()
+        n = f.get("Name")
+        if n:
+            found[n] = {"name": n, "repo": f.get("Repository", ""), "version": f.get("Version", ""),
+                        "desc": f.get("Description", ""), "aur": False, "installed": n in have,
+                        "votes": 0, "protected": n in PROTECTED}
+    return [found[n] for n in names if n in found]
 
 
 def aur(words):
@@ -154,6 +176,8 @@ def main():
         print(json.dumps(search(sys.argv[2:])))
     elif cmd == "aur":
         print(json.dumps(aur(sys.argv[2:])))
+    elif cmd == "info":
+        print(json.dumps(info(sys.argv[2:])))
     elif cmd == "installed":
         print(json.dumps(installed()))
     elif cmd == "helper":
