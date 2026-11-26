@@ -2,7 +2,9 @@ import QtQuick
 import qs.config
 
 // The one on/off pill switch (control center, settings rows, drawers). Size it with
-// implicitWidth/implicitHeight; the knob follows the height.
+// implicitWidth/implicitHeight; the knob follows the height. It does not flip itself: bind `on` to
+// your state and change that state in onToggled.
+// Off: a faint track with a quiet knob. On: the accent fill with a bright knob. Pressing stretches the knob.
 Rectangle {
     id: ts
     property bool on: false
@@ -11,16 +13,27 @@ Rectangle {
     implicitHeight: 22
     radius: height / 2
     opacity: enabled ? 1 : 0.45
-    color: on ? Atelier.accentFill : Atelier.containerHigh
+    color: on ? Atelier.accentFill : Qt.alpha(Atelier.text, 0.16)
     border.width: 1
-    border.color: on ? Qt.alpha(Atelier.accent, 0.5) : Atelier.outline
+    border.color: on ? Qt.alpha(Atelier.accent, 0.55) : Qt.alpha(Atelier.text, 0.14)
     Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+    Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
+
+    readonly property real inset: 4                   // knob to track edge, all round
     Rectangle {
-        width: ts.height - 8; height: width; radius: width / 2
-        y: 3
-        x: ts.on ? parent.width - width - 4 : 3
-        color: ts.on ? Atelier.onFill : Atelier.subtext
+        id: knob
+        readonly property real d: ts.height - 2 * ts.inset
+        width: d + (ma.pressed ? Math.round(d * 0.28) : 0)
+        height: d
+        radius: height / 2
+        anchors.verticalCenter: parent.verticalCenter
+        x: ts.on ? ts.width - width - ts.inset : ts.inset
+        color: ts.on ? Atelier.onFill : Qt.alpha(Atelier.text, 0.78)
+        border.width: 1
+        border.color: Qt.rgba(0, 0, 0, 0.12)
         Behavior on x { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
+        Behavior on width { NumberAnimation { duration: Atelier.durFast } }
+        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
     }
-    MouseArea { anchors.fill: parent; enabled: ts.enabled; cursorShape: Qt.PointingHandCursor; onClicked: ts.toggled() }
+    MouseArea { id: ma; anchors.fill: parent; enabled: ts.enabled; cursorShape: Qt.PointingHandCursor; onClicked: ts.toggled() }
 }
