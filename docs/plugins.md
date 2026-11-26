@@ -1,5 +1,7 @@
 # Plugins
 
+Writing one with an AI? Hand it [plugin-authoring.md](plugin-authoring.md): the complete, self-contained reference (every slot, token, component, API, templates, checklist).
+
 Add your own bits to the shell without editing it. A plugin is a folder in `~/.config/atelier/plugins/<id>/`
 with a `plugin.json` and the files it points at. See `examples/plugins/hello/` (one of everything).
 
@@ -23,7 +25,7 @@ A plugin with an error is listed with the reason and not loaded.
 | key               | each entry                                              | what you get |
 |-------------------|---------------------------------------------------------|--------------|
 | `lockStyles`      | `id, name, note, file`                                  | a card in Settings → Lock screen and a full-screen face. The root Item gets a `ph` property (the lock: `ph.hh`, `ph.mm`, `ph.auth`, `ph.u` …, as in the built-in faces) |
-| `desktopWidgets`  | `id, file, hAlign, vAlign, margin`                      | an Item on the wallpaper (behind windows), sized by its implicit size |
+| `desktopWidgets`  | `id, file, hAlign, vAlign, margin`                      | an Item on the wallpaper (behind windows), sized by its implicit size. `hAlign`/`vAlign`/`margin` are only the default: the user can move it in Settings → Plugins → Desktop widgets |
 | `settingsPages`   | `id, label, icon, sub, file`                            | a page in Settings under "Plugins"; any `Setting*` control works |
 | `barItems`        | `id, file`                                              | an Item in the bar, just before the power button. Set `implicitWidth/Height`; read `Atelier.barVertical` for a side bar |
 | `launcherActions` | `id, title, subtitle, glyph, words, cmd` or `overlay`   | a row in the launcher (search it by `title` or `words`). `cmd` runs through `sh -c`; `overlay` opens a shell drawer |
