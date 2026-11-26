@@ -4,7 +4,7 @@
 # ==============================================================================
 
 if [ -n "$1" ]; then
-    quickshell ipc call theme set "$1"
+    quickshell ipc call theme apply "$1"
 else
     quickshell ipc call theme cycle
 fi
