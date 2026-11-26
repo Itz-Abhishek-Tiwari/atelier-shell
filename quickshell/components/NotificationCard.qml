@@ -182,7 +182,7 @@ Rectangle {
                         anchors.centerIn: parent
                         text: "+" + (root.stackCount - 1)
                         font.family: Atelier.font
-                        font.pixelSize: 9
+                        font.pixelSize: Atelier.fsMicro
                         font.bold: true
                         color: Atelier.accent
                     }
@@ -268,8 +268,8 @@ Rectangle {
                             }
                             Text {
                                 text: Notifs.timeAgo(Notifs.receivedAt(modelData))
-                                font.family: Atelier.font; font.pixelSize: 9
-                                color: Atelier.subtext; opacity: 0.8
+                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm
+                                color: Atelier.subtext; opacity: 0.9
                             }
                         }
                         MouseArea { id: oldMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor

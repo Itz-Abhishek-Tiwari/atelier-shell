@@ -242,6 +242,7 @@ Singleton {
                 property bool showBody: true            // off: titles only (screen sharing, privacy)
                 property bool showSource: true          // the "WhatsApp · iPhone" line
                 property bool lockShowCount: true       // show notifications on the lock screen
+                property int historyHours: 0            // forget notifications older than this many hours (0 = keep until dismissed)
             }
 
             property JsonObject windows: JsonObject {   // Hyprland

@@ -20,6 +20,9 @@ ColumnLayout {
             value: Settings.notifications.popupSeconds; onMoved: (v) => Settings.notifications.popupSeconds = v }
         SettingSlider { label: "Pop-ups at once"; from: 1; to: 8; step: 1; tint: Atelier.yellow
             value: Settings.notifications.maxPopups; onMoved: (v) => Settings.notifications.maxPopups = v }
+        SettingChoice { label: "Clear history after"; description: "Old notifications leave the control center by themselves"; tint: Atelier.yellow
+            options: [{ id: "0", label: "Never" }, { id: "1", label: "1 hour" }, { id: "6", label: "6 hours" }, { id: "24", label: "1 day" }]
+            value: String(Settings.notifications.historyHours); onPicked: (id) => Settings.notifications.historyHours = parseInt(id) }
     }
 
     SettingCard {

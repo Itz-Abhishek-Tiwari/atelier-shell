@@ -32,7 +32,7 @@ Singleton {
     property var popups: []
     // a card's reply field is open: DrawerHost then takes keyboard focus on demand
     property bool replying: false
-    property var times: ({})          // notification id -> arrival time (ms)
+    property alias times: persist.times   // notification id -> arrival time (ms); survives shell reloads
     // a clock for "2m ago" labels (cards, "checked 2h ago"): Date.now() alone isn't a binding
     // dependency, so they froze at "now". Half-minute ticks cost nothing.
     property real now: Date.now()
@@ -48,10 +48,34 @@ Singleton {
         return times[n.id] || Date.now();
     }
 
+    // Optional: forget old notifications (Settings → Notifications → "Clear history after").
+    // A notification whose arrival time is unknown gets one now, so a reload never wipes the list.
+    function pruneHistory(): void {
+        const h = Settings.notifications.historyHours;
+        if (!(h > 0)) return;
+        const cutoff = Date.now() - h * 3600000;
+        let stamped = null;
+        for (const n of server.trackedNotifications.values.slice()) {
+            if (!times[n.id]) {                      // arrival unknown (shell was reloaded): start the clock now
+                stamped = stamped || Object.assign({}, times);
+                stamped[n.id] = Date.now();
+            } else if (times[n.id] < cutoff) n.dismiss();
+        }
+        if (stamped) times = stamped;
+    }
+    Timer {
+        running: Settings.notifications.historyHours > 0
+        interval: 300000
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: root.pruneHistory()
+    }
+
     PersistentProperties {
         id: persist
         reloadableId: "atelier-notifs"
         property bool dnd: false
+        property var times: ({})
     }
     property alias dnd: persist.dnd
 
