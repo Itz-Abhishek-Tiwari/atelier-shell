@@ -16,6 +16,9 @@ import qs.services
 //   oxygen     OnePlus OxygenOS: red hour, letter-spaced date, a pulsing lock ring
 //   material   Pixel / Material You: chunky two-tone stacked clock, "at a glance" line
 //   dot        Nothing OS: dot-matrix clock on a monochrome screen, one red accent
+//   terminal   a shell window that "runs" date, weather, battery and notifications
+//   analog     a calm analog clock face with real hands and the date in a window
+//   aurora     a giant thin clock over soft colour glows (your theme) that drift slowly
 // Echoes of their layout and type, not copies: no logos or brand fonts, your wallpaper.
 // Made for a laptop: a keyboard login (avatar, name, password field, Caps Lock warning)
 // instead of a phone passcode pad, Wi-Fi and battery top right, and on a wide screen the
@@ -160,8 +163,56 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: "black"
-        opacity: Math.min(1, (p.variant === "dot" ? (Settings.lockStyle.dotBackground === "black" ? 1 : 0.5) : 0) + (p.auth ? 0.28 : 0))
+        opacity: Math.min(1, (p.variant === "dot" ? (Settings.lockStyle.dotBackground === "black" ? 1 : 0.5) : p.variant === "aurora" ? 0.5 : 0) + (p.auth ? 0.28 : 0))
         Behavior on opacity { NumberAnimation { duration: 320 } }
+    }
+
+    // Aurora: three soft colour glows that drift slowly behind the clock (theme colours). They sit
+    // outside the face layer on purpose: the face is re-rendered once a second, this every frame.
+    Item {
+        id: aurora
+        anchors.fill: parent
+        visible: p.variant === "aurora"
+        opacity: p.auth ? 0.35 : 1
+        Behavior on opacity { NumberAnimation { duration: 320 } }
+        readonly property bool moving: !p.thumb && p.lockRoot.active
+        Repeater {
+            model: [
+                { c: Atelier.accent, r: 0.62, x0: 0.05, y0: 0.05, x1: 0.38, y1: 0.30, d: 26000 },
+                { c: Atelier.mauve,  r: 0.55, x0: 0.62, y0: 0.35, x1: 0.40, y1: 0.12, d: 31000 },
+                { c: Atelier.blue,   r: 0.50, x0: 0.18, y0: 0.55, x1: 0.55, y1: 0.50, d: 37000 }
+            ]
+            Shape {
+                id: orb
+                required property var modelData
+                readonly property real dia: modelData.r * Math.max(p.width, p.height)
+                width: dia; height: dia
+                x: modelData.x0 * p.width; y: modelData.y0 * p.height
+                ShapePath {
+                    strokeColor: "transparent"
+                    fillGradient: RadialGradient {
+                        centerX: orb.dia / 2; centerY: orb.dia / 2; centerRadius: orb.dia / 2
+                        focalX: orb.dia / 2; focalY: orb.dia / 2
+                        GradientStop { position: 0;    color: Qt.alpha(orb.modelData.c, 0.78) }
+                        GradientStop { position: 0.55; color: Qt.alpha(orb.modelData.c, 0.30) }
+                        GradientStop { position: 1;    color: Qt.alpha(orb.modelData.c, 0) }
+                    }
+                    PathAngleArc { centerX: orb.dia / 2; centerY: orb.dia / 2; radiusX: orb.dia / 2; radiusY: orb.dia / 2; startAngle: 0; sweepAngle: 360 }
+                }
+                SequentialAnimation {
+                    running: aurora.moving && aurora.visible
+                    loops: Animation.Infinite
+                    ParallelAnimation {
+                        NumberAnimation { target: orb; property: "x"; to: orb.modelData.x1 * p.width; duration: orb.modelData.d; easing.type: Easing.InOutSine }
+                        NumberAnimation { target: orb; property: "y"; to: orb.modelData.y1 * p.height; duration: orb.modelData.d; easing.type: Easing.InOutSine }
+                    }
+                    ParallelAnimation {
+                        NumberAnimation { target: orb; property: "x"; to: orb.modelData.x0 * p.width; duration: orb.modelData.d; easing.type: Easing.InOutSine }
+                        NumberAnimation { target: orb; property: "y"; to: orb.modelData.y0 * p.height; duration: orb.modelData.d; easing.type: Easing.InOutSine }
+                    }
+                }
+            }
+        }
     }
 
     // ═══ Status, top right: Wi-Fi · battery (Oxygen has them in its shelf) ══
@@ -209,7 +260,8 @@ Item {
         Loader {
             anchors.fill: parent
             sourceComponent: ({ cupertino: cupertinoFace, hyper: hyperFace, harmony: harmonyFace,
-                                oxygen: oxygenFace, material: materialFace, dot: dotFace })[p.variant] || cupertinoFace
+                                oxygen: oxygenFace, material: materialFace, dot: dotFace,
+                                terminal: terminalFace, analog: analogFace, aurora: auroraFace })[p.variant] || cupertinoFace
         }
     }
 
@@ -468,6 +520,199 @@ Item {
                 Notes { width: parent.width; max: 2; visible: p.notifs.length > 0 }
             }
             Hint { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 50 * p.u; glyph: "󰌾" }
+        }
+    }
+
+    // ── Terminal: a shell window that "runs" a few commands ────────────────
+    Component {
+        id: terminalFace
+        Item {
+            id: tf
+            property bool cursorOn: true
+            Timer { interval: 530; repeat: true; running: !p.thumb && p.lockRoot.active; onTriggered: tf.cursorOn = !tf.cursorOn }
+            Rectangle {
+                id: termWin
+                anchors.centerIn: parent
+                anchors.verticalCenterOffset: -30 * p.u
+                width: Math.min(p.width * 0.66, 1180 * p.u)
+                height: termCol.height + 130 * p.u
+                radius: 16 * p.u
+                color: Qt.rgba(0.03, 0.04, 0.07, 0.78)
+                border.width: Math.max(1, 2 * p.u); border.color: Qt.rgba(1, 1, 1, 0.14)
+                Row {
+                    x: 26 * p.u; y: 24 * p.u; spacing: 12 * p.u
+                    Repeater {
+                        model: [Atelier.red, Atelier.yellow, Atelier.green]
+                        Rectangle { required property color modelData; width: 18 * p.u; height: width; radius: width / 2; color: modelData }
+                    }
+                }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter; y: 22 * p.u
+                    text: "zsh — locked"
+                    font.family: Atelier.font; font.pixelSize: 20 * p.u; color: Qt.rgba(1, 1, 1, 0.45)
+                }
+                Column {
+                    id: termCol
+                    x: 44 * p.u; y: 86 * p.u
+                    width: parent.width - 88 * p.u
+                    spacing: 22 * p.u
+                    Repeater {
+                        model: [
+                            { cmd: "date", show: true,
+                              out: Qt.formatDate(p.now, "ddd d MMM yyyy") + "   " + p.hh + ":" + p.mm + ":" + Qt.formatTime(p.now, "ss") + (p.ampm ? " " + p.ampm : "") },
+                            { cmd: "weather", show: p.temp !== "", out: p.temp + (p.condition ? "  " + p.condition : "") },
+                            { cmd: "battery", show: p.hasBattery, out: p.batPct + "%" + (p.charging ? "  (charging)" : "") },
+                            { cmd: "notifications --count", show: p.notifs.length > 0, out: p.notifs.length + " unread" }
+                        ].filter(l => l.show)
+                        Column {
+                            required property var modelData
+                            spacing: 6 * p.u
+                            Row {
+                                spacing: 0
+                                Text { text: Atelier.userName.toLowerCase() + "@atelier"; font.family: Atelier.font; font.pixelSize: 30 * p.u; font.bold: true; color: Atelier.green }
+                                Text { text: ":~$ "; font.family: Atelier.font; font.pixelSize: 30 * p.u; color: Atelier.blue }
+                                Text { text: parent.parent.modelData.cmd; font.family: Atelier.font; font.pixelSize: 30 * p.u; color: Qt.rgba(1, 1, 1, 0.95) }
+                            }
+                            Text { text: parent.modelData.out; font.family: Atelier.font; font.pixelSize: 30 * p.u; color: Qt.rgba(1, 1, 1, 0.8) }
+                        }
+                    }
+                    Row {
+                        spacing: 0
+                        Text { text: Atelier.userName.toLowerCase() + "@atelier"; font.family: Atelier.font; font.pixelSize: 30 * p.u; font.bold: true; color: Atelier.green }
+                        Text { text: ":~$ "; font.family: Atelier.font; font.pixelSize: 30 * p.u; color: Atelier.blue }
+                        Text { text: "_"; opacity: tf.cursorOn ? 1 : 0; font.family: Atelier.font; font.pixelSize: 30 * p.u; font.bold: true; color: "white" }
+                    }
+                }
+            }
+            Hint { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 50 * p.u; glyph: "󰆍" }
+        }
+    }
+
+    // ── Analog: a quiet clock face with real hands ─────────────────────────
+    Component {
+        id: analogFace
+        Item {
+            id: af
+            readonly property real dia: Math.min(p.height * 0.6, p.width * 0.5)
+            readonly property real sec: p.now.getSeconds()
+            readonly property real min: p.now.getMinutes() + sec / 60
+            readonly property real hr: (p.now.getHours() % 12) + min / 60
+            Item {
+                id: dial
+                width: af.dia; height: af.dia
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: 0.08 * p.height
+                Rectangle {
+                    anchors.fill: parent; radius: width / 2
+                    color: Qt.rgba(0, 0, 0, 0.28)
+                    border.width: Math.max(1, 2 * p.u); border.color: Qt.rgba(1, 1, 1, 0.3)
+                }
+                // 60 ticks: the 12 hour marks are longer and brighter
+                Repeater {
+                    model: 60
+                    Item {
+                        required property int index
+                        readonly property bool hour: index % 5 === 0
+                        width: dial.width; height: dial.height
+                        rotation: index * 6
+                        Rectangle {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            y: 14 * p.u
+                            width: parent.parent.hour ? 6 * p.u : 2 * p.u
+                            height: parent.hour ? 34 * p.u : 14 * p.u
+                            radius: width / 2
+                            color: parent.hour ? "white" : Qt.rgba(1, 1, 1, 0.45)
+                        }
+                    }
+                }
+                // today, in a small window at 3 o'clock
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    x: parent.width * 0.62
+                    text: Qt.formatDate(p.now, "ddd d").toUpperCase()
+                    font.family: p.display; font.pixelSize: 26 * p.u; font.weight: Font.DemiBold
+                    color: Qt.rgba(1, 1, 1, 0.8)
+                }
+                // hands, each pivoting on the centre
+                Rectangle {   // hour
+                    x: dial.width / 2 - width / 2; y: dial.height / 2 - height
+                    width: 12 * p.u; height: dial.height * 0.26; radius: width / 2; color: "white"
+                    transform: Rotation { origin.x: 6 * p.u; origin.y: dial.height * 0.26; angle: af.hr * 30 }
+                }
+                Rectangle {   // minute
+                    x: dial.width / 2 - width / 2; y: dial.height / 2 - height
+                    width: 8 * p.u; height: dial.height * 0.38; radius: width / 2; color: "white"
+                    transform: Rotation { origin.x: 4 * p.u; origin.y: dial.height * 0.38; angle: af.min * 6 }
+                }
+                Rectangle {   // second, in the accent colour
+                    x: dial.width / 2 - width / 2; y: dial.height / 2 - height
+                    width: 3 * p.u; height: dial.height * 0.42; radius: width / 2; color: Atelier.accent
+                    transform: Rotation { origin.x: 1.5 * p.u; origin.y: dial.height * 0.42; angle: af.sec * 6 }
+                }
+                Rectangle { anchors.centerIn: parent; width: 22 * p.u; height: width; radius: width / 2; color: Atelier.accent }
+            }
+            Column {
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: dial.y + dial.height + 44 * p.u
+                spacing: 6 * p.u
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: p.h1 + ":" + p.mm + (p.ampm ? " " + p.ampm : "")
+                    font.family: p.display; font.pixelSize: 64 * p.u; font.weight: Font.Light; color: "white"
+                }
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: Qt.formatDate(p.now, "dddd, d MMMM") + (p.temp !== "" ? "   ·   " + p.temp : "")
+                    font.family: p.display; font.pixelSize: 28 * p.u; color: Qt.rgba(1, 1, 1, 0.8)
+                }
+            }
+            Hint { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 40 * p.u }
+        }
+    }
+
+    // ── Aurora: a large thin clock over drifting colour glows (drawn above) ─
+    Component {
+        id: auroraFace
+        Item {
+            Column {
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: 0.2 * p.height
+                spacing: 0
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: Qt.formatDate(p.now, "dddd, d MMMM")
+                    font.family: p.display; font.pixelSize: 34 * p.u; font.weight: Font.Medium; font.letterSpacing: 2 * p.u
+                    color: Qt.rgba(1, 1, 1, 0.85)
+                }
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 18 * p.u
+                    Text {
+                        text: p.h1 + ":" + p.mm
+                        font.family: p.display; font.pixelSize: 360 * p.u; font.weight: Font.ExtraLight; font.letterSpacing: -6 * p.u
+                        color: "white"
+                    }
+                    Text {
+                        visible: p.ampm !== ""
+                        anchors.top: parent.top; anchors.topMargin: 70 * p.u
+                        text: p.ampm
+                        font.family: p.display; font.pixelSize: 46 * p.u; font.weight: Font.Medium; color: Qt.rgba(1, 1, 1, 0.8)
+                    }
+                }
+                Text {
+                    visible: p.temp !== ""
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "󰖐  " + p.temp + (p.condition ? "  " + p.condition : "")
+                    font.family: p.display; font.pixelSize: 30 * p.u; color: Qt.rgba(1, 1, 1, 0.8)
+                }
+            }
+            Text {
+                visible: p.notifs.length > 0
+                anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 130 * p.u
+                text: "󰂚  " + p.countText
+                font.family: p.display; font.pixelSize: 26 * p.u; font.weight: Font.Medium; color: Qt.rgba(1, 1, 1, 0.85)
+            }
+            Hint { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 50 * p.u }
         }
     }
 

@@ -364,7 +364,7 @@ Singleton {
 
             property JsonObject lock: JsonObject {
                 // atelier (LockContent.qml) | a phone style (PhoneLock.qml):
-                // cupertino, hyper, harmony, oxygen, material, dot
+                // cupertino, hyper, harmony, oxygen, material, dot, terminal, analog, aurora
                 property string theme: "atelier"
                 property string clock: "system"             // system (General → 24-hour clock) | 12 | 24, for every built-in style
             }
@@ -678,6 +678,9 @@ Singleton {
         { id: "harmony",   name: "Harmony",   note: "Huawei HarmonyOS-style" },
         { id: "oxygen",    name: "Oxygen",    note: "OnePlus OxygenOS-style" },
         { id: "material",  name: "Material",  note: "Pixel, Material You-style" },
-        { id: "dot",       name: "Dot",       note: "Nothing OS-style" }
+        { id: "dot",       name: "Dot",       note: "Nothing OS-style" },
+        { id: "terminal",  name: "Terminal",  note: "A shell window with live info" },
+        { id: "analog",    name: "Analog",    note: "A calm clock face with hands" },
+        { id: "aurora",    name: "Aurora",    note: "Thin clock over drifting glows" }
     ]
 }

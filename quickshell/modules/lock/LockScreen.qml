@@ -63,7 +63,7 @@ Scope {
 
     // built-in looks: a phone style = PhoneLock.qml, "atelier" = LockContent.qml (also the
     // fallback for an unknown id, e.g. the removed "depth")
-    readonly property var phoneStyles: ["cupertino", "hyper", "harmony", "oxygen", "material", "dot"]
+    readonly property var phoneStyles: ["cupertino", "hyper", "harmony", "oxygen", "material", "dot", "terminal", "analog", "aurora"]
     function isBuiltin(t) { return !t || t === "atelier" || phoneStyles.indexOf(t) >= 0; }
     // the preview can show another style than the one in use (Settings → a card's Preview)
     property string previewTheme: ""

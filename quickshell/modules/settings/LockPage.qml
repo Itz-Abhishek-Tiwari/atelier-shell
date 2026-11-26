@@ -116,7 +116,7 @@ ColumnLayout {
         readonly property bool shown: win.visible && win.page === "lock"
 
         readonly property var ownStyles: Settings.lockStyles
-        readonly property var phoneIds: ["cupertino", "hyper", "harmony", "oxygen", "material", "dot"]
+        readonly property var phoneIds: ["cupertino", "hyper", "harmony", "oxygen", "material", "dot", "terminal", "analog", "aurora"]
         // what the live miniatures read instead of the real lock (never locks anything)
         QtObject {
             id: lockStub

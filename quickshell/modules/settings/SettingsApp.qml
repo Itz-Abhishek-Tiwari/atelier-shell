@@ -42,7 +42,7 @@ Item {
           keys: "control center quick settings toggles tiles icons cards list header shortcuts notifications" },
         { id: "notifications", group: "Personalise", icon: "󰂚", label: "Notifications",     sub: "Pop-ups and Do Not Disturb",
           keys: "notifications pop-ups popups do not disturb dnd" },
-        { id: "lock",          group: "Personalise", icon: "󰌾", label: "Lock screen",       sub: "Eight built-in styles and their options",
+        { id: "lock",          group: "Personalise", icon: "󰌾", label: "Lock screen",       sub: "Ten built-in styles and their options",
           keys: "lock screen themes styles notifications privacy" },
         { id: "login",         group: "Personalise", icon: "󰍂", label: "Login screen",      sub: "Matches your lock screen; sync and boot options",
           keys: "login greeter greetd sddm boot quiet sync" },
