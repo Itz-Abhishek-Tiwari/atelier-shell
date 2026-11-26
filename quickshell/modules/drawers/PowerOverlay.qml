@@ -179,11 +179,11 @@ Item {
                 Repeater {
                     // 0: Lock  1: Sleep  2: Logout  3: Reboot  4: Power Off
                     model: [
-                        { icon: "󰌾", key: "L", accent: powerRoot.colBlue,   cmd: "qs ipc call lock lock || hyprlock",                         idx: 0 },
-                        { icon: "󰤄", key: "S", accent: powerRoot.colLavend, cmd: "systemctl suspend",                                                      idx: 1 },
-                        { icon: "󰍃", key: "E", accent: powerRoot.colYellow, cmd: "hyprctl dispatch 'hl.dsp.exit()' 2>/dev/null || hyprctl dispatch exit", idx: 2 },
-                        { icon: "󰑓", key: "R", accent: powerRoot.colGreen,  cmd: "systemctl reboot",                                                       idx: 3 },
-                        { icon: "⏻",  key: "P", accent: powerRoot.colRed,    cmd: "systemctl poweroff",                                                     idx: 4 }
+                        { icon: "󰌾", key: "L", label: "Lock", accent: powerRoot.colBlue,   cmd: "qs ipc call lock lock || hyprlock",                         idx: 0 },
+                        { icon: "󰤄", key: "S", label: "Sleep", accent: powerRoot.colLavend, cmd: "systemctl suspend",                                                      idx: 1 },
+                        { icon: "󰍃", key: "E", label: "Log out", accent: powerRoot.colYellow, cmd: "hyprctl dispatch 'hl.dsp.exit()' 2>/dev/null || hyprctl dispatch exit", idx: 2 },
+                        { icon: "󰑓", key: "R", label: "Restart", accent: powerRoot.colGreen,  cmd: "systemctl reboot",                                                       idx: 3 },
+                        { icon: "⏻",  key: "P", label: "Power", accent: powerRoot.colRed,    cmd: "systemctl poweroff",                                                     idx: 4 }
                     ]
 
                     Rectangle {
@@ -212,7 +212,7 @@ Item {
 
                         Text {
                             anchors.centerIn: parent
-                            anchors.verticalCenterOffset: -4
+                            anchors.verticalCenterOffset: -7
                             text: sessBtn.modelData.icon
                             font.family: powerRoot.fontMono
                             font.pixelSize: 24
@@ -223,11 +223,11 @@ Item {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             anchors.bottom: parent.bottom
-                            anchors.bottomMargin: 7
-                            text: sessBtn.modelData.key
-                            font.family: powerRoot.fontMono
-                            font.pixelSize: 9
-                            font.bold: true
+                            anchors.bottomMargin: 9
+                            text: sessBtn.modelData.label
+                            font.family: Atelier.fontUi
+                            font.pixelSize: Atelier.fsMicro
+                            font.weight: Font.Medium
                             color: sessBtn.isActive ? sessBtn.modelData.accent : powerRoot.colSubtext
                             opacity: 0.8
                         }

@@ -291,7 +291,7 @@ Item {
                                     }
                                 }
                             }
-                            Text { text: (root.charging ? "󰂄" : "") + Math.round(root.batPct * 100) + "%"
+                            Text { text: (root.charging ? "󰂄  " : "") + Math.round(root.batPct * 100) + "%"
                                 font.family: root.mono; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
                         }
                     }
