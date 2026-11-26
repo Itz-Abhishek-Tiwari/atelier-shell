@@ -47,6 +47,8 @@ Item {
     readonly property string display: "Inter Display"
     readonly property real ts: u * 1.3          // multiply the shell's type tokens (Atelier.fsMd …) by this
     // styles that draw the whole screen themselves (own backdrop, no shared dark overlay or status icons)
+    // phone styles whose password screen is PhoneAuth.qml (Cupertino keeps the shared one below)
+    readonly property bool ownAuth: ["hyper", "harmony", "oxygen", "material", "dot"].indexOf(variant) >= 0
     readonly property bool owns: ["poster", "flip", "split", "hud", "terminal", "analog", "aurora"].indexOf(variant) >= 0
 
     focus: !thumb
@@ -770,7 +772,7 @@ Item {
         id: authView
         anchors.fill: parent
         visible: opacity > 0
-        opacity: p.auth && !p.leaving && !p.owns ? 1 : 0
+        opacity: p.auth && !p.leaving && !p.owns && !p.ownAuth ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
         readonly property bool dotLook: p.variant === "dot"
         // per style: field corners, mono type
@@ -921,6 +923,15 @@ Item {
                 }
             }
         }
+    }
+
+    // the styles with their own password screen
+    PhoneAuth {
+        anchors.fill: parent
+        ph: p
+        visible: opacity > 0
+        opacity: p.auth && !p.leaving && p.ownAuth ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
     }
 
     // wrong password: shake the dots
