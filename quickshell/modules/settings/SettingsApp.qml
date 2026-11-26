@@ -29,7 +29,10 @@ Item {
     property real openedAt: 0
 
     property string page: "appearance"
-    readonly property var pages: [
+    readonly property var pages: basePages.concat(pluginsPage, Plugins.settingsPages)
+    readonly property var pluginsPage: ({ id: "plugins", group: "Plugins", icon: "󰐱", label: "Plugins", sub: "Load your own styles, widgets and pages",
+          keys: "plugins extensions mods add-ons user custom load" })
+    readonly property var basePages: [
         { id: "profile",       group: "Personalise", icon: "󰀄", label: "Profile",           sub: "Picture, name and greetings",
           keys: "profile picture photo avatar face image name display greeting account user login full computer hostname" },
         { id: "appearance",    group: "Personalise", icon: "󰏘", label: "Appearance",        sub: "Theme, wallpaper, glass, blur and shadows",
@@ -490,6 +493,19 @@ Item {
                         ProfilesPage { visible: win.page === "profiles" }
 
                         AboutPage { win: win; visible: win.page === "about" }
+                        PluginsPage { win: win; visible: win.page === "plugins" }
+                        Repeater {
+                            model: Plugins.settingsPages
+                            delegate: Loader {
+                                required property var modelData
+                                Layout.fillWidth: true
+                                visible: win.page === modelData.id
+                                active: visible
+                                source: "file://" + modelData.file
+                                onLoaded: Plugins.attach(item, modelData.entry)
+                                onStatusChanged: if (status === Loader.Error) Plugins.reportError(modelData.entry.plugin, modelData.entry.id + ": could not load " + modelData.file)
+                            }
+                        }
                     }
                 }
             }

@@ -49,7 +49,9 @@ Item {
     // styles that draw the whole screen themselves (own backdrop, no shared dark overlay or status icons)
     // phone styles whose password screen is PhoneAuth.qml (Cupertino keeps the shared one below)
     readonly property bool ownAuth: ["hyper", "harmony", "oxygen", "material", "dot"].indexOf(variant) >= 0
-    readonly property bool owns: ["poster", "flip", "split", "hud", "terminal", "analog", "aurora"].indexOf(variant) >= 0
+    readonly property var pluginEntry: (Plugins.lockStyles.find(x => x.id === variant) || {}).entry || null
+    readonly property string pluginFile: Plugins.lockFile(variant)      // a user plugin's Face.qml (docs/plugins.md)
+    readonly property bool owns: pluginFile !== "" || ["poster", "flip", "split", "hud", "terminal", "analog", "aurora"].indexOf(variant) >= 0
 
     focus: !thumb
     Component.onCompleted: if (!thumb) forceActiveFocus()
@@ -226,6 +228,15 @@ Item {
                                 oxygen: oxygenFace, material: materialFace, dot: dotFace,
                                 poster: posterFace, flip: flipFace, split: splitFace, hud: hudFace,
                                 terminal: terminalFace, analog: analogFace, aurora: auroraFace })[p.variant] || cupertinoFace
+            visible: p.pluginFile === ""
+        }
+        // a plugin's face: gets `ph` (this lock) like the built-in full-screen faces; a broken file falls back to nothing
+        Loader {
+            anchors.fill: parent
+            active: p.pluginFile !== ""
+            source: p.pluginFile
+            onLoaded: { item.ph = p; Plugins.attach(item, p.pluginEntry); }
+            onStatusChanged: if (status === Loader.Error && !p.thumb) Plugins.reportError(p.pluginEntry.plugin, p.pluginEntry.id + ": could not load " + p.pluginEntry.file)
         }
     }
 

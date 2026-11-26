@@ -164,7 +164,7 @@ Item {
         { id: "camera",     icon: "󰄀", label: "Camera" },     { id: "keyboard",  icon: "󰌌", label: "Keyboard" },
         { id: "keybinds",   icon: "󰧺", label: "Shortcuts" },  { id: "settings",  icon: "󰒓", label: "Settings" }
     ]
-    readonly property var shortcuts: (Settings.controlCenter.shortcuts || []).map(id => allShortcuts.find(x => x.id === id)).filter(x => x).slice(0, 5)
+    readonly property var shortcuts: (Settings.controlCenter.shortcuts || []).map(id => allShortcuts.find(x => x.id === id)).filter(x => x).slice(0, 5).concat(Plugins.controlTiles)
     onVisibleChanged: IPhone.watch(visible)
 
     // ── Dismiss ──────────────────────────────────────────────────────────────
@@ -663,7 +663,7 @@ Item {
                             color: Atelier.subtext
                         }
                         MouseArea { id: scMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                            onClicked: root.requestOverlay(modelData.id) }
+                            onClicked: modelData.cmd ? (Quickshell.execDetached(["sh", "-c", modelData.cmd]), root.close()) : root.requestOverlay(modelData.id) }
                     }
                 }
             }

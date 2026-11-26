@@ -198,6 +198,9 @@ ShellRoot {
         onRequestOverlay: (name) => shellRoot.toggleOverlay(name)
     }
 
+    // User plugins' desktop widgets (docs/plugins.md)
+    PluginWidgets {}
+
     // 2. Every drawer and pop-up lives in ONE always-mapped window (DrawerHost), Caelestia-style:
     //    opening a drawer only shows an Item. No new window / render thread / GL context.
     //    Order = stacking: drawers, then notifications, OSD, toast on top.

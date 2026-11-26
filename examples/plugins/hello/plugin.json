@@ -1,0 +1,56 @@
+{
+  "name": "Hello",
+  "version": "1.0",
+  "author": "you",
+  "description": "A sample with one of everything: lock style, desktop widget, settings page, bar item, launcher action, control tile",
+  "lockStyles": [
+    {
+      "id": "hello",
+      "name": "Hello",
+      "note": "Big greeting",
+      "file": "LockFace.qml"
+    }
+  ],
+  "desktopWidgets": [
+    {
+      "id": "badge",
+      "file": "Widget.qml",
+      "hAlign": "right",
+      "vAlign": "top",
+      "margin": 40
+    }
+  ],
+  "settingsPages": [
+    {
+      "id": "page",
+      "label": "Hello",
+      "icon": "󰋜",
+      "sub": "A plugin's own page",
+      "file": "Page.qml"
+    }
+  ],
+  "barItems": [
+    {
+      "id": "wave",
+      "file": "BarItem.qml"
+    }
+  ],
+  "launcherActions": [
+    {
+      "id": "say",
+      "title": "Say hello",
+      "subtitle": "Hello plugin",
+      "glyph": "󰋜",
+      "words": "hello greet wave",
+      "cmd": "notify-send 'Hello from a plugin'"
+    }
+  ],
+  "controlTiles": [
+    {
+      "id": "tile",
+      "label": "Hello",
+      "icon": "󰋜",
+      "cmd": "notify-send 'Hello from a tile'"
+    }
+  ]
+}

@@ -64,14 +64,15 @@ Scope {
     // built-in looks: a phone style = PhoneLock.qml, "atelier" = LockContent.qml (also the
     // fallback for an unknown id, e.g. the removed "depth")
     readonly property var phoneStyles: ["cupertino", "hyper", "harmony", "oxygen", "material", "dot", "terminal", "analog", "aurora", "poster", "flip", "split", "hud"]
-    function isBuiltin(t) { return !t || t === "atelier" || phoneStyles.indexOf(t) >= 0; }
+    function isPlugin(t) { return !!Plugins.lockFile(t); }
+    function isBuiltin(t) { return !t || t === "atelier" || phoneStyles.indexOf(t) >= 0 || isPlugin(t); }
     // the preview can show another style than the one in use (Settings → a card's Preview)
     property string previewTheme: ""
     readonly property string lockTheme: Settings.lock.theme
     readonly property string shownTheme: previewing && previewTheme ? previewTheme : lockTheme
     Component { id: glassUi; LockContent { lockRoot: root } }
     Component { id: phoneUi; PhoneLock { lockRoot: root } }
-    function uiFor(t) { return phoneStyles.indexOf(t) >= 0 ? phoneUi : glassUi; }
+    function uiFor(t) { return phoneStyles.indexOf(t) >= 0 || isPlugin(t) ? phoneUi : glassUi; }
 
     function lock() {
         if (locked) return;

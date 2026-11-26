@@ -7,6 +7,7 @@ import Quickshell.Wayland
 import Quickshell.Widgets
 import qs.components
 import qs.config
+import qs.services
 
 // Spotlight-style launcher in a Caelestia bottom drawer.
 // One search field for: apps (fuzzy + usage-ranked), shell actions (open the
@@ -70,7 +71,8 @@ Item {
         usageFile.setText(JSON.stringify(u));
     }
 
-    readonly property var actions: [
+    readonly property var actions: baseActions.concat(Plugins.launcherActions)
+    readonly property var baseActions: [
         { key: "wallpaper", title: "Wallpapers",      subtitle: "Browse and set wallpapers",            glyph: "󰸉", color: Atelier.accent, words: "wallpaper background picture image wallhaven", overlay: "wallpaper" },
         { key: "wifi",      title: "Wi-Fi",           subtitle: "Networks and connection",              glyph: "󰤨", color: Atelier.sky, words: "wifi wireless network internet connect", overlay: "wifi" },
         { key: "bluetooth", title: "Bluetooth",       subtitle: "Devices, pairing, headphones",         glyph: "󰂯", color: Atelier.blue, words: "bluetooth devices headphones pair earbuds", overlay: "bluetooth" },

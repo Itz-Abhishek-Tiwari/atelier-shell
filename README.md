@@ -212,6 +212,15 @@ live and is also written to `hypr/atelier-settings.lua`, so it holds at the next
 From scripts: `qs ipc call profiles list|save <name>|apply <name>|active`, and
 `qs ipc call settings open displays|input|sound|shortcuts|profiles`.
 
+## Plugins
+
+Add your own lock styles, desktop widgets, bar items, launcher actions, control-centre tiles and Settings pages without
+touching the shell. Settings → **Plugins** installs one from a git URL, a `.zip` or a folder (it stays off until you
+read and approve it), switches it on or off, or removes it. Or drop a folder into `~/.config/atelier/plugins/` and press
+Reload. A plugin is a `plugin.json` plus QML files that follow the theme; `examples/plugins/hello/` has one of each, and
+[docs/plugins.md](docs/plugins.md) is the guide. From scripts: `qs ipc call plugins list|reload|enable|disable|install|remove`.
+Plugins are code that runs inside your shell: only install ones you trust.
+
 ## Notes
 - **Icons:** [Colloid](https://github.com/vinceliuice/Colloid-icon-theme) everywhere (GTK, Qt/qt6ct, KDE, the shell). `install.sh` fetches the variants your themes use, and `atelier-theme apply <id>` switches to the matching one (e.g. Catppuccin → `Colloid-Purple-Catppuccin-Dark`).
 - **Wallpapers** live in `hypr/wall/` and are git-ignored (large). Drop your own images there.
