@@ -16,6 +16,13 @@ import qs.services
 //   oxygen     OnePlus OxygenOS: red hour, letter-spaced date, a pulsing lock ring
 //   material   Pixel / Material You: chunky two-tone stacked clock, "at a glance" line
 //   dot        Nothing OS: dot-matrix clock on a monochrome screen, one red accent
+//   poster     the time as a huge flat-colour poster (full screen, PosterFace.qml)
+//   flip       flip-card clock on a dark backdrop (FlipFace.qml)
+//   split      a slanted info panel beside your clear wallpaper (SplitFace.qml)
+//   hud        a thin-lined dashboard grid (HudFace.qml)
+//   terminal   a full-screen terminal with a block-letter clock (TerminalFace.qml)
+//   analog     a designer's wall clock (AnalogFace.qml)
+//   aurora     a night sky with drifting aurora ribbons (AuroraFace.qml)
 // Echoes of their layout and type, not copies: no logos or brand fonts, your wallpaper.
 // Made for a laptop: a keyboard login (avatar, name, password field, Caps Lock warning)
 // instead of a phone passcode pad, Wi-Fi and battery top right, and on a wide screen the
@@ -38,6 +45,11 @@ Item {
     readonly property bool auth: !thumb && lockRoot.authMode
     readonly property bool leaving: !thumb && lockRoot.unlocking
     readonly property string display: "Inter Display"
+    readonly property real ts: u * 1.3          // multiply the shell's type tokens (Atelier.fsMd …) by this
+    // styles that draw the whole screen themselves (own backdrop, no shared dark overlay or status icons)
+    // phone styles whose password screen is PhoneAuth.qml (Cupertino keeps the shared one below)
+    readonly property bool ownAuth: ["hyper", "harmony", "oxygen", "material", "dot"].indexOf(variant) >= 0
+    readonly property bool owns: ["poster", "flip", "split", "hud", "terminal", "analog", "aurora"].indexOf(variant) >= 0
 
     focus: !thumb
     Component.onCompleted: if (!thumb) forceActiveFocus()
@@ -127,7 +139,7 @@ Item {
         autoPaddingEnabled: false
         blurEnabled: !p.thumb
         blurMax: 64
-        blur: p.auth ? 0.9 : 0
+        blur: p.auth && !p.owns ? 0.9 : 0
         saturation: p.variant === "dot" ? -1 : 0
         scale: p.leaving ? 1.08 : 1
         Behavior on blur { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
@@ -150,6 +162,7 @@ Item {
     // legibility: a soft dark at the top and bottom (all over for Dot), more under the password view
     Rectangle {
         anchors.fill: parent
+        visible: !p.owns
         gradient: Gradient {
             GradientStop { position: 0;    color: Qt.rgba(0, 0, 0, 0.38) }
             GradientStop { position: 0.45; color: Qt.rgba(0, 0, 0, 0.06) }
@@ -160,13 +173,14 @@ Item {
     Rectangle {
         anchors.fill: parent
         color: "black"
+        visible: !p.owns
         opacity: Math.min(1, (p.variant === "dot" ? (Settings.lockStyle.dotBackground === "black" ? 1 : 0.5) : 0) + (p.auth ? 0.28 : 0))
         Behavior on opacity { NumberAnimation { duration: 320 } }
     }
 
     // ═══ Status, top right: Wi-Fi · battery (Oxygen has them in its shelf) ══
     Row {
-        visible: p.variant !== "oxygen"
+        visible: p.variant !== "oxygen" && !p.owns
         anchors.right: parent.right; anchors.top: parent.top
         anchors.rightMargin: 40 * p.u; anchors.topMargin: 32 * p.u
         spacing: 22 * p.u
@@ -192,13 +206,13 @@ Item {
     Item {
         id: faceWrap
         anchors.fill: parent
-        opacity: p.auth || p.leaving ? 0 : 1
+        opacity: (p.owns ? p.leaving : (p.auth || p.leaving)) ? 0 : 1
         Behavior on opacity { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
         transform: Translate {
-            y: p.auth || p.leaving ? -60 * p.u : 0
+            y: !p.owns && (p.auth || p.leaving) ? -60 * p.u : 0
             Behavior on y { NumberAnimation { duration: 380; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard } }
         }
-        layer.enabled: !p.thumb
+        layer.enabled: !p.thumb && !p.owns
         layer.effect: MultiEffect {
             shadowEnabled: true
             shadowBlur: 0.7
@@ -209,7 +223,9 @@ Item {
         Loader {
             anchors.fill: parent
             sourceComponent: ({ cupertino: cupertinoFace, hyper: hyperFace, harmony: harmonyFace,
-                                oxygen: oxygenFace, material: materialFace, dot: dotFace })[p.variant] || cupertinoFace
+                                oxygen: oxygenFace, material: materialFace, dot: dotFace,
+                                poster: posterFace, flip: flipFace, split: splitFace, hud: hudFace,
+                                terminal: terminalFace, analog: analogFace, aurora: auroraFace })[p.variant] || cupertinoFace
         }
     }
 
@@ -470,6 +486,15 @@ Item {
             Hint { anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 50 * p.u; glyph: "󰌾" }
         }
     }
+
+    // ── Full-screen styles: each one is its own file (PosterFace.qml …) ────
+    Component { id: posterFace;   PosterFace   { ph: p } }
+    Component { id: flipFace;     FlipFace     { ph: p } }
+    Component { id: splitFace;    SplitFace    { ph: p } }
+    Component { id: hudFace;      HudFace      { ph: p } }
+    Component { id: terminalFace; TerminalFace { ph: p } }
+    Component { id: analogFace;   AnalogFace   { ph: p } }
+    Component { id: auroraFace;   AuroraFace   { ph: p } }
 
     // ── Oxygen (OnePlus OxygenOS): a frosted shelf across the screen ───────
     Component {
@@ -747,7 +772,7 @@ Item {
         id: authView
         anchors.fill: parent
         visible: opacity > 0
-        opacity: p.auth && !p.leaving ? 1 : 0
+        opacity: p.auth && !p.leaving && !p.owns && !p.ownAuth ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
         readonly property bool dotLook: p.variant === "dot"
         // per style: field corners, mono type
@@ -898,6 +923,15 @@ Item {
                 }
             }
         }
+    }
+
+    // the styles with their own password screen
+    PhoneAuth {
+        anchors.fill: parent
+        ph: p
+        visible: opacity > 0
+        opacity: p.auth && !p.leaving && p.ownAuth ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
     }
 
     // wrong password: shake the dots

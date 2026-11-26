@@ -1,0 +1,1 @@
+../../../quickshell/modules/lock/PosterFace.qml
