@@ -1,0 +1,194 @@
+diff --git a/src/window/burn/BurnGroundDebris.cpp b/src/window/burn/BurnGroundDebris.cpp
+index 032791e..97e772e 100644
+--- a/src/window/burn/BurnGroundDebris.cpp
++++ b/src/window/burn/BurnGroundDebris.cpp
+@@ -6,6 +6,7 @@
+ #include "gl/Storage.hpp"
+ #include "window/burn/BurnGroundDebris.hpp"
+ #include "window/burn/BurnGroundShader.hpp"
++#include "window/burn/BurnTheme.hpp"
+ 
+ // The dust shader hash is from the Hash without Sine family (David Hoskins, MIT).
+ // See THIRD_PARTY_NOTICES.md.
+@@ -131,7 +132,7 @@ vec4 ember(float life, float seed, float radial) {
+     float glow=radial*radial;
+     float pulse=0.79+0.21*sin(life*(21.0+10.0*seed)+31.0*seed);
+     float alpha=glow*(1.0-life)*pulse;
+-    vec3 hot=mix(vec3(0.91,0.22,0.028),vec3(1.0,0.74,0.32),glow*(1.0-life));
++    vec3 hot=mix(@EMBER@,@HOT_EMBER@,glow*(1.0-life));
+     return vec4(hot*alpha,alpha);
+ }
+ 
+@@ -172,12 +173,13 @@ void main() {
+         if (VERTEX_SHADER == 0) {
+             return 0;
+         }
++        static const std::string THEMED_BODY = burn_theme::apply(FRAGMENT_BODY);
+         constexpr auto CHAR = burn_ground_shader::PRINTED_CHAR;
+         const std::array<GLint, 3> LENGTHS{-1, static_cast<GLint>(CHAR.size()), -1};
+         const GLuint FRAGMENT_SHADER = compile_shader(GL_FRAGMENT_SHADER,
+             // NOLINTNEXTLINE(bugprone-suspicious-stringview-data-usage): glShaderSource gets the
+             // explicit segment length.
+-            std::array{FRAGMENT_HEADER, CHAR.data(), FRAGMENT_BODY},
++            std::array{FRAGMENT_HEADER, CHAR.data(), THEMED_BODY.c_str()},
+             LENGTHS.data());
+         const GLuint PROGRAM = FRAGMENT_SHADER != 0 ? glCreateProgram() : 0;
+         GLint linked = GL_FALSE;
+diff --git a/src/window/burn/BurnGroundShader.hpp b/src/window/burn/BurnGroundShader.hpp
+index d98a403..7962617 100644
+--- a/src/window/burn/BurnGroundShader.hpp
++++ b/src/window/burn/BurnGroundShader.hpp
+@@ -1,5 +1,7 @@
+ #pragma once
+ 
++#include "window/burn/BurnTheme.hpp"
++
+ #include <string>
+ #include <string_view>
+ 
+@@ -114,7 +116,7 @@ vec4 movementSurface(vec3 clean, vec2 paper, vec2 state) {
+ 
+     float outerEdge=1.0-smoothstep(0.015,0.055,abs(singe-0.12));
+     float glow=smoothstep(0.63,0.85,fiber)*smoothstep(0.20,0.85,state.y);
+-    vec3 surface=mix(sheet,backing,hole)+vec3(0.53,0.15,0.025)*glow*max(edge,0.22*outerEdge);
++    vec3 surface=mix(sheet,backing,hole)+@GLOW_EDGE@*glow*max(edge,0.22*outerEdge);
+     return vec4(surface*opacity,opacity);
+ }
+ 
+@@ -194,6 +196,6 @@ void main() {
+         source.reserve(
+             HEADER.size() + burn_shader::COMMON.size() + PRINTED_CHAR.size() + BODY.size());
+         source.append(HEADER).append(burn_shader::COMMON).append(PRINTED_CHAR).append(BODY);
+-        return source;
++        return burn_theme::apply(std::move(source));
+     }
+ }  // namespace burn_ground_shader
+diff --git a/src/window/burn/BurnShaders.hpp b/src/window/burn/BurnShaders.hpp
+index e1e89cc..c9bc37d 100644
+--- a/src/window/burn/BurnShaders.hpp
++++ b/src/window/burn/BurnShaders.hpp
+@@ -3,12 +3,14 @@
+ #include <string>
+ #include <string_view>
+ 
++#include "window/burn/BurnTheme.hpp"
++
+ // burnHash is from the Hash without Sine family (David Hoskins, MIT).
+ // See THIRD_PARTY_NOTICES.md.
+ 
+ namespace burn_shader {
+     // Keep burnArrival identical to hyprimate::burn_arrival for deposits and debris.
+-    inline constexpr std::string_view COMMON = R"GLSL(
++    inline const std::string COMMON = burn_theme::apply(R"GLSL(
+ float burnArrival(vec2 uv, float seedPhase, float variation) {
+     vec2 p=2.0*uv-1.0;
+     float r=max(abs(p.x),abs(p.y));
+@@ -49,8 +51,8 @@ vec2 burnWarp(vec2 uv, float heat) {
+ }
+ // Shared by wallpaper, retained window, and flakes: muted coal, not opaque white speckles.
+ vec3 charPalette(float amount, float heat) {
+-    vec3 coal=mix(vec3(0.12,0.061,0.031),vec3(0.019,0.017,0.015),clamp(amount,0.0,1.0));
+-    return coal+vec3(1.0,0.19,0.012)*heat+vec3(0.55,0.35,0.055)*heat*heat;
++    vec3 coal=mix(@COAL_A@,@COAL_B@,clamp(amount,0.0,1.0));
++    return coal+@FLAME@*heat+@HOT@*heat*heat;
+ }
+ vec3 burnChar(vec3 content, float distance, float width, vec2 uv, float heat) {
+     float mottle=burnFbm(uv*23.0);
+@@ -66,9 +68,9 @@ vec3 burnChar(vec3 content, float distance, float width, vec2 uv, float heat) {
+     carbon=mix(carbon,vec3(0.20+ink*0.45),ash*0.72);
+     float crease=1.0-smoothstep(0.015,0.075,abs(fiber-0.48));
+     carbon*=1.0-crease*0.15;
+-    return mix(content,carbon,amount)+vec3(0.22,0.033,0.002)*crease*glow;
++    return mix(content,carbon,amount)+@CREASE@*crease*glow;
+ }
+-)GLSL";
++)GLSL");
+ 
+     inline std::string vertex() {
+         return std::string{R"GLSL(#version 300 es
+diff --git a/src/window/burn/BurnTheme.hpp b/src/window/burn/BurnTheme.hpp
+new file mode 100644
+index 0000000..b36c556
+--- /dev/null
++++ b/src/window/burn/BurnTheme.hpp
+@@ -0,0 +1,80 @@
++#pragma once
++
++// Atelier patch: the fire in the burn style takes its colours from the desktop theme
++// (~/.config/atelier/theme.json, written by atelier-theme) instead of fixed orange.
++// Read once, when the plugin loads; a theme change shows the next time the plugin loads.
++#include <algorithm>
++#include <array>
++#include <cstdio>
++#include <cstdlib>
++#include <fstream>
++#include <sstream>
++#include <string>
++
++#include <nlohmann/json.hpp>
++
++namespace burn_theme {
++    using Rgb = std::array<float, 3>;
++
++    inline Rgb hex(const std::string& s, Rgb fallback) {
++        if (s.size() != 7 || s[0] != '#') return fallback;
++        unsigned v = 0;
++        if (std::sscanf(s.c_str() + 1, "%x", &v) != 1) return fallback;
++        return {static_cast<float>((v >> 16) & 255) / 255.f, static_cast<float>((v >> 8) & 255) / 255.f,
++                static_cast<float>(v & 255) / 255.f};
++    }
++    inline Rgb mix(Rgb a, Rgb b, float t) {
++        return {a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t};
++    }
++    inline Rgb scale(Rgb a, float k) { return {a[0] * k, a[1] * k, a[2] * k}; }
++    // saturate the pastel accent into a flame colour whose brightest channel is 1
++    inline Rgb flame_of(Rgb c) {
++        const float L = 0.2126f * c[0] + 0.7152f * c[1] + 0.0722f * c[2];
++        Rgb o{std::clamp(L + (c[0] - L) * 1.7f, 0.f, 4.f), std::clamp(L + (c[1] - L) * 1.7f, 0.f, 4.f),
++              std::clamp(L + (c[2] - L) * 1.7f, 0.f, 4.f)};
++        const float m = std::max({o[0], o[1], o[2], 0.001f});
++        return scale(o, 1.f / m);
++    }
++    inline std::string vec3(Rgb c) {
++        char b[96];
++        std::snprintf(b, sizeof b, "vec3(%.4f,%.4f,%.4f)", c[0], c[1], c[2]);
++        return b;
++    }
++
++    inline std::array<std::pair<std::string, std::string>, 8> table() {
++        Rgb accent{1.f, 0.19f, 0.012f}, crust{0.019f, 0.017f, 0.015f}, mantle{0.12f, 0.061f, 0.031f};
++        bool themed = false;
++        if (const char* home = std::getenv("HOME")) {
++            std::ifstream f(std::string{home} + "/.config/atelier/theme.json");
++            if (f) {
++                try {
++                    const auto j = nlohmann::json::parse(f);
++                    const auto& c = j.at("colors");
++                    accent = hex(c.value("accent", ""), accent);
++                    crust = hex(c.value("crust", ""), crust);
++                    mantle = hex(c.value("mantle", ""), mantle);
++                    themed = true;
++                } catch (...) {}
++            }
++        }
++        const Rgb F = themed ? flame_of(accent) : accent;
++        const Rgb coalA = themed ? mix(scale(mantle, 0.9f), scale(F, 0.12f), 0.5f) : mantle;
++        const Rgb coalB = themed ? scale(crust, 0.75f) : crust;
++        const Rgb hot = themed ? scale(mix(F, {1.f, 1.f, 1.f}, 0.45f), 0.62f) : Rgb{0.55f, 0.35f, 0.055f};
++        return {{{"@COAL_A@", vec3(coalA)},
++                 {"@COAL_B@", vec3(coalB)},
++                 {"@FLAME@", vec3(F)},
++                 {"@HOT@", vec3(hot)},
++                 {"@CREASE@", vec3(scale(F, 0.22f))},
++                 {"@GLOW_EDGE@", vec3(scale(F, 0.53f))},
++                 {"@EMBER@", vec3(scale(F, 0.91f))},
++                 {"@HOT_EMBER@", vec3(themed ? mix(F, {1.f, 1.f, 1.f}, 0.55f) : Rgb{1.f, 0.74f, 0.32f})}}};
++    }
++
++    inline std::string apply(std::string s) {
++        static const auto T = table();
++        for (const auto& [k, v] : T)
++            for (size_t p = 0; (p = s.find(k, p)) != std::string::npos; p += v.size()) s.replace(p, k.size(), v);
++        return s;
++    }
++}

@@ -170,3 +170,8 @@ ufw
 zram-generator
 sof-firmware
 hostapd
+
+# Showcase mode: build deps of the hyprimate plugin (setup/hyprimate.sh)
+cmake
+ninja
+nlohmann-json
