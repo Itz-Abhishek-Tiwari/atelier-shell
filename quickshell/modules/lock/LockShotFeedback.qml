@@ -3,7 +3,7 @@ import qs.config
 
 // Feedback for a screenshot taken on the lock screen (Print key / camera button): a quick
 // white flash and a small pill at the top. Shown AFTER grim has finished, so it is never
-// in the picture. Used by DepthLock.qml and LockContent.qml.
+// in the picture. Used by LockContent.qml.
 Item {
     id: fb
     required property var lockRoot

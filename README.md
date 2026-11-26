@@ -111,7 +111,7 @@ install.sh     sets all of it up
 ## Login screen (Quickshell instead of SDDM)
 
 The `greeter/` folder is a Quickshell login screen built on **greetd**. It looks exactly like
-your lock screen: it loads the same style files (Atelier, Depth or a phone style, whichever
+your lock screen: it loads the same style files (Atelier or a phone style, whichever
 Settings → Lock screen uses, with the same options), on your wallpaper and in your theme. A small
 pill in the top-left corner picks the person (F1) and the desktop session (F2).
 
@@ -135,7 +135,7 @@ the screen.
 If a login ever fails: `Ctrl+Alt+F3`, log in, then
 `sudo systemctl disable greetd && sudo systemctl enable --force sddm && sudo reboot`.
 
-## Performance modes (Game / Programming)
+## Performance modes (Game / Programming / Battery saver / Showcase)
 
 The UI keeps the same look; the work behind it changes. Switch in the control center, in
 *Settings → Behavior → Performance modes*, with keys, or over IPC.
@@ -144,6 +144,8 @@ The UI keeps the same look; the work behind it changes. Switch in the control ce
 |---|---|---|
 | **Normal** | | Your own look and settings. Windows glide in on a soft spring; drawers open with one gentle overshoot. |
 | **Programming** | `Super+Shift+D` | Opaque windows (crisp text, no blur work behind them), 1-pass blur, crisp low-travel animations (shorter, barely any scale or slide, no overshoot, in windows and the shell alike), no dimming, performance power profile (balanced on battery), screen kept awake. Remembered across logins. |
+| **Battery saver** | `Super+Shift+B` | The least the screen has to draw: opaque windows (nothing is blended), no blur, shadows, animations or dimming, the power-saver profile, desktop widget not drawn, no shell shadows or glass, shell animations 1.9× faster. Every part can be changed in Settings → Modes. Remembered across logins. |
+| **Showcase** | `Super+Shift+A` | The opposite of the others: everything on, looks first. Full blur (3+ passes), shadows, glass, and the [hyprimate](https://github.com/JustinBacher/hyprimate) plugin's shader animations (liquid, cloth, paper, swarm, bubble… windows, optional cube / lava workspace transitions). Build the plugin once with `setup/hyprimate.sh`; it is loaded only in this mode and unloaded when you leave. Per session, not kept across logins. |
 | **Game** | `Super+Shift+G` | No blur / shadows / animations (or, if you keep them, fades only: nothing moves over the game), quick shell drawers, opaque windows and shell glass, tearing allowed, performance power profile, Do Not Disturb, screen kept awake, desktop widgets not drawn. Not remembered across logins. |
 
 **Game library** (`Super+G`): a drawer from the bottom edge, styled like the rest of the shell, listing every installed game:
@@ -157,7 +159,7 @@ Lutris, Heroic, ...) switches to Game mode, and closing it switches back. Leavin
 your power profile, Do Not Disturb and caffeine exactly as they were.
 
 ```bash
-qs ipc call mode set game|dev|normal      # also: cycle, toggleGame, toggleDev, get
+qs ipc call mode set game|dev|saver|showcase|normal      # also: cycle, toggleGame, toggleDev, toggleSaver, toggleShowcase, get
 ```
 
 ## Daily use
@@ -191,7 +193,7 @@ qs ipc call mode set game|dev|normal      # also: cycle, toggleGame, toggleDev, 
 | List / apply theme | `atelier-theme list` / `atelier-theme apply tokyo-night` |
 | Light/dark toggle | `atelier-theme toggle-mode` |
 
-Themes (17): Catppuccin (Mocha, Macchiato, Frappé, Latte), Dracula, Everforest, Gruvbox (dark, light), Kanagawa, Nord, One Dark, Ayu Mirage, Rosé Pine (+ Moon, Dawn), Solarized Dark, Tokyo Night.
+Themes (29): Catppuccin (Mocha, Macchiato, Frappé, Latte), Dracula, Everforest (dark, light), Flexoki (dark, light), GitHub (dark, light), Gruvbox (dark, light), Kanagawa (Wave, Dragon, Lotus), Nord, One (Dark, Light), Ayu (Mirage, Light), Rosé Pine (+ Moon, Dawn), Solarized (dark, light), Tokyo Night (+ Storm, Day).
 Add your own as JSON in `theming/themes/` or `~/.config/atelier/themes/`.
 
 ## Hardware settings and profiles

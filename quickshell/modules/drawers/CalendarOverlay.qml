@@ -157,7 +157,7 @@ Item {
                     width: 28
                     height: 28
                     radius: Atelier.radiusMd
-                    color: prevMa.containsMouse ? (calOverlayRoot.Qt.alpha(Atelier.text, 0.08)) : "transparent"
+                    color: prevMa.containsMouse ? Atelier.hover : "transparent"
 
                     Text {
                         anchors.centerIn: parent
@@ -181,7 +181,7 @@ Item {
                     Layout.fillWidth: true
                     height: 28
                     radius: Atelier.radiusMd
-                    color: calOverlayRoot.Qt.alpha(Atelier.text, 0.05)
+                    color: Atelier.container
 
                     Text {
                         anchors.centerIn: parent
@@ -204,7 +204,7 @@ Item {
                     width: 28
                     height: 28
                     radius: Atelier.radiusMd
-                    color: nextMa.containsMouse ? (calOverlayRoot.Qt.alpha(Atelier.text, 0.08)) : "transparent"
+                    color: nextMa.containsMouse ? Atelier.hover : "transparent"
 
                     Text {
                         anchors.centerIn: parent
@@ -277,7 +277,7 @@ Item {
 
                         color: isToday 
                             ? (Atelier.peach)
-                            : (isHovered ? (calOverlayRoot.Qt.alpha(Atelier.text, 0.08)) : "transparent")
+                            : (isHovered ? Atelier.hover : "transparent")
 
                         Text {
                             anchors.centerIn: parent
@@ -308,7 +308,7 @@ Item {
                 Layout.fillWidth: true
                 height: 28
                 radius: Atelier.radiusMd
-                color: calOverlayRoot.Qt.alpha(Atelier.text, 0.04)
+                color: Atelier.container
 
                 RowLayout {
                     anchors.centerIn: parent

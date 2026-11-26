@@ -122,7 +122,7 @@ Item {
         id: panelWrap
         anchors.centerIn: parent
         width: c.wide ? Math.min(1180, c.width - 140) : Math.min(420, c.width - 48)
-        height: c.wide ? Math.min(660, c.height - 150) : Math.min(640, c.height - 80)
+        height: c.wide ? Math.min(centreCol.implicitHeight + 36 + 56, c.height - 120) : Math.min(640, c.height - 80)
 
         // springs open when the lock appears, shrinks away on unlock
         property real shown: 0
@@ -155,7 +155,7 @@ Item {
             anchors.margins: 18
             spacing: 18
 
-            // ── Left: weather · media ───────────────────────────────────────
+            // ── Left: weather · this month ──────────────────────────────────
             ColumnLayout {
                 visible: c.wide
                 Layout.fillWidth: false
@@ -167,17 +167,17 @@ Item {
 
                 Card {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 150
+                    Layout.preferredHeight: 132
                     tint: Atelier.sapphire
                     ColumnLayout {
                         anchors.fill: parent
                         anchors.margins: 18
-                        spacing: 4
+                        spacing: 2
                         Chip { icon: c.hour < 6 || c.hour >= 19 ? "󰖔" : "󰖙"; text: "Weather"; tint: Atelier.sapphire }
                         Item { Layout.fillHeight: true }
                         Text {
                             text: c.temp || "—"
-                            font.family: Atelier.font; font.pixelSize: 44; font.bold: true
+                            font.family: Atelier.font; font.pixelSize: 40; font.bold: true
                             color: Atelier.text
                         }
                         Text {
@@ -190,56 +190,49 @@ Item {
                     }
                 }
 
+                // this month, today filled with the accent
                 Card {
+                    id: monthCard
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    tint: Atelier.pink
+                    tint: Atelier.peach
+                    readonly property bool mondayFirst: Settings.lockStyle.harmonyWeekStart !== "sun"
+                    readonly property int y0: c.now.getFullYear()
+                    readonly property int m0: c.now.getMonth()
+                    readonly property int days: new Date(y0, m0 + 1, 0).getDate()
+                    readonly property int lead: { const d = new Date(y0, m0, 1).getDay(); return mondayFirst ? (d + 6) % 7 : d; }
+                    readonly property real cell: (width - 36) / 7
                     ColumnLayout {
                         anchors.fill: parent
                         anchors.margins: 18
-                        spacing: 12
-                        Chip { icon: "󰎆"; text: c.player ? "Now playing" : "Nothing playing"; tint: Atelier.pink }
-
-                        ClippingRectangle {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Layout.minimumHeight: 60
-                            radius: Atelier.radiusMd
-                            color: Qt.alpha(Atelier.pink, 0.10)
-                            Image {
-                                anchors.fill: parent
-                                source: c.player ? c.player.trackArtUrl : ""
-                                fillMode: Image.PreserveAspectCrop
-                                asynchronous: true
-                                sourceSize.width: 520; sourceSize.height: 520
+                        spacing: 8
+                        Chip { icon: "󰸗"; text: Qt.formatDate(c.now, "MMMM yyyy"); tint: Atelier.peach }
+                        Item { Layout.fillHeight: true }
+                        Grid {
+                            columns: 7
+                            Repeater {
+                                model: monthCard.mondayFirst ? ["M", "T", "W", "T", "F", "S", "S"] : ["S", "M", "T", "W", "T", "F", "S"]
+                                Text { required property string modelData; width: monthCard.cell; height: 24
+                                    horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
+                                    text: modelData; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.DemiBold
+                                    color: Atelier.subtext }
                             }
-                            Text {
-                                anchors.centerIn: parent
-                                visible: !c.player || !c.player.trackArtUrl
-                                text: "󰝚"; font.family: Atelier.font; font.pixelSize: 40
-                                color: Qt.alpha(Atelier.pink, 0.7)
+                            Repeater {
+                                model: Math.ceil((monthCard.lead + monthCard.days) / 7) * 7
+                                Item {
+                                    required property int index
+                                    readonly property int day: index - monthCard.lead + 1
+                                    readonly property bool today: day === c.now.getDate()
+                                    width: monthCard.cell; height: Math.min(monthCard.cell, 34)
+                                    Rectangle { anchors.centerIn: parent; width: Math.min(parent.width, parent.height) - 2; height: width; radius: width / 2
+                                        visible: parent.today; color: Atelier.accentFill }
+                                    Text { anchors.centerIn: parent; visible: parent.day >= 1 && parent.day <= monthCard.days; text: parent.day
+                                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: parent.today ? Font.Bold : Font.Normal
+                                        color: parent.today ? Atelier.onFill : Atelier.text }
+                                }
                             }
                         }
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: 2
-                            Text { Layout.fillWidth: true; text: c.player ? (c.player.trackTitle || c.player.identity) : "Play something to see it here"; font.family: Atelier.fontUi; font.pixelSize: 14; font.weight: Font.DemiBold; color: Atelier.text; elide: Text.ElideRight }
-                            Text { Layout.fillWidth: true; visible: !!c.player; text: c.player ? (c.player.trackArtist || "") : ""; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext; elide: Text.ElideRight }
-                        }
-                        SlimBar {
-                            Layout.fillWidth: true
-                            visible: !!c.player && c.player.length > 0
-                            value: c.player && c.player.length > 0 ? c.player.position / c.player.length : 0
-                            tint: Atelier.pink
-                        }
-                        RowLayout {
-                            Layout.alignment: Qt.AlignHCenter
-                            visible: !!c.player
-                            spacing: 10
-                            TintButton { size: 36; icon: "󰒮"; tint: Atelier.text; onClicked: c.player.previous() }
-                            TintButton { size: 44; icon: c.player && c.player.isPlaying ? "󰏤" : "󰐊"; tint: Atelier.pink; onClicked: c.player.togglePlaying() }
-                            TintButton { size: 36; icon: "󰒭"; tint: Atelier.text; onClicked: c.player.next() }
-                        }
+                        Item { Layout.fillHeight: true }
                     }
                 }
             }
@@ -250,6 +243,7 @@ Item {
                 Layout.fillHeight: true
 
                 ColumnLayout {
+                    id: centreCol
                     anchors.centerIn: parent
                     width: Math.min(parent.width, 380)
                     spacing: 0
@@ -408,7 +402,9 @@ Item {
                 }
             }
 
-            // ── Right: system · notifications ───────────────────────────────
+            // ── Right: system · now playing · notifications ─────────────────
+            // Cards size to what they hold; the last one present takes the rest of the height,
+            // so nothing sits in a big empty box.
             ColumnLayout {
                 visible: c.wide
                 Layout.fillWidth: false
@@ -420,55 +416,118 @@ Item {
 
                 Card {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 150
+                    Layout.fillHeight: !c.player && c.notifs.length === 0
+                    Layout.preferredHeight: sysCol.implicitHeight + 36
                     tint: Atelier.green
                     ColumnLayout {
-                        anchors.fill: parent
+                        id: sysCol
+                        anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top
                         anchors.margins: 18
                         spacing: 10
                         Chip { icon: "󰍹"; text: "System"; tint: Atelier.green }
-                        Item { Layout.fillHeight: true }
                         RowLayout {
                             Layout.fillWidth: true
+                            Layout.topMargin: 4
                             visible: c.hasBattery
                             spacing: 10
-                            Text { text: c.charging ? "󰂄" : "󰁹"; font.family: Atelier.font; font.pixelSize: Atelier.fsXl; color: c.batPct <= 0.15 && !c.charging ? Atelier.red : Atelier.green }
-                            SlimBar {
-                                Layout.fillWidth: true
-                                value: c.batPct
-                                tint: c.batPct <= 0.15 && !c.charging ? Atelier.red : Atelier.green
-                            }
-                            Text { text: Math.round(c.batPct * 100) + "%"; font.family: Atelier.font; font.pixelSize: Atelier.fsMd; color: Atelier.subtext1 }
+                            Text { text: Math.round(c.batPct * 100) + "%"; font.family: Atelier.font; font.pixelSize: 30; font.bold: true; color: Atelier.text }
+                            Item { Layout.fillWidth: true }
+                            Text { text: (c.charging ? "󰂄  Charging" : "󰁹  On battery"); font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd
+                                color: c.batPct <= 0.15 && !c.charging ? Atelier.red : Atelier.subtext1 }
+                        }
+                        SlimBar {
+                            Layout.fillWidth: true
+                            visible: c.hasBattery
+                            value: c.batPct
+                            tint: c.batPct <= 0.15 && !c.charging ? Atelier.red : Atelier.green
                         }
                         Flow {
                             Layout.fillWidth: true
+                            Layout.topMargin: 2
                             spacing: 6
                             Chip { icon: SysState.wifiIcon; text: SysState.wifiConnected ? SysState.ssid : "Offline"; tint: Atelier.sky }
                             Chip {
                                 icon: c.btConnected.length > 0 ? "󰂱" : "󰂯"
-                                text: c.btConnected.length > 0 ? (c.btConnected[0].name || "Connected") : (c.btAdapter && c.btAdapter.enabled ? "On" : "Off")
+                                text: c.btConnected.length > 0 ? (c.btConnected[0].name || "Connected") : (c.btAdapter && c.btAdapter.enabled ? "Bluetooth on" : "Bluetooth off")
                                 tint: Atelier.blue
                             }
+                        }
+                    }
+                    // nothing else to show: say so quietly at the foot of this card
+                    RowLayout {
+                        visible: !c.player && c.notifs.length === 0
+                        anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom
+                        anchors.margins: 18
+                        spacing: 8
+                        Text { text: "󰂜"; font.family: Atelier.font; font.pixelSize: Atelier.fsXl; color: Atelier.lavender }
+                        Text { Layout.fillWidth: true; text: "No notifications"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext }
+                    }
+                }
+
+                // now playing, compact: art · title/artist · controls · progress
+                Card {
+                    visible: !!c.player
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: mediaCol.implicitHeight + 36
+                    Layout.fillHeight: c.notifs.length === 0
+                    tint: Atelier.pink
+                    ColumnLayout {
+                        id: mediaCol
+                        anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top
+                        anchors.margins: 18
+                        spacing: 12
+                        Chip { icon: "󰎆"; text: "Now playing"; tint: Atelier.pink }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 12
+                            ClippingRectangle {
+                                implicitWidth: 56; implicitHeight: 56
+                                radius: Atelier.radiusSm
+                                color: Qt.alpha(Atelier.pink, 0.12)
+                                Image { anchors.fill: parent; source: c.player ? c.player.trackArtUrl : ""; fillMode: Image.PreserveAspectCrop
+                                    asynchronous: true; sourceSize.width: 120; sourceSize.height: 120 }
+                                Text { anchors.centerIn: parent; visible: !c.player || !c.player.trackArtUrl; text: "󰝚"
+                                    font.family: Atelier.font; font.pixelSize: 22; color: Qt.alpha(Atelier.pink, 0.7) }
+                            }
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 2
+                                Text { Layout.fillWidth: true; text: c.player ? (c.player.trackTitle || c.player.identity) : ""; font.family: Atelier.fontUi; font.pixelSize: 14; font.weight: Font.DemiBold; color: Atelier.text; elide: Text.ElideRight }
+                                Text { Layout.fillWidth: true; text: c.player ? (c.player.trackArtist || "") : ""; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext; elide: Text.ElideRight }
+                            }
+                        }
+                        SlimBar {
+                            Layout.fillWidth: true
+                            visible: !!c.player && c.player.length > 0
+                            value: c.player && c.player.length > 0 ? c.player.position / c.player.length : 0
+                            tint: Atelier.pink
+                        }
+                        RowLayout {
+                            Layout.alignment: Qt.AlignHCenter
+                            spacing: 10
+                            TintButton { size: 34; icon: "󰒮"; tint: Atelier.text; onClicked: c.player.previous() }
+                            TintButton { size: 42; icon: c.player && c.player.isPlaying ? "󰏤" : "󰐊"; tint: Atelier.pink; onClicked: c.player.togglePlaying() }
+                            TintButton { size: 34; icon: "󰒭"; tint: Atelier.text; onClicked: c.player.next() }
                         }
                     }
                 }
 
                 Card {
+                    visible: c.notifs.length > 0
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     tint: Atelier.lavender
                     ColumnLayout {
-                        anchors.fill: parent
+                        anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top
                         anchors.margins: 18
                         spacing: 10
                         Chip {
                             icon: "󰂚"
-                            text: c.notifs.length === 0 ? "No notifications"
-                                : c.notifs.length + (c.notifs.length === 1 ? " notification" : " notifications")
+                            text: c.notifs.length + (c.notifs.length === 1 ? " notification" : " notifications")
                             tint: Atelier.lavender
                         }
                         Repeater {
-                            model: c.notifs.slice(0, 4)
+                            model: c.notifs.slice(0, c.player ? 2 : 4)
                             Rectangle {
                                 // no `required` here on purpose: Qt's required-property path reads the
                                 // (possibly already deleted) notification object and can segfault
@@ -505,24 +564,12 @@ Item {
                                 }
                             }
                         }
-                        Item {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Text {
-                                anchors.centerIn: parent
-                                visible: c.notifs.length === 0
-                                text: "󰂜"
-                                font.family: Atelier.font; font.pixelSize: 38
-                                color: Qt.alpha(Atelier.lavender, 0.35)
-                            }
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.top: parent.top
-                                visible: c.notifs.length > 4
-                                text: "+" + (c.notifs.length - 4) + " more"
-                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.DemiBold
-                                color: Atelier.subtext
-                            }
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            visible: c.notifs.length > (c.player ? 2 : 4)
+                            text: "+" + (c.notifs.length - (c.player ? 2 : 4)) + " more"
+                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.DemiBold
+                            color: Atelier.subtext
                         }
                     }
                 }

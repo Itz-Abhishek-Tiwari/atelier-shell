@@ -165,8 +165,7 @@ Item {
         { id: "keybinds",   icon: "󰧺", label: "Shortcuts" },  { id: "settings",  icon: "󰒓", label: "Settings" }
     ]
     readonly property var shortcuts: (Settings.controlCenter.shortcuts || []).map(id => allShortcuts.find(x => x.id === id)).filter(x => x).slice(0, 5)
-    property bool showAllNotifs: false
-    onVisibleChanged: { if (!visible) showAllNotifs = false; IPhone.watch(visible); }
+    onVisibleChanged: IPhone.watch(visible)
 
     // ── Dismiss ──────────────────────────────────────────────────────────────
     Item {
@@ -577,7 +576,7 @@ Item {
                     SectionLabel { text: "Mode" }
                     Text {
                         Layout.fillWidth: true
-                        text: Perf.game ? "· max performance" : Perf.dev ? "· opaque windows, faster" : "· your usual look"
+                        text: "· " + Perf.infoOf(Perf.mode).blurb.toLowerCase()
                         font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
                         elide: Text.ElideRight
                     }
@@ -589,45 +588,40 @@ Item {
                             onClicked: root.requestOverlay("settings:modes") }
                     }
                 }
-                Rectangle {
+                // one tile per mode: glyph over a short name, the active one tinted in its own colour
+                Row {
                     id: seg
                     Layout.fillWidth: true
-                    implicitHeight: 38
-                    radius: Atelier.radiusMd
-                    color: Atelier.container
-                    border.width: 1; border.color: Atelier.outline
-                    readonly property var opts: [{ id: "normal", label: "Normal", icon: "󰖲" }, { id: "dev", label: "Coding", icon: "󰅩" }, { id: "game", label: "Game", icon: "󰊴" }]
-                    readonly property int sel: Math.max(0, opts.findIndex(o => o.id === Perf.mode))
-                    readonly property real cell: (width - 8) / 3
-                    Rectangle {      // the sliding highlight
-                        x: 4 + seg.sel * seg.cell; y: 4
-                        width: seg.cell; height: seg.height - 8
-                        radius: Atelier.radiusSm
-                        color: root.tone(false, false)
-                        border.width: 1
-                        border.color: root.toneEdge(false)
-                        Behavior on x { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
-                    }
-                    Row {
-                        x: 4; y: 4
-                        Repeater {
-                            model: seg.opts
-                            Item {
-                                required property var modelData
-                                required property int index
-                                readonly property bool on: seg.sel === index
-                                width: seg.cell; height: seg.height - 8
-                                Row {
-                                    anchors.centerIn: parent
-                                    spacing: 6
-                                    Text { anchors.verticalCenter: parent.verticalCenter; text: modelData.icon; font.family: Atelier.font; font.pixelSize: Atelier.fsLg
-                                        color: parent.parent.on ? Atelier.accent : Atelier.subtext }
-                                    Text { anchors.verticalCenter: parent.verticalCenter; text: modelData.label; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd
-                                        font.weight: parent.parent.on ? Font.DemiBold : Font.Medium
-                                        color: Atelier.text }
-                                }
-                                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Perf.set(modelData.id) }
+                    spacing: 6
+                    readonly property real cell: (width - spacing * (Perf.info.length - 1)) / Perf.info.length
+                    Repeater {
+                        model: Perf.info
+                        Rectangle {
+                            id: tile
+                            required property var modelData
+                            readonly property bool on: Perf.mode === modelData.id
+                            width: seg.cell; height: 60
+                            radius: Atelier.radiusMd
+                            color: on ? Qt.alpha(modelData.tint, Atelier.isLight ? 0.18 : 0.24) : (tileMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+                            border.width: 1
+                            border.color: on ? Qt.alpha(modelData.tint, 0.6) : Atelier.outline
+                            scale: tileMa.pressed ? 0.95 : 1
+                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                            Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 3
+                                Text { anchors.horizontalCenter: parent.horizontalCenter; text: tile.modelData.icon
+                                    font.family: Atelier.font; font.pixelSize: 20
+                                    color: tile.on ? tile.modelData.tint : Atelier.subtext
+                                    Behavior on color { ColorAnimation { duration: Atelier.durFast } } }
+                                Text { anchors.horizontalCenter: parent.horizontalCenter; text: tile.modelData.short
+                                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm
+                                    font.weight: tile.on ? Font.DemiBold : Font.Medium
+                                    color: tile.on ? Atelier.text : Atelier.subtext }
                             }
+                            MouseArea { id: tileMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                onClicked: Perf.set(tile.modelData.id) }
                         }
                     }
                 }
@@ -674,7 +668,7 @@ Item {
                 }
             }
 
-            // ── Notifications ───────────────────────────────────────────────
+            // ── Notifications: just a summary row; the list is its own drawer (left edge) ──
             RowLayout {
                 Layout.fillWidth: true
                 Layout.topMargin: 2
@@ -686,77 +680,21 @@ Item {
                     color: Qt.alpha(Atelier.accent, 0.14)
                     Text { id: ncText; anchors.centerIn: parent; text: Notifs.count; font.family: root.mono; font.pixelSize: Atelier.fsMicro; color: Atelier.accent }
                 }
-                Item { Layout.fillWidth: true }
+                Text {
+                    Layout.fillWidth: true
+                    text: Notifs.dnd ? "Do Not Disturb" : (Notifs.count === 0 ? "All caught up" : "")
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext
+                    elide: Text.ElideRight
+                }
                 RoundBtn { icon: Notifs.dnd ? "󰂛" : "󰂚"; size: 26; glyphSize: 13; tip: Notifs.dnd ? "Do Not Disturb is on" : "Do Not Disturb"
                     active: Notifs.dnd; onClicked: Notifs.dnd = !Notifs.dnd }
                 Text {
-                    visible: Notifs.count > 0
-                    text: "Clear all"
-                    font.family: Atelier.fontUi
-                    font.pixelSize: Atelier.fsMd
-                    font.weight: Font.Medium
-                    color: clearMa.containsMouse ? Atelier.text : Atelier.subtext
-                    MouseArea { id: clearMa; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Notifs.clearAll() }
+                    text: "Open"
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.Medium
+                    color: openNMa.containsMouse ? Atelier.text : Atelier.subtext
+                    MouseArea { id: openNMa; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                        onClicked: root.requestOverlay("notifications") }
                 }
-            }
-
-            // empty: a quiet line with a glyph
-            RowLayout {
-                Layout.fillWidth: true
-                Layout.topMargin: -8
-                visible: Notifs.count === 0
-                spacing: 8
-                Text { text: Notifs.dnd ? "󰂛" : "󰄬"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: Notifs.dnd ? Atelier.peach : Atelier.green }
-                Text {
-                    Layout.fillWidth: true
-                    text: Notifs.dnd ? "Do Not Disturb is on. Pop-ups are silenced." : "You're all caught up."
-                    font.family: Atelier.fontUi
-                    font.pixelSize: Atelier.fsMd
-                    color: Atelier.subtext
-                }
-            }
-
-            ListView {
-                id: notifList
-                Layout.fillWidth: true
-                Layout.topMargin: -6
-                visible: Notifs.count > 0
-                implicitHeight: contentHeight
-                interactive: false
-                spacing: 14            // room for a stack's peeking layers
-                // the first few; "Show N more" reveals the rest
-                // stacks (same app + title) are one card; the first few, "Show N more" for the rest
-                model: root.showAllNotifs ? Notifs.groups : Notifs.groups.slice(0, Math.max(1, Settings.controlCenter.notifLimit))
-                boundsBehavior: Flickable.StopAtBounds
-
-                delegate: NotificationCard {
-                    required property var modelData
-                    width: notifList.width
-                    notif: modelData
-                }
-
-                add: Transition { NumberAnimation { property: "opacity"; from: 0; to: 1; duration: Atelier.durFast } }
-                remove: Transition {
-                    ParallelAnimation {
-                        NumberAnimation { property: "x"; to: 120; duration: Atelier.durClose; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveClose }
-                        NumberAnimation { property: "opacity"; to: 0; duration: Atelier.durClose }
-                    }
-                }
-                displaced: Transition {
-                    NumberAnimation { properties: "y"; duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard }
-                }
-            }
-
-            Text {
-                readonly property int hidden: Notifs.groups.length - Math.max(1, Settings.controlCenter.notifLimit)
-                visible: !root.showAllNotifs && hidden > 0
-                Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: -8
-                text: "Show " + hidden + " more"
-                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.Medium
-                color: moreMa.containsMouse ? Atelier.text : Atelier.subtext
-                MouseArea { id: moreMa; anchors.fill: parent; anchors.margins: -8; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                    onClicked: root.showAllNotifs = true }
             }
         }
         }

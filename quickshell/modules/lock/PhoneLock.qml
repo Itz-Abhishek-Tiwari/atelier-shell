@@ -133,6 +133,20 @@ Item {
         Behavior on blur { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
         Behavior on scale { NumberAnimation { duration: 420; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveClose } }
     }
+    // the wallpaper blurred once (static: costs nothing per frame); every Frost card shows its
+    // own patch of it, so cards read as frosted glass instead of a thin tint over busy pixels
+    MultiEffect {
+        id: frostSrc
+        anchors.fill: parent
+        visible: false
+        source: wall
+        autoPaddingEnabled: false
+        blurEnabled: true
+        blurMax: 64
+        blur: 1
+        brightness: -0.06
+        saturation: p.variant === "dot" ? -1 : 0.15
+    }
     // legibility: a soft dark at the top and bottom (all over for Dot), more under the password view
     Rectangle {
         anchors.fill: parent
@@ -212,18 +226,31 @@ Item {
                 spacing: 0
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: Qt.formatDate(p.now, "dddd, d MMMM") + (p.ampm ? "  ·  " + p.ampm : "")
+                    text: Qt.formatDate(p.now, "dddd, d MMMM")
                     font.family: p.display; font.pixelSize: 32 * p.u; font.weight: Font.DemiBold
                     color: Qt.rgba(1, 1, 1, 0.88)
                 }
-                Text {
+                // the clock stays centred; AM/PM hangs off its right at the baseline
+                Item {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: p.h1 + ":" + p.mm
-                    font.family: p.display; font.pixelSize: 250 * p.u
-                    font.weight: o.cupertinoWeight === "regular" ? Font.Medium : o.cupertinoWeight === "heavy" ? Font.Black : Font.Bold
-                    font.letterSpacing: -6 * p.u
-                    color: parent.parent.ink
-                    lineHeight: 0.92
+                    width: cupClock.width; height: cupClock.height
+                    Text {
+                        id: cupClock
+                        text: p.h1 + ":" + p.mm
+                        font.family: p.display; font.pixelSize: 250 * p.u
+                        font.weight: o.cupertinoWeight === "regular" ? Font.Medium : o.cupertinoWeight === "heavy" ? Font.Black : Font.Bold
+                        font.letterSpacing: -6 * p.u
+                        color: parent.parent.parent.ink
+                        lineHeight: 0.92
+                    }
+                    Text {
+                        visible: p.ampm !== ""
+                        anchors.left: cupClock.right; anchors.leftMargin: 14 * p.u
+                        anchors.baseline: cupClock.baseline
+                        text: p.ampm
+                        font.family: p.display; font.pixelSize: 40 * p.u; font.weight: Font.DemiBold
+                        color: Qt.rgba(1, 1, 1, 0.8)
+                    }
                 }
                 // gauges, like the round lock-screen widgets
                 Row {
@@ -307,13 +334,24 @@ Item {
                 anchors.verticalCenterOffset: -40 * p.u
                 spacing: -80 * p.u
                 GradText { text: p.hh; px: 330 * p.u; weight: parent.parent.weight; from: parent.parent.grad[0]; to: parent.parent.grad[1] }
-                GradText { text: p.mm; px: 330 * p.u; weight: parent.parent.weight; from: parent.parent.grad[0]; to: parent.parent.grad[1] }
+                GradText {
+                    id: hMin
+                    text: p.mm; px: 330 * p.u; weight: parent.parent.weight; from: parent.parent.grad[0]; to: parent.parent.grad[1]
+                    Text {
+                        visible: p.ampm !== ""
+                        anchors.left: parent.right; anchors.leftMargin: 18 * p.u
+                        anchors.top: parent.top; anchors.topMargin: 0.24 * parent.height
+                        text: p.ampm
+                        font.family: p.display; font.pixelSize: 44 * p.u; font.weight: Font.DemiBold
+                        color: "white"
+                    }
+                }
             }
             Column {
                 anchors.left: hClock.left; anchors.leftMargin: 16 * p.u
                 anchors.top: hClock.bottom; anchors.topMargin: 6 * p.u
                 spacing: 4 * p.u
-                Text { text: Qt.formatDate(p.now, "dddd") + (p.ampm ? "  ·  " + p.ampm : ""); font.family: p.display; font.pixelSize: 38 * p.u; font.weight: Font.DemiBold; color: "white" }
+                Text { text: Qt.formatDate(p.now, "dddd"); font.family: p.display; font.pixelSize: 38 * p.u; font.weight: Font.DemiBold; color: "white" }
                 Text { text: Qt.formatDate(p.now, "d MMMM yyyy"); font.family: p.display; font.pixelSize: 26 * p.u; color: Qt.rgba(1, 1, 1, 0.8) }
             }
             // cards on the right
@@ -440,9 +478,10 @@ Item {
             readonly property var o: Settings.lockStyle
             readonly property bool atTop: o.oxygenShelf === "top"
             readonly property color hot: o.oxygenAccent === "theme" ? Atelier.accent : "#eb0029"
+            // the hint sits just off the shelf, on its open side
             Hint {
                 anchors.horizontalCenter: parent.horizontalCenter
-                y: parent.atTop ? p.height - height - 50 * p.u : 50 * p.u
+                y: parent.atTop ? shelf.y + shelf.height + 22 * p.u : shelf.y - height - 22 * p.u
             }
             Item {
                 id: shelf
@@ -529,46 +568,69 @@ Item {
         Item {
             readonly property var o: Settings.lockStyle
             readonly property bool inLine: o.materialLayout === "line"
-            readonly property real tile: (inLine ? 210 : 250) * p.u * (o.materialShrink && p.notifs.length > 0 ? 0.82 : 1)
-            readonly property color dark: Qt.rgba(0.08, 0.08, 0.1, 0.62)
-            readonly property color toneA: Qt.tint(dark, Qt.alpha(Atelier.accent, 0.5))
-            readonly property color toneB: Qt.tint(dark, Qt.alpha(Atelier.accent, 0.28))
-            readonly property color onTone: Qt.tint("white", Qt.alpha(Atelier.accent, 0.22))
-            readonly property string digits: p.hh + p.mm
-            Grid {
+            // opaque tonal surfaces (Material You): hours = the theme's accent fill with its light
+            // ink, minutes = a deep accent-tinted tone with accent-tinted light digits
+            readonly property color base: Qt.rgba(0.07, 0.07, 0.09, 1)
+            readonly property color toneA: Atelier.accentFill
+            readonly property color toneB: Qt.tint(base, Qt.alpha(Atelier.accent, 0.2))
+            readonly property color onA: Atelier.onFill
+            readonly property color onTone: Qt.tint("white", Qt.alpha(Atelier.accent, 0.45))
+            // the clock (Pixel style): chunky rounded digits, no tiles. Hours in a light accent
+            // tone, minutes in white; stacked in "grid", one line in "line". AM/PM small beside.
+            readonly property color hourInk: Qt.tint("white", Qt.alpha(Atelier.accent, 0.6))
+            Item {
                 id: tiles
-                columns: parent.inLine ? 4 : 2
-                spacing: 18 * p.u
-                x: parent.inLine ? (p.width - width) / 2 : 0.08 * p.width
-                y: parent.inLine ? 0.14 * p.height : (p.height - height) / 2 - 20 * p.u
-                Repeater {
-                    model: 4
-                    Rectangle {
-                        required property int index
-                        width: tiles.parent.tile; height: tiles.parent.tile * (tiles.parent.inLine ? 1.25 : 1)
-                        radius: width * 0.34
-                        color: index < 2 ? tiles.parent.toneA : tiles.parent.toneB
-                        Text {
+                readonly property real px: (inLineFace ? 230 : 300) * p.u * (tiles.parent.o.materialShrink && p.notifs.length > 0 ? 0.85 : 1)
+                readonly property bool inLineFace: tiles.parent.inLine
+                width: clockCol.width
+                height: clockCol.height
+                x: inLineFace ? (p.width - width) / 2 : 0.1 * p.width
+                y: inLineFace ? 0.12 * p.height : 0.1 * p.height
+                Grid {
+                    id: clockCol
+                    columns: tiles.inLineFace ? 3 : 1
+                    rowSpacing: -0.3 * tiles.px
+                    columnSpacing: 0
+                    horizontalItemAlignment: Grid.AlignHCenter
+                    Text { text: p.hh; font.family: p.display; font.pixelSize: tiles.px; font.weight: Font.Black
+                        font.letterSpacing: -0.04 * tiles.px; font.features: { "tnum": 1 }; color: tiles.parent.hourInk }
+                    // a drawn colon: the font's black-weight colon blobs at this size
+                    Item {
+                        visible: tiles.inLineFace
+                        width: 0.2 * tiles.px; height: clockCol.children[0].height
+                        Column {
                             anchors.centerIn: parent
-                            text: tiles.parent.digits.charAt(index)
-                            font.family: p.display; font.pixelSize: parent.width * 0.78; font.weight: Font.DemiBold
-                            color: tiles.parent.onTone
+                            anchors.verticalCenterOffset: 0.04 * tiles.px
+                            spacing: 0.24 * tiles.px
+                            Repeater { model: 2
+                                Rectangle { width: 0.105 * tiles.px; height: width; radius: width / 2; color: Qt.rgba(1, 1, 1, 0.75) } }
                         }
                     }
+                    Text { text: p.mm; font.family: p.display; font.pixelSize: tiles.px; font.weight: Font.Black
+                        font.letterSpacing: -0.04 * tiles.px; font.features: { "tnum": 1 }; color: "white" }
                 }
+            }
+            // AM/PM: small, level with the top of the hours (line: the top of the clock)
+            Text {
+                visible: p.ampm !== ""
+                x: tiles.x + tiles.width + 12 * p.u
+                y: tiles.y + 0.2 * tiles.px
+                text: p.ampm
+                font.family: p.display; font.pixelSize: 40 * p.u; font.weight: Font.Bold
+                color: parent.hourInk
             }
             // at a glance: date, weather, then notification chips
             Column {
-                x: parent.inLine ? (p.width - width) / 2 : p.width - width - 0.07 * p.width
-                y: parent.inLine ? tiles.y + tiles.height + 50 * p.u : (p.height - height) / 2 - 20 * p.u
-                width: Math.min(560 * p.u, p.width * (parent.inLine ? 0.6 : 0.34))
+                // line: centred under the clock; grid: left-aligned under the stacked clock
+                x: parent.inLine ? (p.width - width) / 2 : tiles.x + 0.03 * tiles.px
+                y: tiles.y + tiles.height + (parent.inLine ? 50 : 20) * p.u
+                width: Math.min(560 * p.u, p.width * (parent.inLine ? 0.6 : 0.4))
                 spacing: 14 * p.u
                 Text { anchors.horizontalCenter: parent.parent.inLine ? parent.horizontalCenter : undefined
                     text: Qt.formatDate(p.now, "dddd, MMM d"); font.family: p.display; font.pixelSize: 44 * p.u; font.weight: Font.Medium; color: "white" }
-                Flow {
-                    width: parent.width
+                Row {
+                    anchors.horizontalCenter: parent.parent.inLine ? parent.horizontalCenter : undefined
                     spacing: 10 * p.u
-                    M3Chip { visible: p.ampm !== ""; icon: "󰥔"; label: p.ampm }
                     M3Chip { visible: p.temp !== ""; icon: "󰖐"; label: p.temp + (p.condition ? " · " + p.condition : "") }
                     M3Chip { visible: p.hasBattery; icon: p.charging ? "󰂄" : "󰁹"; label: p.batPct + "%" + (p.charging ? " · Charging" : "") }
                 }
@@ -597,7 +659,7 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     width: 84 * p.u; height: 84 * p.u; radius: 28 * p.u
                     color: fabMa.containsMouse ? Qt.lighter(tiles.parent.toneA, 1.2) : tiles.parent.toneA
-                    Text { anchors.centerIn: parent; text: "󰌾"; font.family: Atelier.font; font.pixelSize: 34 * p.u; color: tiles.parent.onTone }
+                    Text { anchors.centerIn: parent; text: "󰌾"; font.family: Atelier.font; font.pixelSize: 34 * p.u; color: tiles.parent.onA }
                     MouseArea { id: fabMa; anchors.fill: parent; enabled: !p.thumb; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         onClicked: { p.lockRoot.authMode = true; p.forceActiveFocus(); } }
                 }
@@ -869,14 +931,12 @@ Item {
         spacing: 8 * p.u
         Repeater {
             model: p.notifs.slice(0, ns.max)
-            Rectangle {
+            Frost {
                 // no `required` on purpose (see LockContent.qml: a deleted notification can segfault)
                 width: ns.width
                 height: 70 * p.u
                 radius: 22 * p.u
-                color: ns.dark ? Qt.rgba(0, 0, 0, 0.45) : Qt.rgba(1, 1, 1, 0.18)
-                border.width: 1
-                border.color: Qt.rgba(1, 1, 1, ns.dark ? 0.1 : 0.2)
+                wash: ns.dark ? 0.45 : 0.3
                 Item {
                     id: nIcon
                     x: 16 * p.u; anchors.verticalCenter: parent.verticalCenter
@@ -911,12 +971,9 @@ Item {
     }
 
     // now playing (Cupertino): art · title/artist · play/pause
-    component NowPlaying: Rectangle {
+    component NowPlaying: Frost {
         height: 92 * p.u
         radius: 24 * p.u
-        color: Qt.rgba(1, 1, 1, 0.18)
-        border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.2)
         ClippingRectangle {
             id: art
             x: 14 * p.u; anchors.verticalCenter: parent.verticalCenter
@@ -945,12 +1002,23 @@ Item {
         }
     }
 
-    // "Click or type to unlock" (optionally after a glyph)
-    component Hint: Text {
-        property string glyph: ""
-        text: (glyph ? glyph + "  " : "") + "Start typing to unlock"
-        font.family: p.display; font.pixelSize: 19 * p.u; font.weight: Font.Medium
-        color: Qt.rgba(1, 1, 1, 0.75)
+    // "Start typing to unlock": a small frosted pill, readable on any wallpaper
+    component Hint: Frost {
+        id: hint
+        property string glyph: "󰌾"
+        width: hintRow.width + 40 * p.u
+        height: 44 * p.u
+        radius: height / 2
+        wash: 0.24
+        Row {
+            id: hintRow
+            anchors.centerIn: parent
+            spacing: 10 * p.u
+            Text { visible: hint.glyph !== ""; anchors.verticalCenter: parent.verticalCenter; text: hint.glyph
+                font.family: Atelier.font; font.pixelSize: 18 * p.u; color: Qt.rgba(1, 1, 1, 0.9) }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: "Start typing to unlock"
+                font.family: p.display; font.pixelSize: 19 * p.u; font.weight: Font.Medium; color: Qt.rgba(1, 1, 1, 0.92) }
+        }
     }
 
     // frosted round corner button (Cupertino)
@@ -973,7 +1041,7 @@ Item {
         property string cap
         property string big
         width: 104 * p.u; height: 104 * p.u
-        Rectangle { anchors.fill: parent; radius: width / 2; color: Qt.rgba(1, 1, 1, 0.16); border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.2) }
+        Frost { anchors.fill: parent; radius: width / 2 }
         Shape {
             anchors.fill: parent
             visible: gg.value >= 0
@@ -1037,13 +1105,44 @@ Item {
         }
     }
 
-    // a tinted glass card (Hyper)
-    component FrostCard: Rectangle {
-        radius: 36 * p.u
-        color: Qt.rgba(0.04, 0.04, 0.07, 0.34)
-        border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.16)
+    // frosted glass: the blurred wallpaper behind this card (frostSrc) + a dark wash + a hairline.
+    // Readable over any wallpaper; the position is re-read while visible (layouts settle late).
+    component Frost: Item {
+        id: fr
+        property real radius: 28 * p.u
+        property real wash: 0.3
+        property point at: Qt.point(0, 0)
+        function sync() {
+            const q = fr.mapToItem(p, 0, 0);
+            if (Math.abs(q.x - at.x) > 0.5 || Math.abs(q.y - at.y) > 0.5) at = Qt.point(q.x, q.y);
+        }
+        Component.onCompleted: Qt.callLater(sync)
+        onWidthChanged: Qt.callLater(sync)
+        onHeightChanged: Qt.callLater(sync)
+        onVisibleChanged: if (visible) Qt.callLater(sync)
+        Timer { interval: 500; repeat: true; running: fr.visible && !p.auth && (p.thumb ? false : p.lockRoot.active); onTriggered: fr.sync() }
+        ClippingRectangle {
+            anchors.fill: parent
+            radius: fr.radius
+            color: "transparent"
+            ShaderEffectSource {
+                anchors.fill: parent
+                sourceItem: frostSrc
+                sourceRect: Qt.rect(fr.at.x, fr.at.y, fr.width, fr.height)
+            }
+            Rectangle { anchors.fill: parent; color: Qt.rgba(0, 0, 0, fr.wash) }
+        }
+        Rectangle {
+            anchors.fill: parent
+            radius: fr.radius
+            color: "transparent"
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.14)
+        }
     }
+
+    // a frosted card (Hyper)
+    component FrostCard: Frost { radius: 36 * p.u }
 
     // an app's icon, a bell when it has none
     component AppIcon: Item {
@@ -1057,7 +1156,7 @@ Item {
     }
 
     // this month, today ringed (Harmony)
-    component MiniMonth: Rectangle {
+    component MiniMonth: Frost {
         id: mm
         property bool mondayFirst: true
         readonly property int y0: p.now.getFullYear()
@@ -1067,9 +1166,6 @@ Item {
         readonly property real cell: (width - 48 * p.u) / 7
         height: mmCol.height + 48 * p.u
         radius: 36 * p.u
-        color: Qt.rgba(0.04, 0.04, 0.07, 0.34)
-        border.width: 1
-        border.color: Qt.rgba(1, 1, 1, 0.16)
         Column {
             id: mmCol
             x: 24 * p.u; y: 24 * p.u
@@ -1126,9 +1222,9 @@ Item {
         property string icon
         property string label
         width: mcRow.width + 40 * p.u
-        height: 56 * p.u
-        radius: 18 * p.u
-        color: Qt.tint(Qt.rgba(0.08, 0.08, 0.1, 0.62), Qt.alpha(Atelier.accent, 0.28))
+        height: 52 * p.u
+        radius: height / 2
+        color: Qt.tint(Qt.rgba(0.09, 0.09, 0.11, 1), Qt.alpha(Atelier.accent, 0.24))
         Row {
             id: mcRow
             anchors.centerIn: parent

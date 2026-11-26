@@ -77,18 +77,21 @@ Singleton {
                 property var layoutFiles: ({ atelier: "org.kde.dolphin.desktop", classic: "org.gnome.Nautilus.desktop" })
                 property string titlebarButtons: "right" // Traditional: close / maximise / minimise on the left | right
                 property bool linkRounding: true        // windows follow the shell's roundness (concentric)
-                property string wallTransition: "fade"  // none | fade | wipe | slide | grow | zoom | spread | outline | random
+                property string wallTransition: "fade"  // none | fade | wipe | slide | grow | zoom | spread | random
                 property string wallDirection: "left"   // wipe / slide: left | right | top | bottom
                 property int wallDuration: 800          // ms
             }
 
             property JsonObject bar: JsonObject {
+                property string design: "pills"         // pills (the original) | gauge (ring gauges, cover art, big clock) | dock (bare icon rail with dots)
+                property string style: "pills"          // pills (round, filled) | square (rounded-square tiles) | accent (accent-filled) | outline (accent line, no fill) | flat (no backgrounds, wider gaps)
                 property int minWorkspaces: 5
                 property bool showTitle: true           // vertical window title
                 property bool showApps: true            // pinned apps pill
                 property bool showLogo: true            // launcher button
                 property bool showWorkspaces: true
                 property bool showTray: true
+                property bool showGit: true             // branch + changes of the focused window's git project
                 property bool showClock: true
                 property bool showPrivacy: true         // mic / camera / screen-share dots while an app uses them
                 property bool showStatus: true          // wifi / bluetooth / volume / battery / bell
@@ -150,7 +153,7 @@ Singleton {
                 property string wifiAddress: ""         // Wi-Fi mode: the iPhone's IP; empty = <name>.local
             }
 
-            // what Programming and Game mode change (services/Perf.qml + hypr/atelier-mode.lua;
+            // what Programming, Game, Showcase and Battery saver mode change (services/Perf.qml + hypr/atelier-mode.lua;
             // Settings → Modes). Normal mode is just your own look (the Windows page).
             property JsonObject modes: JsonObject {
                 property bool devOpaque: true            // opaque windows: crisp text, no blur behind them
@@ -173,6 +176,26 @@ Singleton {
                 property bool gameHideWidgets: true      // don't draw the desktop widget
                 property bool gameLeanShell: true        // no shell shadows, opaque shell surfaces
                 property string gameApps: ""             // extra window classes that count as games, comma-separated
+                property bool saverOpaque: true          // opaque windows: nothing is blended
+                property bool saverDim: false
+                property string saverBlur: "off"
+                property bool saverShadows: false
+                property string saverPower: "power-saver"
+                property bool saverCaffeine: false
+                property bool saverDnd: false
+                property bool saverHideWidgets: true     // don't draw (or refresh) the desktop widget
+                property bool saverLeanShell: true       // no shell shadows, solid instead of glass
+                property string showcaseWindowStyle: "liquid"     // hyprimate window animation: liquid | cloth | paper | swarm | bubble | smoke | burn | construction
+                property string showcaseWorkspaceStyle: "off"     // off | rotation | planet_hop | cube | lava
+                property real showcaseStrength: 0.65     // how hard the window effect deforms (liquid, cloth, bubble, smoke)
+                property int showcaseDuration: 0         // ms, 0 = the style's own timing
+                property bool showcaseOnOpen: true       // animate opening windows
+                property bool showcaseOnClose: true      // animate closing windows
+                property bool showcaseOnMove: false      // animate dragging / moving windows (the costliest: redrawn every frame while you drag)
+                property int showcaseBlurPasses: 2       // at least this many blur passes (your Windows setting if higher)
+                property string showcasePower: "performance"
+                property bool showcaseCaffeine: false
+                property bool showcaseDnd: false
             }
 
             property JsonObject controlCenter: JsonObject {   // modules/drawers/ControlCenter.qml
@@ -339,27 +362,10 @@ Singleton {
             }
 
             property JsonObject lock: JsonObject {
-                // atelier (LockContent.qml) | depth (DepthLock.qml) | a phone style (PhoneLock.qml):
+                // atelier (LockContent.qml) | a phone style (PhoneLock.qml):
                 // cupertino, hyper, harmony, oxygen, material, dot
                 property string theme: "atelier"
                 property string clock: "system"             // system (General → 24-hour clock) | 12 | 24, for every built-in style
-                // "depth": Samsung-style lock (modules/lock/DepthLock.qml), clock behind the subject
-                property string depthLayout: "horizontal"   // horizontal (12:45) | stacked (12 over 45)
-                property real depthClockSize: 0.22          // digit height, share of the screen height
-                property string depthFont: "display"        // display (Inter Display) | mono | serif
-                property string depthWeight: "bold"         // light | regular | bold | black
-                property bool depthShadow: true
-                property string depthPos: "auto"            // auto (placed around the subject) | custom (dragged in the editor)
-                property real depthX: 0.5                   // custom: clock centre, share of the screen width
-                property real depthY: 0.1                   // custom: top of the date line, share of the screen height
-                property bool depthEffect: true             // clock behind the subject (off = a plain big clock on top)
-                property string depthStyle: "solid"         // solid | glass (frosted digits)
-                property string depthColor: "auto"          // auto (from the wallpaper) | theme | white | black | theme role | "#rrggbb"
-                property real depthGlassTint: 0.2           // glass: how much of the clock colour shows, 0 … 0.7
-                property real depthGlassFrost: 0.9          // glass: how blurred the picture inside the digits is, 0.2 … 1
-                property string depthDate: "long"           // long ("Monday, 23 November") | short ("Mon 23 Nov") | off
-                property bool depthWeather: true            // the temperature after the date
-                property bool depthAmPm: true               // AM/PM beside the digits (12-hour clock only)
             }
 
             // the phone-inspired lock styles (modules/lock/PhoneLock.qml), each one's own options
@@ -528,13 +534,16 @@ Singleton {
         return "    binds = { overrides = " + root.lua(ov) + ", custom = " + root.lua(custom) + " },\n";
     }
 
-    // the compositor half of Programming / Game mode
+    // the compositor half of Programming / Game / Battery saver mode
     readonly property string luaModes: {
         const m = adapter.modes;
         const mode = (p) => "{ opaque = " + m[p + "Opaque"] + ", blur = \"" + m[p + "Blur"] + "\", shadows = " + m[p + "Shadows"]
-            + ", animations = " + m[p + "Animations"] + (p === "dev" ? ", dim = " + m.devDim + ", anim_speed = " + Number(m.devAnimSpeed).toFixed(2)
+            + ", animations = " + (p === "saver" ? "false" : m[p + "Animations"]) + (p === "dev" ? ", dim = " + m.devDim + ", anim_speed = " + Number(m.devAnimSpeed).toFixed(2)
+                                                                 : p === "saver" ? ", dim = " + m.saverDim
                                                                  : ", tearing = " + m.gameTearing) + " }";
-        return "    modes = {\n        dev = " + mode("dev") + ",\n        game = " + mode("game") + ",\n    },\n";
+        return "    modes = {\n        dev = " + mode("dev") + ",\n        game = " + mode("game") + ",\n        saver = " + mode("saver") + ",\n        showcase = { window_style = \"" + m.showcaseWindowStyle + "\", workspace_style = \"" + m.showcaseWorkspaceStyle + "\", blur_passes = " + Math.round(m.showcaseBlurPasses)
+            + ", strength = " + Number(m.showcaseStrength).toFixed(2) + ", duration = " + Math.round(m.showcaseDuration)
+            + ", on_open = " + m.showcaseOnOpen + ", on_close = " + m.showcaseOnClose + ", on_move = " + m.showcaseOnMove + " },\n    },\n";
     }
     readonly property string hyprLua: {
         const w = adapter.windows;
@@ -663,7 +672,6 @@ Singleton {
     // The lock screens this shell ships (Settings → Lock screen, Settings → Login screen)
     readonly property var lockStyles: [
         { id: "atelier",   name: "Atelier",   note: "Glass panel, this shell's own" },
-        { id: "depth",     name: "Depth",     note: "Clock behind the subject, Samsung-style" },
         { id: "cupertino", name: "Cupertino", note: "iOS-style" },
         { id: "hyper",     name: "Hyper",     note: "Xiaomi HyperOS-style" },
         { id: "harmony",   name: "Harmony",   note: "Huawei HarmonyOS-style" },

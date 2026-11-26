@@ -11,9 +11,6 @@ import qs.services
 // Settings → Appearance → Wallpaper (Settings.appearance.wallTransition):
 //   none · fade (crossfade + settle zoom) · wipe · slide · grow (circle from the centre) · zoom
 //   · spread (cells eat through from a few random colonies with a glowing edge: shaders/spread.frag)
-//   · outline (the new wallpaper's subject is drawn as a line, filled in, then the rest spreads
-//     out of it: shaders/outline.frag, maps from scripts/wallfx.py. A wallpaper that isn't
-//     prepared yet plays spread while its maps are made in the background for next time.)
 // Hyprland's blur is paused while a transition runs (see blur()): it made every style stall.
 // One `progress` value (0 → 1) drives every style. Nothing animates (and no mask layer
 // exists) outside a transition, so the idle cost is zero.
@@ -34,7 +31,7 @@ PanelWindow {
     readonly property Item back: front === slotA ? slotB : slotA
     readonly property string target: Wallpaper.current
 
-    readonly property var styles: ["fade", "wipe", "slide", "grow", "zoom", "spread", "outline"]
+    readonly property var styles: ["fade", "wipe", "slide", "grow", "zoom", "spread"]
     property string style: "fade"          // resolved for the running transition ("random" picks one)
     property string dir: "left"            // wipe / slide: the edge the new wallpaper comes from
     property real progress: 1
@@ -56,18 +53,11 @@ PanelWindow {
         anim.stop();
         if (anim.pending) finish();           // a transition was cut short: settle it first
         const s = Settings.appearance.wallTransition || "fade";
-        style = s === "random" ? styles[Math.floor(Math.random() * styles.length)] : s;
+        style = Perf.saver ? "none" : s === "random" ? styles[Math.floor(Math.random() * styles.length)] : (styles.indexOf(s) >= 0 || s === "none" ? s : "spread");
         dir = Settings.appearance.wallDirection || "left";
         progress = 0;
         back.shown = false;
         if (style !== "none") blur(false);     // before the image decodes, so it lands in time
-        if (style === "outline") {             // is this wallpaper prepared? (fast lookup)
-            mapPending = true;
-            mapImg.source = ""; penImg.source = "";
-            mapProc.running = false;
-            mapProc.command = ["python3", root.wallfx, "map", target];
-            mapProc.running = true;
-        }
         back.source = url;                     // the transition starts when it finishes decoding
     }
 
@@ -80,39 +70,11 @@ PanelWindow {
     }
     Timer { id: blurSafety; interval: 8000; onTriggered: if (!anim.pending) root.blur(true) }   // a load that never finished
 
-    // starts once the new image (and, for outline, its maps) are ready
+    // starts once the new image is ready
     function tryBegin() {
-        if (!back || back.shown || progress !== 0 || back.status !== Image.Ready || mapPending) return;
-        if (style === "outline" && (mapImg.status !== Image.Ready || penImg.status !== Image.Ready)) return;
+        if (!back || back.shown || progress !== 0 || back.status !== Image.Ready) return;
         begin();
     }
-
-    // ── outline: the per-wallpaper maps ──
-    readonly property string wallfx: Quickshell.shellDir + "/scripts/wallfx.py"
-    property bool mapPending: false
-    Process {
-        id: mapProc
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const r = text.trim().split(" ");
-                if (r.length === 2) {
-                    mapImg.source = "file://" + r[0];
-                    penImg.source = "file://" + r[1];
-                } else {
-                    root.style = "spread";      // no subject, or not prepared yet
-                    if (r[0] === "missing")     // prepare it quietly for next time
-                        Quickshell.execDetached(["nice", "-n", "15", "python3", root.wallfx, "make", root.target]);
-                }
-                root.mapPending = false;
-                root.tryBegin();
-            }
-        }
-    }
-    // texture providers for the shader (never drawn themselves)
-    Image { id: mapImg; width: 1; height: 1; opacity: 0; asynchronous: true; cache: false; smooth: true
-        onStatusChanged: { if (status === Image.Ready) root.tryBegin(); else if (status === Image.Error && root.style === "outline") { root.style = "spread"; root.tryBegin(); } } }
-    Image { id: penImg; width: 1; height: 1; opacity: 0; asynchronous: true; cache: false; smooth: true
-        onStatusChanged: { if (status === Image.Ready) root.tryBegin(); else if (status === Image.Error && root.style === "outline") { root.style = "spread"; root.tryBegin(); } } }
 
     function begin() {
         Wallpaper.transitioning = true;        // the theme waits until we are done
@@ -134,8 +96,6 @@ PanelWindow {
         front = back;
         old.shown = false;
         old.source = "";
-        // the outline masks are full-resolution textures only the transition shader reads
-        mapImg.source = ""; penImg.source = "";
     }
 
     readonly property real dx: dir === "left" ? -1 : dir === "right" ? 1 : 0   // where it comes FROM
@@ -305,29 +265,6 @@ PanelWindow {
         fragmentShader: Qt.resolvedUrl("../../shaders/spread.v3.frag.qsb")
     }
 
-    ShaderEffect {
-        id: outlineFx
-        anchors.fill: parent
-        z: 10
-        visible: root.style === "outline" && anim.pending && !!root.front && !!root.back
-        property real t: root.progress
-        property real sw: width
-        property real sh: height
-        property real mw: mapImg.implicitWidth
-        property real mh: mapImg.implicitHeight
-        property real sdRange: 12          // wallfx.py SD
-        property real lineW: 2
-        property real cell: 4
-        property vector4d cropOld: root.crop(oldTex)
-        property vector4d cropNew: root.crop(newTex)
-        property color ink: Atelier.text
-        property variant oldTex: root.front ? root.front.image : null
-        property variant newTex: root.back ? root.back.image : null
-        property variant mapTex: mapImg
-        property variant penTex: penImg
-        fragmentShader: Qt.resolvedUrl("../../shaders/outline.v1.frag.qsb")
-    }
-
     NumberAnimation {
         id: anim
         property bool pending: false
@@ -336,10 +273,9 @@ PanelWindow {
         from: 0
         to: 1
         // spread needs time to read as a spreading front: never under 1.2 s
-        duration: root.style === "outline" ? Math.max(2400, Settings.appearance.wallDuration * 3)
-                : root.style === "spread" ? Math.max(1200, Settings.appearance.wallDuration * 1.6)
+        duration: root.style === "spread" ? Math.max(1200, Settings.appearance.wallDuration * 1.6)
                 : Math.max(1, Settings.appearance.wallDuration)
-        easing.type: root.style === "spread" || root.style === "outline" ? Easing.Linear   // the shader eases itself
+        easing.type: root.style === "spread" ? Easing.Linear   // the shader eases itself
                    : root.style === "slide" || root.style === "wipe" ? Easing.InOutCubic : Easing.OutCubic
         onFinished: root.finish()
     }

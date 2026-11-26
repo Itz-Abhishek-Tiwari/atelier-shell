@@ -29,6 +29,8 @@ Item {
     signal openPrivacy(real centerY)
     signal openWallpaper()
     signal openControlCenter()
+    signal openNotifications()
+    signal openMedia()
 
     // ── Open on hover (Settings → Bar → Behaviour) ──────────────────────────
     // hoverTarget: which hover-capable item the pointer is on ("wifi" | "bluetooth" | "calendar" | "").
@@ -50,7 +52,9 @@ Item {
     // spans ALONG the bar of the hover icons, for the drawer window (DrawerHost.barZones)
     function zones() {
         const out = [];
-        for (const [name, item] of [["calendar", clockPill], ["wifi", wifiIcon], ["bluetooth", btIcon]]) {
+        const list = bar.alt && bar.altItem ? [["calendar", bar.altItem.clockItem], ["wifi", bar.altItem.wifiItem], ["bluetooth", bar.altItem.btItem]]
+                                           : [["calendar", clockPill], ["wifi", wifiIcon], ["bluetooth", btIcon]];
+        for (const [name, item] of list) {
             if (!item || !item.visible) continue;
             const p = item.mapToItem(null, 0, 0);
             const a = bar.vertical ? p.y : p.x, len = bar.vertical ? item.height : item.width;
@@ -65,9 +69,22 @@ Item {
     }
 
     property string activeOverlay: ""
+    property var altItem: null
 
     readonly property bool vertical: Atelier.barVertical
     readonly property int crossAlign: vertical ? Qt.AlignHCenter : Qt.AlignVCenter
+    // Settings → Bar → Style: how the groups are drawn (the flat top bar is always borderless)
+    readonly property bool alt: !Atelier.flatBar && (Settings.bar.design === "gauge" || Settings.bar.design === "dock")
+    readonly property string barStyle: Atelier.flatBar ? "flat" : Settings.bar.style
+    readonly property color pillFill: barStyle === "flat" || barStyle === "outline" ? "transparent"
+        : barStyle === "accent" ? Qt.alpha(Atelier.accent, 0.26)
+        : barStyle === "square" ? Atelier.containerHigh : Atelier.container
+    readonly property color pillEdge: barStyle === "outline" ? Qt.alpha(Atelier.accent, 0.75)
+        : barStyle === "accent" ? Qt.alpha(Atelier.accent, 0.55)
+        : barStyle === "square" ? Qt.alpha(Atelier.text, 0.12) : "transparent"
+    readonly property int pillBorder: barStyle === "outline" ? 2 : 1
+    readonly property real pillRadius: barStyle === "square" ? 8 : pillWidth / 2
+    readonly property int groupGap: barStyle === "flat" ? 16 : barStyle === "square" ? 6 : 8
     readonly property int pillWidth: Math.max(26, Atelier.barWidth - 10)
     function centerOf(item) {
         const p = item.mapToItem(bar, item.width / 2, item.height / 2);
@@ -137,7 +154,20 @@ Item {
     }
 
     // ── Layout: a column on the left/right, a row on the top/bottom ──────────
+    // alternative designs (Settings → Bar → Bar design) replace the whole pill layout
+    Loader {
+        id: altLoader
+        readonly property var host: bar     // `bar: bar` inside BarAlt would bind to itself
+        anchors.fill: parent
+        active: bar.alt
+        sourceComponent: Settings.bar.design === "gauge" ? gaugeBar : dockBar
+        Component { id: dockBar; BarAlt { bar: altLoader.host } }
+        Component { id: gaugeBar; BarGauge { bar: altLoader.host; onOpenMedia: altLoader.host.openMedia() } }
+        onItemChanged: bar.altItem = item
+    }
+
     GridLayout {
+        visible: !bar.alt
         anchors.fill: parent
         anchors.topMargin: bar.vertical ? 10 : 0
         anchors.bottomMargin: bar.vertical ? 10 : 0
@@ -146,8 +176,8 @@ Item {
         flow: bar.vertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
         rows: bar.vertical ? 16 : 1
         columns: bar.vertical ? 1 : 16
-        rowSpacing: 8
-        columnSpacing: 8
+        rowSpacing: bar.groupGap
+        columnSpacing: bar.groupGap
 
         // Logo → app grid
         BarIcon {
@@ -206,8 +236,10 @@ Item {
             readonly property int slot: 30
             implicitWidth: bar.vertical ? bar.pillWidth : bar.wsCount * slot + 8
             implicitHeight: bar.vertical ? bar.wsCount * slot + 8 : bar.pillWidth
-            radius: bar.pillWidth / 2
-            color: Atelier.container
+            radius: bar.pillRadius
+            color: bar.pillFill
+            border.width: bar.pillEdge.a > 0 ? bar.pillBorder : 0
+            border.color: bar.pillEdge
 
             Rectangle {
                 id: wsActive
@@ -217,7 +249,9 @@ Item {
                 width: 28
                 height: 28
                 radius: Atelier.radiusSm
-                color: Atelier.accentFill
+                color: Qt.alpha(Atelier.accent, 0.22)     // tinted, not solid: coloured app icons stay readable on it
+                border.width: 1
+                border.color: Qt.alpha(Atelier.accent, 0.55)
                 Behavior on x { enabled: !bar.vertical; NumberAnimation { duration: 340; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
                 Behavior on y { enabled: bar.vertical; NumberAnimation { duration: 340; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
             }
@@ -259,7 +293,7 @@ Item {
                             implicitSize: 16
                             source: wsCell.icon
                             asynchronous: true
-                            opacity: wsCell.isActive ? 1 : 0.85
+                            opacity: wsCell.isActive ? 1 : 0.8
                         }
 
                         Text {   // number: active-but-empty, or occupied without a known icon
@@ -269,17 +303,18 @@ Item {
                             font.family: Atelier.font
                             font.pixelSize: Atelier.fsSm
                             font.bold: true
-                            color: wsCell.isActive ? Atelier.onFill : Atelier.text
+                            color: wsCell.isActive ? Atelier.accent : Atelier.text
                         }
 
                         Rectangle {   // empty workspace
                             anchors.centerIn: parent
                             visible: !wsCell.isOccupied && !wsCell.isActive
-                            width: 5
-                            height: 5
-                            radius: 2.5
-                            color: Atelier.subtext
-                            opacity: 0.5
+                            width: 6
+                            height: 6
+                            radius: 3
+                            color: Atelier.overlay1
+                            opacity: wsMa.containsMouse ? 0.95 : 0.65
+                            Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
                         }
 
                         Rectangle {   // urgent
@@ -406,6 +441,46 @@ Item {
             }
         }
 
+        // Git: focused project's state. A dot (green clean / peach changed), the branch (horizontal bar
+        // only), then changes and unpushed / unpulled counts stacked in the vertical bar. Click copies the branch.
+        Pill {
+            id: gitPill
+            Layout.alignment: bar.crossAlign
+            visible: Settings.bar.showGit && GitStatus.active
+            clickable: true
+            pad: 8
+            gap: bar.vertical ? 4 : 7
+            onClicked: Quickshell.execDetached(["wl-copy", GitStatus.branch])
+            readonly property color tint: GitStatus.dirty > 0 ? Atelier.peach : Atelier.green
+            readonly property int fs: bar.vertical ? 11 : Atelier.fsSm
+            color: Qt.alpha(tint, 0.16)
+            Rectangle { implicitWidth: 8; implicitHeight: 8; radius: 4; color: gitPill.tint }
+            Text {
+                visible: !bar.vertical
+                width: Math.min(implicitWidth, 120)
+                elide: Text.ElideRight
+                text: GitStatus.branch
+                font.family: Atelier.font; font.pixelSize: gitPill.fs; font.weight: Font.DemiBold
+                color: Atelier.text
+            }
+            Text {
+                visible: GitStatus.dirty > 0
+                text: (bar.vertical ? "" : "±") + (GitStatus.dirty > 99 ? "99+" : GitStatus.dirty)
+                font.family: Atelier.font; font.pixelSize: gitPill.fs; font.weight: Font.DemiBold
+                color: gitPill.tint
+            }
+            Text {
+                visible: GitStatus.ahead > 0
+                text: "↑" + GitStatus.ahead
+                font.family: Atelier.font; font.pixelSize: gitPill.fs; color: Atelier.blue
+            }
+            Text {
+                visible: GitStatus.behind > 0
+                text: "↓" + GitStatus.behind
+                font.family: Atelier.font; font.pixelSize: gitPill.fs; color: Atelier.red
+            }
+        }
+
         // System tray
         Pill {
             Layout.alignment: bar.crossAlign
@@ -470,7 +545,7 @@ Item {
                 color: Atelier.red
                 // gentle pulse, only while recording (the pill is hidden otherwise)
                 SequentialAnimation on opacity {
-                    running: recPill.visible
+                    running: recPill.visible && !Perf.saver
                     loops: Animation.Infinite
                     NumberAnimation { to: 0.35; duration: 900; easing.type: Easing.InOutSine }
                     NumberAnimation { to: 1; duration: 900; easing.type: Easing.InOutSine }
@@ -710,8 +785,8 @@ Item {
                 icon: Notifs.dnd ? "󰂛" : (Notifs.count > 0 ? "󰂚" : "󰂜")
                 iconColor: Notifs.count > 0 && !Notifs.dnd ? Atelier.accent : Atelier.text
                 size: 15
-                active: bar.activeOverlay === "controlcenter"
-                onClicked: bar.openControlCenter()
+                active: bar.activeOverlay === "notifications"
+                onClicked: bar.openNotifications()
 
                 Rectangle {
                     visible: Notifs.count > 0 && !Notifs.dnd
@@ -753,8 +828,10 @@ Item {
 
         implicitWidth: bar.vertical ? bar.pillWidth : grid.implicitWidth + 2 * pad + 6
         implicitHeight: bar.vertical ? grid.implicitHeight + 2 * pad : bar.pillWidth
-        radius: bar.pillWidth / 2
-        color: highlighted ? Qt.alpha(Atelier.accent, 0.18) : Atelier.flatBar ? "transparent" : Atelier.container
+        radius: bar.pillRadius
+        color: highlighted ? Qt.alpha(Atelier.accent, 0.18) : bar.pillFill
+        border.width: bar.pillEdge.a > 0 ? bar.pillBorder : 0
+        border.color: bar.pillEdge
         Behavior on color { ColorAnimation { duration: Atelier.durFast } }
 
         MouseArea {

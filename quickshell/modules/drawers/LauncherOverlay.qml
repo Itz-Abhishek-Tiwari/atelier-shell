@@ -83,6 +83,7 @@ Item {
         { key: "gifs",      title: "GIFs",            subtitle: "Find a GIF · Super+Shift+;",           glyph: "󰵸", color: Atelier.pink,   words: "gif gifs giphy tenor meme reaction animated", overlay: "gifs" },
         { key: "sysmon",    title: "System monitor",  subtitle: "CPU, memory, GPU, apps, battery (Super+Shift+M)", glyph: "󰍛", color: Atelier.accent, words: "system monitor task manager cpu ram memory gpu temperature processes htop battery health charge limit", overlay: "sysmon" },
         { key: "timers",    title: "Timers",          subtitle: "Timer, stopwatch, pomodoro (Super+Alt+T)", glyph: "󱎫", color: Atelier.peach, words: "timer stopwatch pomodoro focus countdown alarm clock", overlay: "timers" },
+        { key: "ports",     title: "Ports",           subtitle: "What is listening on localhost (Super+Alt+O)", glyph: "󰛳", color: Atelier.teal, words: "ports listening localhost server dev kill process netstat", overlay: "ports" },
         { key: "colors",    title: "Colour picker",   subtitle: "Pick a colour from the screen",       glyph: "󰈈", color: Atelier.pink, words: "color colour picker eyedropper hex rgb pipette", overlay: "colors" },
         { key: "calendar",  title: "Calendar",        subtitle: "Month view",                           glyph: "󰃭", color: Atelier.green, words: "calendar date month day", overlay: "calendar" },
         { key: "session",   title: "Session",         subtitle: "Lock, sleep, log out, restart, power", glyph: "󰐥", color: Atelier.red, words: "session power menu logout shutdown", overlay: "power" },
