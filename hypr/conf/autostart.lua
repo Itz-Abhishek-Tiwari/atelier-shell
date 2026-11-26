@@ -10,5 +10,4 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("systemctl --user start plasma-polkit-agent")   -- password prompts for pkexec/gparted (polkit-kde-agent)
     -- let root (only the local root user) draw on XWayland, so pkexec'd X11 apps like gparted can open :0
     hl.exec_cmd("sh -c 'command -v xhost >/dev/null && xhost +SI:localuser:root'")
-    hl.exec_cmd("kdeconnect-indicator")
 end)

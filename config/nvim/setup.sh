@@ -227,7 +227,7 @@ fi
 # ── Screenshots directory (used by nvim-silicon output path) ─────────────────
 step "Screenshots directory"
 mkdir -p ~/Pictures/Screenshots
-ok "~/Pictures/Screenshots exists"
+ok "$HOME/Pictures/Screenshots exists"
 
 # ── Config location check ─────────────────────────────────────────────────────
 step "Verifying Neovim config location"

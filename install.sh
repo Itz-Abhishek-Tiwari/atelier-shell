@@ -378,7 +378,7 @@ link_one() {
             log_info "Backing up existing configs to: $BACKUP_DIR"
         fi
         # keep the destination's identity in the backup (".zshrc", "starship.toml", ...)
-        local slot="$BACKUP_DIR/$(basename "$dest")"
+        local slot; slot="$BACKUP_DIR/$(basename "$dest")"
         [ -e "$slot" ] && slot="$BACKUP_DIR/$(basename "$(dirname "$dest")")_$(basename "$dest")"
         run mv "$dest" "$slot"
         log_success "Backed up $dest"

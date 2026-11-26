@@ -39,7 +39,7 @@ if [ -n "$wp" ] && [ -f "$wp" ]; then
         if command -v ffmpeg >/dev/null 2>&1 \
             && ffmpeg -loglevel error -y -i "$wp" -vf "scale='min(1920,iw)':-2" -q:v 3 -frames:v 1 "$tmp" 2>/dev/null; then
             :
-        elif command -v magick >/dev/null 2>&1 && magick "$wp[0]" -resize '1920x>' -quality 90 "$tmp" 2>/dev/null; then
+        elif command -v magick >/dev/null 2>&1 && magick "${wp}[0]" -resize '1920x>' -quality 90 "$tmp" 2>/dev/null; then
             :
         else
             command cp -f "$wp" "$tmp"
