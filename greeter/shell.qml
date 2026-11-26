@@ -32,10 +32,6 @@ ShellRoot {
     property var sessions: []     // [{name, exec, desktop}]
     property int userIdx: 0
     property int sessIdx: 0
-    // Laptops with an AMD iGPU plus an NVIDIA dGPU: "AMD only" keeps the dGPU out of Hyprland so it
-    // can power down (saves battery), but the HDMI port is wired to it and stops working.
-    property bool hybridGpu: false
-    property bool gpuAmd: false
     readonly property string user: users.length ? users[userIdx].name : ""
     readonly property var session: sessions.length ? sessions[sessIdx] : null
     onUserChanged: { GreeterData.user = user; GreeterData.realName = users.length ? (users[userIdx].real || user) : ""; }
@@ -68,11 +64,6 @@ ShellRoot {
             }
         }
     }
-    Process {
-        running: true
-        command: ["sh", "-c", "a=0; n=0; for v in /sys/class/drm/card[0-9]*/device/vendor; do case \"$(cat \"$v\" 2>/dev/null)\" in 0x1002) a=1;; 0x10de) n=1;; esac; done; [ $a$n = 11 ] && echo hybrid; true"]
-        stdout: StdioCollector { onStreamFinished: root.hybridGpu = text.trim() === "hybrid" }
-    }
     FileView { id: lastFile; path: "/var/cache/atelier-greeter/last"; printErrors: false }
     function restoreLast() {
         let t = "";
@@ -83,12 +74,10 @@ ShellRoot {
         const si = sessions.findIndex(s => s.name === p[1]);
         if (ui >= 0) userIdx = ui;
         if (si >= 0) sessIdx = si;
-        gpuAmd = p[2] === "amd";
     }
-    function toggleGpu() { if (hybridGpu) gpuAmd = !gpuAmd; }
     Process { id: saver }
     function saveLast() {
-        saver.command = ["sh", "-c", "printf '%s|%s|%s' \"$1\" \"$2\" \"$3\" > /var/cache/atelier-greeter/last 2>/dev/null; true", "sh", user, session ? session.name : "", gpuAmd ? "amd" : "both"];
+        saver.command = ["sh", "-c", "printf '%s|%s' \"$1\" \"$2\" > /var/cache/atelier-greeter/last 2>/dev/null; true", "sh", user, session ? session.name : ""];
         saver.running = true;
     }
     function pickUser(i) {
@@ -193,8 +182,7 @@ ShellRoot {
             // session.sh clears the login VT and sends the session's console output to a log
             // file, so no text flashes on screen between the greeter and the desktop
             Greetd.launch([Quickshell.shellPath("session.sh")].concat(exec),
-                ["XDG_SESSION_TYPE=wayland", "XDG_SESSION_DESKTOP=" + desk, "XDG_CURRENT_DESKTOP=" + desk,
-                    "ATELIER_GPU=" + (root.hybridGpu && root.gpuAmd ? "amd" : "both")], true);
+                ["XDG_SESSION_TYPE=wayland", "XDG_SESSION_DESKTOP=" + desk, "XDG_CURRENT_DESKTOP=" + desk], true);
         }
     }
 
@@ -263,13 +251,12 @@ ShellRoot {
         // F1 = next person · F2 = next session · Esc closes the demo
         Shortcut { sequence: "F1"; onActivated: root.nextUser() }
         Shortcut { sequence: "F2"; onActivated: root.nextSession() }
-        Shortcut { sequence: "F3"; onActivated: root.toggleGpu() }
         Shortcut { sequence: "Esc"; enabled: root.demo; onActivated: Qt.quit() }
 
         // ── who and what: a quiet pill in the top-left corner ────────────────
         Row {
             id: picker
-            visible: !greeterAuth.unlocking && (root.users.length > 1 || root.sessions.length > 1 || root.hybridGpu || root.demo)
+            visible: !greeterAuth.unlocking && (root.users.length > 1 || root.sessions.length > 1 || root.demo)
             x: 28; y: 24
             spacing: 8
             opacity: greeterAuth.unlocking ? 0 : 1
@@ -289,14 +276,6 @@ ShellRoot {
                 more: root.sessions.length > 1
                 hint: "F2"
                 onClicked: root.nextSession()
-            }
-            PickChip {
-                visible: root.hybridGpu
-                icon: "󰢮"
-                label: root.gpuAmd ? "AMD only · saves battery, no HDMI" : "GPU: both · HDMI works"
-                more: true
-                hint: "F3"
-                onClicked: root.toggleGpu()
             }
             PickChip { visible: root.demo; icon: "󰈈"; label: "Preview · password “demo” · Esc closes"; more: false }
         }
