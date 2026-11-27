@@ -16,8 +16,9 @@ Rectangle {
     radius: size / 2
     color: pb.fill
     opacity: enabled ? 1 : 0.4
-    scale: pbMa.pressed ? 0.92 : (pbMa.containsMouse ? 1.05 : 1)
-    Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+    scale: pbMa.pressed ? 0.94 : (pbMa.containsMouse ? 1.03 : 1)
+    Behavior on scale { Anim { type: "fastSpatial" } }
+    StateLayer { mouseArea: pbMa; color: Atelier.onFill }
     Row {
         id: pbRow
         anchors.centerIn: parent

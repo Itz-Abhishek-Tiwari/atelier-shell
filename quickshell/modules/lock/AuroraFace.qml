@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Shapes
 import Quickshell.Widgets
+import qs.components
 import qs.config
 import qs.services
 
@@ -165,7 +166,7 @@ Item {
         anchors.fill: parent
         opacity: root.a ? 1 : 0
         visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: root.dur; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: root.dur; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel } }
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
@@ -208,7 +209,7 @@ Item {
                     color: Qt.rgba(1, 1, 1, 0.1)
                     border.width: Math.max(1, 2 * root.u)
                     border.color: root.lr.message ? Qt.alpha(Atelier.red, 0.9) : Qt.rgba(1, 1, 1, 0.3)
-                    Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
+                    Behavior on border.color { CAnim {} }
                 }
                 Text {
                     anchors.left: parent.left; anchors.leftMargin: 32 * root.u; anchors.verticalCenter: parent.verticalCenter
@@ -225,7 +226,7 @@ Item {
                             width: 15 * root.u; height: width; radius: root.round ? width / 2 : 0; color: "white"
                             scale: 0
                             Component.onCompleted: scale = 1
-                            Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack } }
+                            Behavior on scale { Anim { type: "fastSpatial" } }
                         }
                     }
                 }
@@ -244,6 +245,7 @@ Item {
                 text: root.lr.message ? root.lr.message : ph.capsOn ? "Caps Lock is on" : ph.isPreview ? "Preview · Esc to go back" : "Enter to unlock · Esc to go back"
                 font.family: ph.display; font.pixelSize: Atelier.fsLg * ph.ts * 1.1
                 color: root.lr.message ? Qt.tint("white", Qt.alpha(Atelier.red, 0.8)) : ph.capsOn ? Qt.tint("white", Qt.alpha(Atelier.yellow, 0.7)) : Qt.rgba(1, 1, 1, 0.7)
+                Behavior on color { CAnim {} }
             }
         }
         AuthPower {

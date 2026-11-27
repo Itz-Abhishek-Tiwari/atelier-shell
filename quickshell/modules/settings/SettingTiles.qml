@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import qs.components
 import qs.config
 
 // Visual choice, system-settings style: a row of tiles, each a small drawn preview with a
@@ -79,7 +80,7 @@ Item {
                     color: Atelier.containerHigh
                     border.width: tile.on ? 2 : 1
                     border.color: tile.on ? Atelier.accent : (ma.containsMouse ? Qt.alpha(Atelier.text, 0.25) : Atelier.outline)
-                    Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
+                    Behavior on border.color { CAnim {} }
                     clip: true
 
                     Loader {
@@ -99,6 +100,7 @@ Item {
                     font.pixelSize: Atelier.fsMd
                     font.weight: tile.on ? Font.DemiBold : Font.Normal
                     color: tile.on ? Atelier.text : Atelier.subtext1
+                    Behavior on color { CAnim {} }
                 }
                 MouseArea {
                     id: ma

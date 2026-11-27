@@ -62,7 +62,7 @@ Item {
             id: clearPill
             visible: opacity > 0
             opacity: root.showClear ? 1 : 0
-            Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+            Behavior on opacity { Anim { type: "effects" } }
             z: 5
             // right-aligned (left on the left side), just past the last card
             x: root.atLeft ? 0 : root.atCenter ? (parent.width - width) / 2 : parent.width - width
@@ -73,7 +73,7 @@ Item {
             color: clearMa.containsMouse ? Qt.alpha(Atelier.red, 0.16) : Atelier.surface
             border.width: 1
             border.color: clearMa.containsMouse ? Qt.alpha(Atelier.red, 0.45) : Atelier.outline
-            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+            Behavior on color { CAnim {} }
             Row {
                 id: clearRow
                 anchors.centerIn: parent
@@ -131,7 +131,7 @@ Item {
             // arrive: slide in from the right edge and fade in
             add: Transition {
                 ParallelAnimation {
-                    NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 220; easing.type: Easing.OutCubic }
+                    NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 220; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel }
                     NumberAnimation { property: "x"; from: root.slideX; to: 0; duration: 420
                         easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveSmooth }
                     NumberAnimation { property: "y"; from: ViewTransition.destination.y + root.slideY; to: ViewTransition.destination.y; duration: 420

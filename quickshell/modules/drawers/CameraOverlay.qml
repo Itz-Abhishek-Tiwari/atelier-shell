@@ -407,8 +407,8 @@ Item {
                                 fillMode: VideoOutput.PreserveAspectCrop
                                 opacity: win.showing ? 1 : 0
                                 scale: win.zoom
-                                Behavior on opacity { NumberAnimation { duration: Atelier.durMedium } }
-                                Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
+                                Behavior on opacity { Anim { type: "slowEffects" } }
+                                Behavior on scale { Anim { type: "fastSpatial" } }
                                 transform: Scale { origin.x: preview.width / 2; xScale: win.mirror ? -1 : 1 }
                             }
 
@@ -524,7 +524,7 @@ Item {
                                     width: cbRow.implicitWidth + 36; height: 38; radius: 19
                                     color: cbMa.containsMouse ? Qt.lighter(Atelier.accentFill, 1.1) : Atelier.accentFill
                                     scale: cbMa.pressed ? 0.94 : 1
-                                    Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+                                    Behavior on scale { Anim { type: "fastSpatial" } }
                                     Row {
                                         id: cbRow
                                         anchors.centerIn: parent
@@ -562,7 +562,7 @@ Item {
                                     scale: 1
                                     SequentialAnimation on scale {
                                         running: win.countdown > 0; loops: Animation.Infinite
-                                        NumberAnimation { from: 1.25; to: 1; duration: 350; easing.type: Easing.OutCubic }
+                                        NumberAnimation { from: 1.25; to: 1; duration: 350; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel }
                                         PauseAnimation { duration: 650 }
                                     }
                                 }
@@ -571,7 +571,7 @@ Item {
                             // shutter flash
                             Rectangle {
                                 anchors.fill: parent; color: "white"; opacity: 0
-                                NumberAnimation on opacity { id: flash; running: false; from: 0.85; to: 0; duration: 380; easing.type: Easing.OutCubic }
+                                NumberAnimation on opacity { id: flash; running: false; from: 0.85; to: 0; duration: 380; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel }
                             }
 
                             // ═══ top bar ═══
@@ -594,8 +594,8 @@ Item {
                                         y: 4; height: 28; radius: Atelier.radiusMd; color: "white"
                                         x: 4 + (win.source === "iphone" ? lapSeg.width : 0)
                                         width: win.source === "iphone" ? iphSeg.width : lapSeg.width
-                                        Behavior on x { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
-                                        Behavior on width { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                                        Behavior on x { Anim { type: "fastSpatial" } }
+                                        Behavior on width { Anim { type: "fastSpatial" } }
                                     }
                                     Row {
                                         id: segRow
@@ -676,8 +676,8 @@ Item {
                                 opacity: win.showAdjust ? 1 : 0
                                 scale: win.showAdjust ? 1 : 0.94
                                 transformOrigin: Item.TopRight
-                                Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
-                                Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
+                                Behavior on opacity { Anim { type: "effects" } }
+                                Behavior on scale { Anim { type: "fastSpatial" } }
                                 MouseArea { anchors.fill: parent }     // don't let clicks reach the picture
 
                                 Column {
@@ -731,7 +731,7 @@ Item {
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 x: (parent.width - width) * brTrack.frac
                                                 scale: brMa.pressed ? 1.2 : 1
-                                                Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+                                                Behavior on scale { Anim { type: "fastSpatial" } }
                                             }
                                             MouseArea {
                                                 id: brMa
@@ -760,7 +760,7 @@ Item {
                                                     width: rsText.implicitWidth + 20; height: 28; radius: Atelier.radiusMd
                                                     color: on ? "white" : (rsChip.containsMouse ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(1, 1, 1, 0.08))
                                                     border.width: on ? 0 : 1; border.color: Qt.rgba(1, 1, 1, 0.14)
-                                                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                                                    Behavior on color { CAnim {} }
                                                     Text { id: rsText; anchors.centerIn: parent
                                                         text: modelData.h + "p" + (modelData.fps !== 30 ? " " + modelData.fps : "")
                                                         font.family: Atelier.font; font.pixelSize: Atelier.fsSm; color: parent.on ? "#141414" : "white" }
@@ -819,7 +819,7 @@ Item {
                                     anchors.bottom: parent.top; anchors.bottomMargin: 4
                                     visible: opacity > 0
                                     opacity: win.canZoom && win.showing ? 1 : 0
-                                    Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                                    Behavior on opacity { Anim { type: "effects" } }
                                     width: zRow.implicitWidth + 8; height: 34; radius: Atelier.radiusLg
                                     color: Qt.rgba(0, 0, 0, 0.38)
                                     Row {
@@ -833,12 +833,13 @@ Item {
                                                 readonly property bool near: modelData === (win.zoom < 1.5 ? 1 : win.zoom < 2.5 ? 2 : 3)
                                                 width: near ? 40 : 28; height: 28; radius: Atelier.radiusMd
                                                 color: near ? Qt.rgba(0, 0, 0, 0.55) : "transparent"
-                                                Behavior on width { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
+                                                Behavior on width { Anim { type: "fastSpatial" } }
                                                 Text {
                                                     anchors.centerIn: parent
                                                     text: parent.near ? (Math.abs(win.zoom - Math.round(win.zoom)) < 0.05 ? Math.round(win.zoom) : win.zoom.toFixed(1)) + "×" : modelData
                                                     font.family: Atelier.font; font.pixelSize: parent.near ? 12 : 11; font.bold: parent.near
                                                     color: parent.near ? Atelier.yellow : "white"
+                                                    Behavior on color { CAnim {} }
                                                 }
                                                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: win.setZoom(modelData) }
                                             }
@@ -852,13 +853,14 @@ Item {
                                     anchors.top: parent.top
                                     spacing: 22
                                     opacity: win.recording ? 0 : 1
-                                    Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                                    Behavior on opacity { Anim { type: "effects" } }
                                     Repeater {
                                         model: [{ id: "photo", label: "PHOTO" }, { id: "video", label: "VIDEO" }]
                                         Text {
                                             text: modelData.label
                                             font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; font.letterSpacing: 1.6
                                             color: win.mode === modelData.id ? Atelier.yellow : Qt.rgba(1, 1, 1, 0.75)
+                                            Behavior on color { CAnim {} }
                                             MouseArea { anchors.fill: parent; anchors.margins: -8; cursorShape: Qt.PointingHandCursor
                                                 enabled: !win.recording; onClicked: win.mode = modelData.id }
                                         }
@@ -873,7 +875,7 @@ Item {
                                     visible: camRoot.lastShot !== ""
                                     opacity: win.recording ? 0.4 : 1
                                     scale: thMa.pressed ? 0.9 : (thMa.containsMouse ? 1.06 : 1)
-                                    Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
+                                    Behavior on scale { Anim { type: "fastSpatial" } }
                                     ClippingRectangle {
                                         anchors.fill: parent
                                         radius: Atelier.radiusMd
@@ -893,7 +895,7 @@ Item {
                                     }
                                     SequentialAnimation on scale {
                                         id: thumbPop; running: false
-                                        NumberAnimation { from: 0.6; to: 1.08; duration: 220; easing.type: Easing.OutCubic }
+                                        NumberAnimation { from: 0.6; to: 1.08; duration: 220; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel }
                                         NumberAnimation { to: 1; duration: Atelier.durFast }
                                     }
                                     MouseArea { id: thMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
@@ -916,10 +918,10 @@ Item {
                                         radius: win.recording ? 7 : width / 2
                                         color: win.mode === "video" ? Atelier.red : "white"
                                         scale: shMa.pressed ? 0.86 : (shMa.containsMouse ? 0.96 : 1)
-                                        Behavior on width { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
-                                        Behavior on radius { NumberAnimation { duration: Atelier.durFast } }
-                                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                                        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+                                        Behavior on width { Anim { type: "fastSpatial" } }
+                                        Behavior on radius { Anim { type: "fastSpatial" } }
+                                        Behavior on color { CAnim {} }
+                                        Behavior on scale { Anim { type: "fastSpatial" } }
                                     }
                                     MouseArea { id: shMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: win.shutter() }
                                 }
@@ -933,7 +935,7 @@ Item {
                                     opacity: win.recording ? 0.4 : 1
                                     Text { anchors.centerIn: parent; text: "󰓡"; font.family: Atelier.font; font.pixelSize: 22; color: "white"
                                         rotation: win.source === "iphone" ? 180 : 0
-                                        Behavior on rotation { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } } }
+                                        Behavior on rotation { Anim { type: "spatial" } } }
                                     MouseArea { id: swMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                         onClicked: win.pickSource(win.source === "iphone" ? "laptop" : "iphone") }
                                 }
@@ -950,8 +952,8 @@ Item {
                                 visible: opacity > 0
                                 opacity: win.showHelp ? 1 : 0
                                 scale: win.showHelp ? 1 : 0.95
-                                Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
-                                Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                                Behavior on opacity { Anim { type: "effects" } }
+                                Behavior on scale { Anim { type: "fastSpatial" } }
                                 MouseArea { anchors.fill: parent; onClicked: win.showHelp = false }
                                 Column {
                                     id: helpCol
@@ -1011,7 +1013,7 @@ Item {
                                     asynchronous: true
                                     sourceSize.width: 1920; sourceSize.height: 1920
                                     opacity: status === Image.Ready ? 1 : 0
-                                    Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                                    Behavior on opacity { Anim { type: "effects" } }
                                     MouseArea { anchors.fill: parent; onDoubleClicked: Quickshell.execDetached(["xdg-open", win.shot.path]) }
                                 }
                             }
@@ -1082,7 +1084,7 @@ Item {
                                     width: backRow.implicitWidth + 26; height: 36; radius: Atelier.radiusLg
                                     color: backMa.containsMouse ? Qt.rgba(1, 1, 1, 0.16) : Qt.rgba(1, 1, 1, 0.08)
                                     border.width: 1; border.color: Qt.rgba(1, 1, 1, 0.14)
-                                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                                    Behavior on color { CAnim {} }
                                     Row {
                                         id: backRow
                                         anchors.centerIn: parent
@@ -1148,8 +1150,8 @@ Item {
                                     readonly property bool cur: index === win.shotIndex
                                     scale: cur ? 1 : (tMa.containsMouse ? 0.96 : 0.9)
                                     opacity: cur ? 1 : 0.7
-                                    Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
-                                    Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                                    Behavior on scale { Anim { type: "fastSpatial" } }
+                                    Behavior on opacity { Anim { type: "effects" } }
                                     ClippingRectangle {
                                         anchors.fill: parent
                                         radius: Atelier.radiusMd
@@ -1218,8 +1220,8 @@ Item {
                              : Qt.rgba(0, 0, 0, 0.42)
                         border.width: on ? 0 : 1; border.color: Qt.rgba(1, 1, 1, 0.12)
                         scale: tbMa.pressed ? 0.9 : 1
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+                        Behavior on color { CAnim {} }
+                        Behavior on scale { Anim { type: "fastSpatial" } }
                         Row {
                             id: tbRow
                             anchors.centerIn: parent

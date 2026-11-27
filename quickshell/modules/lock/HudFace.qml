@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Shapes
 import Quickshell.Widgets
+import qs.components
 import qs.config
 import qs.services
 
@@ -116,7 +117,7 @@ Item {
                     width: 0.5 * timeBox.width - 80 * root.u; height: 76 * root.u
                     color: Qt.alpha(Atelier.accent, 0.08)
                     border.width: Math.max(1, 2 * root.u); border.color: root.lr.message ? Atelier.red : Atelier.accent
-                    Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
+                    Behavior on border.color { CAnim {} }
                     Text {
                         anchors.left: parent.left; anchors.leftMargin: 18 * root.u; anchors.verticalCenter: parent.verticalCenter
                         text: "*".repeat(Math.min(root.lr.buffer.length, 20)) + (root.cursorOn ? "_" : " ")
@@ -138,6 +139,7 @@ Item {
                           : ph.capsOn ? "CAPS LOCK ON" : ph.isPreview ? "PREVIEW  /  ESC TO GO BACK" : "AWAITING INPUT"
                     font.family: root.mono; font.pixelSize: Atelier.fsXl * ph.ts * 1.6; font.letterSpacing: 2 * root.u
                     color: root.lr.message ? Atelier.red : ph.capsOn ? Atelier.yellow : Atelier.accent
+                    Behavior on color { CAnim {} }
                 }
             }
             // verification progress
@@ -147,7 +149,7 @@ Item {
                     id: bar
                     height: parent.height; color: Atelier.accent
                     width: root.lr.checking ? parent.width : 0
-                    Behavior on width { NumberAnimation { duration: root.lr.checking ? 1400 : 200; easing.type: Easing.OutCubic } }
+                    Behavior on width { NumberAnimation { duration: root.lr.checking ? 1400 : 200; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel } }
                 }
             }
         }

@@ -313,8 +313,9 @@ Item {
                                 width: (tabRow.width - tabRow.spacing) / 2
                                 height: tabRow.height
                                 radius: height / 2
-                                color: on ? Atelier.accentFill : (tabMa.containsMouse ? Atelier.containerHigh : "transparent")
-                                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                                color: on ? Atelier.accentFill : "transparent"
+                                Behavior on color { CAnim {} }
+                                StateLayer { mouseArea: tabMa }
                                 Row {
                                     anchors.centerIn: parent
                                     spacing: 6
@@ -451,7 +452,7 @@ Item {
                                 color: "#" + sw.modelData
                                 border.width: sw.on ? 2 : 1
                                 border.color: sw.on ? Atelier.accent : Qt.alpha(Atelier.text, 0.2)
-                                Behavior on width { NumberAnimation { duration: Atelier.durFast } }
+                                Behavior on width { Anim { type: "fastSpatial" } }
                             }
                             MouseArea {
                                 anchors.fill: parent
@@ -494,7 +495,7 @@ Item {
                         scrollAnim.to = Math.max(0, Math.min(target, Math.max(0, contentHeight - height)));
                         scrollAnim.restart();
                     }
-                    NumberAnimation { id: scrollAnim; target: grid; property: "contentY"; duration: Atelier.durFast; easing.type: Easing.OutCubic }
+                    NumberAnimation { id: scrollAnim; target: grid; property: "contentY"; duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel }
                     Keys.onLeftPressed: go(currentIndex - 1)
                     Keys.onRightPressed: go(currentIndex + 1)
                     Keys.onUpPressed: (e) => { if (currentIndex < cols) { searchField.forceActiveFocus(); } else go(currentIndex - cols); }
@@ -533,7 +534,7 @@ Item {
                             anchors.fill: parent
                             anchors.margins: 6
                             scale: tileMa.pressed ? 0.97 : 1
-                            Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+                            Behavior on scale { Anim { type: "fastSpatial" } }
 
                             RoundImage {
                                 anchors.fill: parent
@@ -673,7 +674,8 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         visible: wallRoot.activeTab === "wallhaven" && wallRoot.whError !== ""
                         implicitWidth: retryT.implicitWidth + 28; implicitHeight: 30; radius: Atelier.radiusLg
-                        color: retryMa.containsMouse ? Atelier.containerHigh : Atelier.container
+                        color: Atelier.container
+                        StateLayer { mouseArea: retryMa }
                         Text { id: retryT; anchors.centerIn: parent; text: "Try again"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; color: Atelier.text }
                         MouseArea { id: retryMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: wallRoot.searchWallhaven(true) }
                     }
@@ -701,8 +703,9 @@ Item {
         property string icon
         signal clicked()
         implicitWidth: 36; implicitHeight: 36; radius: Atelier.radiusLg
-        color: rbMa.containsMouse ? Atelier.containerHigh : Atelier.container
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+        color: Atelier.container
+        Behavior on color { CAnim {} }
+        StateLayer { mouseArea: rbMa }
         Text { anchors.centerIn: parent; text: rb.icon; font.family: Atelier.font; font.pixelSize: Atelier.fsXl; color: rbMa.containsMouse ? Atelier.text : Atelier.subtext1 }
         MouseArea { id: rbMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: rb.clicked() }
     }
@@ -715,8 +718,9 @@ Item {
         implicitWidth: chRow.implicitWidth + 22
         implicitHeight: 30
         radius: Atelier.radiusMd
-        color: on ? Atelier.accentFill : (chMa.containsMouse ? Atelier.containerHigh : Atelier.container)
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+        color: on ? Atelier.accentFill : Atelier.container
+        Behavior on color { CAnim {} }
+        StateLayer { mouseArea: chMa }
         Row {
             id: chRow
             anchors.centerIn: parent
@@ -761,7 +765,7 @@ Item {
             maskThresholdMin: 0.5
             maskSpreadAtMin: 1.0
             opacity: ri.ready ? 1 : 0
-            Behavior on opacity { NumberAnimation { duration: Atelier.durMedium } }
+            Behavior on opacity { Anim { type: "slowEffects" } }
         }
     }
 }

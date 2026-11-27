@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell.Widgets
+import qs.components
 import qs.config
 
 // One OSD slider: a tall pill. The fill rises from the bottom (true to scale),
@@ -21,8 +22,8 @@ Item {
     implicitWidth: focused ? 46 : 38
     implicitHeight: 210
     opacity: focused || hovered ? 1 : 0.6
-    Behavior on implicitWidth { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
-    Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+    Behavior on implicitWidth { Anim { type: "spatial" } }
+    Behavior on opacity { Anim { type: "effects" } }
 
     readonly property real shown: Math.max(0, Math.min(1, value))
     readonly property color fillColor: dimmed ? Atelier.overlay0 : Atelier.fill(tint)
@@ -42,7 +43,7 @@ Item {
                 GradientStop { position: 0; color: Qt.lighter(lvl.fillColor, 1.12) }
                 GradientStop { position: 1; color: lvl.fillColor }
             }
-            Behavior on height { enabled: !input.pressed; NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
+            Behavior on height { enabled: !input.pressed; NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel } }
         }
     }
 
@@ -56,6 +57,7 @@ Item {
         font.pixelSize: Atelier.fsSm
         font.bold: true
         color: lvl.shown > 0.92 ? Atelier.onFill : Atelier.text
+        Behavior on color { CAnim {} }
     }
 
     // icon (bottom) — sits inside the fill once there is any
@@ -68,6 +70,7 @@ Item {
         font.family: Atelier.font
         font.pixelSize: 18
         color: lvl.dimmed ? Atelier.red : (lvl.shown > 0.1 ? Atelier.onFill : Atelier.text)
+        Behavior on color { CAnim {} }
     }
 
     // Input lives on top of everything (outside the clipping effect)

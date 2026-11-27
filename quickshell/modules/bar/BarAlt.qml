@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
+import qs.components
 import qs.config
 import qs.services
 
@@ -53,7 +54,7 @@ Item {
             color: c.active ? Qt.alpha(Atelier.accent, 0.2)
                  : Atelier.containerHigh
             opacity: c.active || ma.containsMouse ? 1 : 0
-            Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+            Behavior on opacity { Anim { type: "effects" } }
         }
         Text {
             id: glyph
@@ -64,7 +65,7 @@ Item {
             font.pixelSize: 18
             color: c.tint
             scale: ma.pressed ? 0.85 : ma.containsMouse ? 1.1 : 1
-            Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+            Behavior on scale { Anim { type: "fastSpatial" } }
         }
         Text {
             id: badgeText
@@ -141,8 +142,8 @@ Item {
                             radius: 3
                             color: w.urgent ? Atelier.red : w.on ? Atelier.accent : Atelier.text
                             opacity: w.on ? 1 : w.used ? 0.7 : 0.25
-                            Behavior on width { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
-                            Behavior on height { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
+                            Behavior on width { Anim { type: "spatial" } }
+                            Behavior on height { Anim { type: "spatial" } }
                         }
                         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: bar.goToWorkspace(w.num) }
                     }
@@ -233,7 +234,7 @@ Item {
                 radius: Atelier.radiusSm
                 color: clock.on ? Qt.alpha(Atelier.accent, 0.2) : Atelier.containerHigh
                 opacity: clock.on || clockMa.containsMouse ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                Behavior on opacity { Anim { type: "effects" } }
             }
             Grid {
                 id: clockGrid

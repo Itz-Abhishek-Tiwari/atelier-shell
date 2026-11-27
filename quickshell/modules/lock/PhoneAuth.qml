@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell.Widgets
+import qs.components
 import qs.config
 import qs.services
 
@@ -55,7 +56,7 @@ Item {
                         Repeater {
                             model: Math.min(root.lr.buffer.length, 20)
                             Rectangle { width: 14 * root.u; height: width; radius: width / 2; color: "white"
-                                scale: 0; Component.onCompleted: scale = 1; Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack } } }
+                                scale: 0; Component.onCompleted: scale = 1; Behavior on scale { Anim { type: "fastSpatial" } } }
                         }
                     }
                     Rectangle {
@@ -103,7 +104,7 @@ Item {
                         Repeater {
                             model: Math.min(root.lr.buffer.length, 16)
                             Rectangle { width: 10 * root.u; height: width; radius: width / 2; color: "white"
-                                scale: 0; Component.onCompleted: scale = 1; Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack } } }
+                                scale: 0; Component.onCompleted: scale = 1; Behavior on scale { Anim { type: "fastSpatial" } } }
                         }
                     }
                     Rectangle { anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom; height: Math.max(1, 2 * root.u)
@@ -161,7 +162,7 @@ Item {
                             Repeater {
                                 model: Math.min(root.lr.buffer.length, 24)
                                 Rectangle { width: 14 * root.u; height: width; radius: 3 * root.u; color: "white"
-                                    scale: 0; Component.onCompleted: scale = 1; Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack } } }
+                                    scale: 0; Component.onCompleted: scale = 1; Behavior on scale { Anim { type: "fastSpatial" } } }
                             }
                         }
                         Rectangle {
@@ -215,7 +216,7 @@ Item {
                         Repeater {
                             model: Math.min(root.lr.buffer.length, 18)
                             Rectangle { width: 20 * root.u; height: width; radius: width / 2; color: "white"
-                                scale: 0; Component.onCompleted: scale = 1; Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack } } }
+                                scale: 0; Component.onCompleted: scale = 1; Behavior on scale { Anim { type: "fastSpatial" } } }
                         }
                     }
                     Rectangle {
@@ -264,7 +265,7 @@ Item {
                             width: 46 * root.u; height: 60 * root.u
                             color: filled ? (root.lr.message ? hot : "white") : "transparent"
                             border.width: Math.max(1, 2 * root.u); border.color: filled ? "transparent" : (index === root.lr.buffer.length ? hot : Qt.rgba(1, 1, 1, 0.35))
-                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                            Behavior on color { CAnim {} }
                         }
                     }
                 }
@@ -272,6 +273,7 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: root.msg.toUpperCase(); font.family: Atelier.font; font.pixelSize: Atelier.fsMd * ph.ts; font.letterSpacing: 5 * root.u
                     color: root.lr.message ? hot : Qt.rgba(1, 1, 1, 0.6)
+                    Behavior on color { CAnim {} }
                 }
                 // the Enter key as a red dot button
                 Rectangle {

@@ -58,7 +58,7 @@ Rectangle {
     color: popup ? Atelier.surface : (hovered ? Atelier.containerHigh : Atelier.container)
     border.width: critical || popup ? 1 : 0
     border.color: critical ? Qt.alpha(Atelier.red, 0.6) : Atelier.outline
-    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+    Behavior on color { CAnim {} }
     // hover on a pop-up: a faint wash (its surface colour itself stays put)
     Rectangle {
         visible: root.popup
@@ -66,7 +66,7 @@ Rectangle {
         radius: parent.radius
         color: Atelier.text
         opacity: root.hovered ? 0.04 : 0
-        Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+        Behavior on opacity { Anim { type: "effects" } }
     }
 
     // the stack: two thin strips peeking out underneath
@@ -146,6 +146,7 @@ Rectangle {
                     font.family: Atelier.font
                     font.pixelSize: Atelier.fsXl
                     color: root.critical ? Atelier.red : Atelier.accent
+                    Behavior on color { CAnim {} }
                 }
             }
         }
@@ -250,8 +251,9 @@ Rectangle {
                         Layout.fillWidth: true
                         implicitHeight: oldRow.implicitHeight + 10
                         radius: Atelier.radiusSm
-                        color: oldMa.containsMouse ? Atelier.containerHigh : "transparent"
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        color: "transparent"
+                        Behavior on color { CAnim {} }
+                        StateLayer { mouseArea: oldMa }
                         RowLayout {
                             id: oldRow
                             anchors.left: parent.left; anchors.right: parent.right
@@ -282,6 +284,7 @@ Rectangle {
                     text: "Show less"
                     font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.DemiBold
                     color: lessMa.containsMouse ? Atelier.accent : Atelier.subtext
+                    Behavior on color { CAnim {} }
                     MouseArea { id: lessMa; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor; onClicked: root.expanded = false }
                 }
@@ -332,13 +335,14 @@ Rectangle {
                         implicitHeight: 26
                         radius: 13
                         color: replyField.text.trim() ? Qt.alpha(Atelier.accent, 0.22) : Atelier.containerHigh
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        Behavior on color { CAnim {} }
                         Text {
                             anchors.centerIn: parent
                             text: "󰒊"
                             font.family: Atelier.font
                             font.pixelSize: Atelier.fsMd
                             color: replyField.text.trim() ? Atelier.accent : Atelier.subtext
+                            Behavior on color { CAnim {} }
                         }
                         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: replyField.send() }
                     }
@@ -409,6 +413,7 @@ Rectangle {
                         font.family: Atelier.font
                         font.pixelSize: Atelier.fsMd
                         color: xMa.containsMouse ? Atelier.red : Atelier.subtext
+                        Behavior on color { CAnim {} }
                     }
                     MouseArea { id: xMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Notifs.dismissGroup(root.notif) }
                 }
@@ -428,7 +433,7 @@ Rectangle {
         radius: 11
         color: accent ? Qt.alpha(Atelier.accent, (Atelier.isLight ? 0.14 : 0.2) + (tbMa.containsMouse ? 0.06 : 0))
              : (tbMa.containsMouse ? Atelier.containerHigh : "transparent")
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+        Behavior on color { CAnim {} }
         Row {
             id: tbRow
             anchors.centerIn: parent
@@ -440,6 +445,7 @@ Rectangle {
                 font.family: Atelier.font
                 font.pixelSize: Atelier.fsSm
                 color: tb.accent ? Atelier.accent : Atelier.subtext
+                Behavior on color { CAnim {} }
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
@@ -448,6 +454,7 @@ Rectangle {
                 font.pixelSize: Atelier.fsSm
                 font.weight: Font.DemiBold
                 color: tb.accent ? Atelier.accent : Atelier.subtext
+                Behavior on color { CAnim {} }
                 elide: Text.ElideRight
                 width: Math.min(implicitWidth, 140)
             }

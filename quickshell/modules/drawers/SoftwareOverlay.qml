@@ -110,7 +110,7 @@ Item {
                         y: 4; height: parent.height - 8; width: 124; radius: height / 2
                         x: 4 + (root.tab === "find" ? 0 : 124)
                         color: Atelier.accentFill
-                        Behavior on x { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
+                        Behavior on x { Anim { type: "spatial" } }
                     }
                     Row {
                         x: 4; y: 4
@@ -126,11 +126,11 @@ Item {
                                     Text { anchors.verticalCenter: parent.verticalCenter; text: tb.modelData.icon
                                            font.family: Atelier.font; font.pixelSize: Atelier.fsLg
                                            color: tb.on ? Atelier.onFill : Atelier.subtext
-                                           Behavior on color { ColorAnimation { duration: Atelier.durFast } } }
+                                           Behavior on color { CAnim {} } }
                                     Text { anchors.verticalCenter: parent.verticalCenter; text: tb.modelData.label
                                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold
                                            color: tb.on ? Atelier.onFill : Atelier.text
-                                           Behavior on color { ColorAnimation { duration: Atelier.durFast } } }
+                                           Behavior on color { CAnim {} } }
                                     Text { visible: tb.modelData.id === "installed" && Packages.installed.length > 0
                                            anchors.verticalCenter: parent.verticalCenter; text: Packages.installed.length
                                            font.family: Atelier.font; font.pixelSize: Atelier.fsMicro
@@ -258,8 +258,8 @@ Item {
                                     border.width: 1
                                     border.color: tMa.containsMouse ? Qt.alpha(hue, 0.45) : Atelier.outline
                                     scale: tMa.pressed ? 0.97 : 1
-                                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                                    Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+                                    Behavior on color { CAnim {} }
+                                    Behavior on scale { Anim { type: "fastSpatial" } }
                                     Row {
                                         anchors.verticalCenter: parent.verticalCenter
                                         anchors.left: parent.left; anchors.leftMargin: 12

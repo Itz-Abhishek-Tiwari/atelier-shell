@@ -55,7 +55,7 @@ Item {
           keys: "traditional classic layout floating title bar buttons menu bar global menu dock shelf magnify trash downloads file manager nautilus" },
         { id: "windows",       group: "Workspace",   icon: "󰖲", label: "Windows",           sub: "Tiling, gaps, corners and animations",
           keys: "windows tiling layout dwindle master scrolling monocle gaps rounding corners animations hyprland" },
-        { id: "modes",         group: "Workspace",   icon: "󰊗", label: "Modes",             sub: "Normal, Programming, Game, Battery saver and Showcase",
+        { id: "modes",         group: "Workspace",   icon: "󰊗", label: "Modes",             sub: "Normal, Programming, Game and Battery saver",
           keys: "modes performance game programming dev developer blur opacity opaque shadows animations tearing power profile do not disturb dnd caffeine awake widgets auto detect steam games mode" },
         { id: "shortcuts",     group: "Workspace",   icon: "󰘳", label: "Shortcuts",         sub: "Change keys and add your own",
           keys: "shortcuts keybinds keybindings hotkeys keys bind rebind custom command" },
@@ -309,8 +309,9 @@ Item {
                                     visible: !srow.isHeader
                                     anchors.fill: parent
                                     radius: 9
-                                    color: srow.on ? Qt.alpha(Atelier.accent, 0.16) : (ma.containsMouse ? Atelier.container : "transparent")
-                                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                                    color: srow.on ? Qt.alpha(Atelier.accent, 0.16) : "transparent"
+                                    Behavior on color { CAnim {} }
+                                    StateLayer { mouseArea: ma }
 
                                     RowLayout {
                                         anchors.fill: parent
@@ -323,6 +324,7 @@ Item {
                                             text: srow.modelData.icon || ""
                                             font.family: Atelier.font; font.pixelSize: Atelier.fsXl
                                             color: srow.on ? Atelier.accent : Atelier.subtext1
+                                            Behavior on color { CAnim {} }
                                         }
                                         Text {
                                             Layout.fillWidth: true
@@ -331,6 +333,7 @@ Item {
                                             font.pixelSize: Atelier.fsLg
                                             font.weight: srow.on ? Font.DemiBold : Font.Normal
                                             color: srow.on ? Atelier.text : Atelier.subtext1
+                                            Behavior on color { CAnim {} }
                                             elide: Text.ElideRight
                                         }
                                     }
@@ -385,7 +388,7 @@ Item {
                         anchors.top: parent.top
                         implicitWidth: 28; implicitHeight: 28; radius: Atelier.radiusMd
                         color: closeMa.containsMouse ? Qt.alpha(Atelier.red, 0.2) : Atelier.container
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        Behavior on color { CAnim {} }
                         Text { anchors.centerIn: parent; text: "󰅖"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: closeMa.containsMouse ? Atelier.red : Atelier.subtext }
                         MouseArea { id: closeMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: win.close() }
                     }

@@ -21,6 +21,13 @@ hl.curve("easeInSoft",   { type = "bezier", points = { {0.4,  0},   {0.7,  0.2} 
 hl.curve("almostLinear", { type = "bezier", points = { {0.5,  0.5}, {0.75, 1}   } })
 hl.curve("quick",        { type = "bezier", points = { {0.15, 0},   {0.1,  1}   } })
 
+-- Material 3 (Caelestia's set; the same curves the shell's Anim tokens use, so windows and
+-- panels move as one system): arrivals decelerate, departures accelerate, the rest is standard.
+hl.curve("emphasizedDecel",   { type = "bezier", points = { {0.05, 0.7}, {0.1, 1}    } })
+hl.curve("emphasizedAccel",   { type = "bezier", points = { {0.3,  0},   {0.8, 0.15} } })
+hl.curve("standard",          { type = "bezier", points = { {0.2,  0},   {0,   1}    } })
+hl.curve("specialWorkSwitch", { type = "bezier", points = { {0.05, 0.7}, {0.1, 1}    } })
+
 -- Springs. Damping ratio ζ = damping / (2·√(stiffness·mass)); ζ = 1 is no overshoot.
 --   glide  ζ ≈ 0.92: soft, settles without a visible bounce (windows opening, moving, resizing)
 --   swift  ζ ≈ 0.95: stiffer and faster, for tiling reflows that should feel snappy

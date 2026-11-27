@@ -16,8 +16,8 @@ Rectangle {
     color: on ? Atelier.accentFill : Qt.alpha(Atelier.text, 0.16)
     border.width: 1
     border.color: on ? Qt.alpha(Atelier.accent, 0.55) : Qt.alpha(Atelier.text, 0.14)
-    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-    Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
+    Behavior on color { CAnim {} }
+    Behavior on border.color { CAnim {} }
 
     readonly property real inset: 4                   // knob to track edge, all round
     Rectangle {
@@ -31,9 +31,9 @@ Rectangle {
         color: ts.on ? Atelier.onFill : Qt.alpha(Atelier.text, 0.78)
         border.width: 1
         border.color: Qt.rgba(0, 0, 0, 0.12)
-        Behavior on x { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
-        Behavior on width { NumberAnimation { duration: Atelier.durFast } }
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+        Behavior on x { Anim { type: "fastSpatial" } }
+        Behavior on width { Anim { type: "fastSpatial" } }
+        Behavior on color { CAnim {} }
     }
     MouseArea { id: ma; anchors.fill: parent; enabled: ts.enabled; cursorShape: Qt.PointingHandCursor; onClicked: ts.toggled() }
 }

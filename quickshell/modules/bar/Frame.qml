@@ -85,7 +85,7 @@ Scope {
             property color fill: Atelier.surface
             anchors.fill: parent
             preferredRendererType: Shape.CurveRenderer
-            Behavior on fill { ColorAnimation { duration: 300 } }
+            Behavior on fill { CAnim {} }
 
             readonly property real x0: Atelier.insetLeft
             readonly property real y0: Atelier.insetTop

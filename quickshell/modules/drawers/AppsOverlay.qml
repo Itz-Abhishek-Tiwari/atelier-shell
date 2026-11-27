@@ -225,7 +225,7 @@ Item {
                 Layout.preferredHeight: 30
                 spacing: 6
                 opacity: root.query ? 0.35 : 1
-                Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                Behavior on opacity { Anim { type: "effects" } }
                 Repeater {
                     model: root.tabs
                     Rectangle {
@@ -234,8 +234,9 @@ Item {
                         width: tabLabel.implicitWidth + 26
                         height: 30
                         radius: Atelier.radiusMd
-                        color: on ? Qt.alpha(modelData.tint, 0.18) : (tabMa.containsMouse ? Atelier.container : "transparent")
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        color: on ? Qt.alpha(modelData.tint, 0.18) : "transparent"
+                        Behavior on color { CAnim {} }
+                        StateLayer { mouseArea: tabMa }
                         Text {
                             id: tabLabel
                             anchors.centerIn: parent
@@ -244,6 +245,7 @@ Item {
                             font.pixelSize: Atelier.fsMd
                             font.weight: parent.on ? Font.DemiBold : Font.Normal
                             color: parent.on ? parent.modelData.tint : Atelier.subtext
+                            Behavior on color { CAnim {} }
                         }
                         MouseArea {
                             id: tabMa
@@ -320,8 +322,9 @@ Item {
             anchors.fill: parent
             anchors.margins: 3
             radius: Atelier.radiusMd
-            color: cell.current ? Atelier.containerHigh : (cellMa.containsMouse ? Atelier.container : "transparent")
-            Behavior on color { ColorAnimation { duration: 100 } }
+            color: cell.current ? Atelier.containerHigh : "transparent"
+            Behavior on color { CAnim {} }
+            StateLayer { mouseArea: cellMa }
         }
 
         Item {
@@ -331,7 +334,7 @@ Item {
             anchors.horizontalCenter: parent.horizontalCenter
             y: 12
             scale: cellMa.pressed ? 0.9 : 1
-            Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+            Behavior on scale { Anim { type: "fastSpatial" } }
             readonly property string src: cell.app ? root.iconFor(cell.app) : ""
             IconImage { anchors.fill: parent; visible: iconBox.src !== ""; source: iconBox.src; asynchronous: true }
             Rectangle {   // letter tile when the theme lacks the icon
@@ -360,6 +363,7 @@ Item {
             font.family: Atelier.fontUi
             font.pixelSize: Atelier.fsSm
             color: cell.current ? Atelier.text : Atelier.subtext
+            Behavior on color { CAnim {} }
             wrapMode: Text.Wrap
             maximumLineCount: 2
             elide: Text.ElideRight

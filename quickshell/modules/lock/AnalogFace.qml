@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell.Widgets
+import qs.components
 import qs.config
 import qs.services
 
@@ -163,7 +164,7 @@ Item {
                             width: 16 * root.u; height: width; radius: Atelier.rounding > 0 ? width / 2 : 0; color: root.ink
                             scale: 0
                             Component.onCompleted: scale = 1
-                            Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack } }
+                            Behavior on scale { Anim { type: "fastSpatial" } }
                         }
                     }
                 }
@@ -177,13 +178,14 @@ Item {
                 }
                 Rectangle { anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom; height: 3 * root.u
                     color: root.lr.message ? Atelier.red : root.ink
-                    Behavior on color { ColorAnimation { duration: Atelier.durFast } } }
+                    Behavior on color { CAnim {} } }
             }
             Text {
                 width: parent.width; wrapMode: Text.WordWrap
                 text: root.lr.message ? root.lr.message : ph.capsOn ? "Caps Lock is on" : ph.isPreview ? "Preview · Esc to go back" : "Enter to unlock · Esc to go back"
                 font.family: ph.display; font.pixelSize: Atelier.fsLg * ph.ts * 1.1
                 color: root.lr.message ? Atelier.red : root.mute
+                Behavior on color { CAnim {} }
             }
         }
         AuthPower {

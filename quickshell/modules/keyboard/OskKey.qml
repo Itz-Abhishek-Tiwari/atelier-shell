@@ -1,4 +1,5 @@
 import QtQuick
+import qs.components
 import qs.config
 
 // One key of the on-screen keyboard. Fires `tapped()` on press (not release, so typing feels
@@ -17,12 +18,13 @@ Rectangle {
     signal tapped()
 
     radius: Atelier.radiusSm
-    color: active ? Qt.alpha(tint, 0.3) : (ma.pressed ? Atelier.containerHigh : (ma.containsMouse ? Atelier.containerHigh : Atelier.container))
+    color: active ? Qt.alpha(tint, 0.3) : (ma.pressed ? Atelier.containerHigh : Atelier.container)
+    StateLayer { mouseArea: ma }
     border.width: 1
     border.color: active ? Qt.alpha(tint, 0.7) : Atelier.outline
     scale: ma.pressed ? 0.94 : 1
-    Behavior on color { ColorAnimation { duration: 90 } }
-    Behavior on scale { NumberAnimation { duration: 80 } }
+    Behavior on color { CAnim {} }
+    Behavior on scale { Anim { type: "fastSpatial" } }
 
     Text {
         visible: key.sub !== ""
@@ -45,6 +47,7 @@ Rectangle {
         font.pixelSize: key.label.length > 2 ? 12 : key.labelSize
         font.weight: Font.DemiBold
         color: key.active ? key.tint : Atelier.text
+        Behavior on color { CAnim {} }
     }
 
     Timer { id: first; interval: 420; onTriggered: again.start() }

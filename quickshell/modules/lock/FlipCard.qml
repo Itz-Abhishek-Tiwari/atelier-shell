@@ -42,7 +42,7 @@ Item {
         PropertyAction { target: card; property: "aScale"; value: 1 }
         PropertyAction { target: card; property: "bScale"; value: 0 }
         NumberAnimation { target: card; property: "aScale"; to: 0; duration: 170; easing.type: Easing.InQuad }
-        NumberAnimation { target: card; property: "bScale"; to: 1; duration: 200; easing.type: Easing.OutQuad }
+        NumberAnimation { target: card; property: "bScale"; to: 1; duration: 200; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.standardDecel }
         ScriptAction { script: card.botText = card.text }
     }
 

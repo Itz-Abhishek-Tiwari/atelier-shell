@@ -409,9 +409,9 @@ Item {
                             anchors.rightMargin: 6
                             anchors.verticalCenter: parent.verticalCenter
                             color: eyeMa.containsMouse ? wifiOverlayRoot.colContainer : "transparent"
-                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                            Behavior on color { CAnim {} }
                             scale: eyeMa.pressed ? 0.86 : (eyeMa.containsMouse ? 1.18 : 1.0)
-                            Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+                            Behavior on scale { Anim { type: "fastSpatial" } }
 
                             Text {
                                 anchors.centerIn: parent
@@ -419,6 +419,7 @@ Item {
                                 font.family: Atelier.fontUi
                                 font.pixelSize: Atelier.fsXl
                                 color: wifiOverlayRoot.showPassword ? wifiOverlayRoot.colPrimary : wifiOverlayRoot.colSubtext
+                                Behavior on color { CAnim {} }
                             }
 
                             MouseArea {
@@ -442,7 +443,8 @@ Item {
                             Layout.fillWidth: true
                             height: 34
                             radius: Atelier.radiusMd
-                            color: cancelMa.containsMouse ? Atelier.hover : "transparent"
+                            color: "transparent"
+                            StateLayer { mouseArea: cancelMa }
 
                             Text {
                                 anchors.centerIn: parent
@@ -559,7 +561,7 @@ Item {
                                 anchors.fill: parent
                                 radius: Atelier.radiusSm
                                 color: netRowMa.containsMouse ? wifiOverlayRoot.colContainer : "transparent"
-                                Behavior on color { ColorAnimation { duration: 100 } }
+                                Behavior on color { CAnim {} }
                             }
 
                             RowLayout {
@@ -574,6 +576,7 @@ Item {
                                     font.family: wifiOverlayRoot.fontMono
                                     font.pixelSize: 14
                                     color: modelData.inUse ? wifiOverlayRoot.colPrimary : wifiOverlayRoot.colSubtext
+                                    Behavior on color { CAnim {} }
                                 }
 
                                 // Lock icon
@@ -592,6 +595,7 @@ Item {
                                     font.pixelSize: Atelier.fsMd
                                     font.bold: modelData.inUse
                                     color: modelData.inUse ? wifiOverlayRoot.colPrimary : wifiOverlayRoot.colText
+                                    Behavior on color { CAnim {} }
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                 }
@@ -612,6 +616,7 @@ Item {
                                         font.family: wifiOverlayRoot.fontMono
                                         font.pixelSize: Atelier.fsMd
                                         color: modelData.inUse ? wifiOverlayRoot.colOnPrimary : wifiOverlayRoot.colText
+                                        Behavior on color { CAnim {} }
                                     }
 
                                     MouseArea {

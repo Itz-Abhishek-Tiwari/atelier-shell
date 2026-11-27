@@ -178,7 +178,7 @@ ColumnLayout {
             color: Atelier.container
             border.width: inUse ? 2 : 1
             border.color: inUse ? Atelier.mauve : (hov.hovered ? Qt.alpha(Atelier.text, 0.25) : Atelier.outline)
-            Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
+            Behavior on border.color { CAnim {} }
             HoverHandler { id: hov }
 
             ClippingRectangle {

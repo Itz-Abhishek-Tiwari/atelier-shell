@@ -157,7 +157,8 @@ Item {
                     width: 28
                     height: 28
                     radius: Atelier.radiusMd
-                    color: prevMa.containsMouse ? Atelier.hover : "transparent"
+                    color: "transparent"
+                    StateLayer { mouseArea: prevMa }
 
                     Text {
                         anchors.centerIn: parent
@@ -204,7 +205,8 @@ Item {
                     width: 28
                     height: 28
                     radius: Atelier.radiusMd
-                    color: nextMa.containsMouse ? Atelier.hover : "transparent"
+                    color: "transparent"
+                    StateLayer { mouseArea: nextMa }
 
                     Text {
                         anchors.centerIn: parent
@@ -242,6 +244,7 @@ Item {
                             font.pixelSize: Atelier.fsMicro
                             font.bold: true
                             color: calOverlayRoot.isLight ? Atelier.overlay1 : Atelier.subtext
+                            Behavior on color { CAnim {} }
                         }
                     }
                 }
@@ -319,6 +322,7 @@ Item {
                         font.family: calOverlayRoot.fontMono
                         font.pixelSize: Atelier.fsMd
                         color: calOverlayRoot.isLight ? Atelier.blue : Atelier.sky
+                        Behavior on color { CAnim {} }
                     }
 
                     Text {

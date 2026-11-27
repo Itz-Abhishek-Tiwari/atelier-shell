@@ -388,8 +388,9 @@ Scope {
                         implicitWidth: modeRow.implicitWidth + 24
                         implicitHeight: 38
                         radius: 19
-                        color: on ? Atelier.accentFill : (modeMa.containsMouse ? Atelier.containerHigh : Atelier.container)
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        color: on ? Atelier.accentFill : Atelier.container
+                        Behavior on color { CAnim {} }
+                        StateLayer { mouseArea: modeMa }
                         RowLayout {
                             id: modeRow
                             anchors.centerIn: parent
@@ -408,10 +409,11 @@ Scope {
                     implicitWidth: recRow.implicitWidth + 22
                     implicitHeight: 38
                     radius: 19
-                    color: root.recordMode ? Qt.alpha(Atelier.red, 0.22) : (recMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+                    color: root.recordMode ? Qt.alpha(Atelier.red, 0.22) : Atelier.container
+                    StateLayer { mouseArea: recMa }
                     border.width: root.recordMode ? 1 : 0
                     border.color: Qt.alpha(Atelier.red, 0.6)
-                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                    Behavior on color { CAnim {} }
                     RowLayout {
                         id: recRow
                         anchors.centerIn: parent
@@ -428,7 +430,8 @@ Scope {
                     implicitWidth: editRow.implicitWidth + 22
                     implicitHeight: 38
                     radius: 19
-                    color: root.editAfter ? Qt.alpha(Atelier.yellow, 0.25) : (editMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+                    color: root.editAfter ? Qt.alpha(Atelier.yellow, 0.25) : Atelier.container
+                    StateLayer { mouseArea: editMa }
                     border.width: root.editAfter ? 1 : 0
                     border.color: Qt.alpha(Atelier.yellow, 0.6)
                     RowLayout {

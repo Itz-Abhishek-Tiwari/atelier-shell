@@ -7,10 +7,6 @@
 --           shorter, low-travel window animations (M.motion.dev), no dimming
 --   game    maximum performance: no blur, no shadows, no animations, opaque windows,
 --           tearing allowed for fullscreen games
---   showcase everything on, performance be damned: full blur (3+ passes), shadows, glass
---           windows, plus the hyprimate plugin's shader animations (liquid / cloth / paper /
---           swarm / bubble windows, optional workspace transitions). Loaded only in this mode
---           and unloaded when you leave it. Needs the plugin built by `setup/hyprimate.sh`.
 --   saver   battery saver: the least the compositor can draw: no blur, no shadows, NO
 --           animations at all, no dimming, opaque windows (nothing is blended). Kept across logins.
 --
@@ -67,10 +63,6 @@ M.defaults = {
         dev  = { opaque = true, dim = false, blur = "light", shadows = true, animations = true, anim_speed = 0.6 },
         game = { opaque = true, blur = "off", shadows = false, animations = false, tearing = true },
         saver = { opaque = true, dim = false, blur = "off", shadows = false },
-        -- window_style: liquid | cloth | paper | swarm | bubble | smoke | burn | construction
-        -- workspace_style: off | rotation | planet_hop | cube | lava
-        showcase = { window_style = "liquid", workspace_style = "off", blur_passes = 2,
-                     strength = 0.65, duration = 0, on_open = true, on_close = true, on_move = false },
     },
     -- Settings → Displays (conf/monitors.lua): one hl.monitor spec per output
     monitors = {
@@ -98,7 +90,7 @@ function M.saved_mode()
     f:close()
     local mode = raw:match('"mode"%s*:%s*"(%a+)"')
     if mode == "dev" or mode == "saver" then return mode end
-    if (mode == "game" or mode == "showcase") and raw:match('"session"%s*:%s*"([^"]*)"') == os.getenv("HYPRLAND_INSTANCE_SIGNATURE") then
+    if mode == "game" and raw:match('"session"%s*:%s*"([^"]*)"') == os.getenv("HYPRLAND_INSTANCE_SIGNATURE") then
         return mode
     end
     return "normal"
@@ -108,8 +100,8 @@ end
 -- Each leaf is { speed, curve, style }; Hyprland "speed" is in 100 ms units (smaller = faster),
 -- `false` turns that leaf off. Springs (glide, swift) are near-critically damped: no wobble.
 --
---   normal  glide: windows grow in on a soft spring, workspaces slide with a long ease-out
---           tail, things leave quickly and quietly
+--   normal  Caelestia / Material 3: windows decelerate in (emphasizedDecel), accelerate out
+--           (emphasizedAccel), moves, fades and workspaces on the standard curve
 --   dev     crisp: the same timing scaled by Settings → Modes → "Animation length", but with
 --           less travel (windows barely scale, workspaces slide 5 %) and no soft tails, so
 --           motion never pulls your eye off the code
@@ -117,23 +109,26 @@ end
 --           scales (a moving window makes the compositor redraw the whole game every frame)
 local springs = { glide = true, swift = true }
 M.motion = {
+    -- normal: Caelestia's Hyprland motion (Material 3), matched to the shell's Anim tokens.
+    -- Layers fade rather than slide: the shell re-maps its own frame / drawer surfaces (glass
+    -- changes), and a slide would make the bar visibly move on those re-maps.
     normal = {
-        windowsIn        = { 4.2, "glide",        "popin 92%" },
-        windowsOut       = { 1.8, "easeInSoft",   "popin 94%" },
-        windowsMove      = { 3.8, "swift" },
-        fadeIn           = { 2.2, "almostLinear" },
-        fadeOut          = { 1.6, "almostLinear" },
-        fadeSwitch       = { 3.0, "quick" },
-        fadeShadow       = { 3.0, "quick" },
-        fadeDim          = { 3.5, "almostLinear" },
-        border           = { 4.0, "easeOutQuint" },
-        layersIn         = { 3.2, "easeOutQuint", "fade" },
-        layersOut        = { 1.6, "easeInSoft",   "fade" },
-        fadeLayersIn     = { 2.0, "almostLinear" },
-        fadeLayersOut    = { 1.4, "almostLinear" },
-        workspaces       = { 4.2, "easeOutExpo",  "slidefade 12%" },
-        specialWorkspace = { 4.0, "easeOutExpo",  "slidefadevert 12%" },
-        zoomFactor       = { 5.0, "easeOutQuint" },
+        windowsIn        = { 5.0, "emphasizedDecel", "popin 92%" },
+        windowsOut       = { 3.0, "emphasizedAccel", "popin 94%" },
+        windowsMove      = { 6.0, "standard" },
+        fadeIn           = { 6.0, "standard" },
+        fadeOut          = { 6.0, "standard" },
+        fadeSwitch       = { 6.0, "standard" },
+        fadeShadow       = { 6.0, "standard" },
+        fadeDim          = { 6.0, "standard" },
+        border           = { 6.0, "standard" },
+        layersIn         = { 5.0, "emphasizedDecel", "fade" },
+        layersOut        = { 4.0, "emphasizedAccel", "fade" },
+        fadeLayersIn     = { 5.0, "standard" },
+        fadeLayersOut    = { 4.0, "standard" },
+        workspaces       = { 5.0, "standard", "slide" },
+        specialWorkspace = { 4.0, "specialWorkSwitch", "slidefadevert 15%" },
+        zoomFactor       = { 5.0, "emphasizedDecel" },
     },
     dev = {
         windowsIn        = { 3.0, "swift",        "popin 97%" },
@@ -199,64 +194,10 @@ local function mode_opts(t, name)
     return r
 end
 
--- hyprimate (https://github.com/JustinBacher/hyprimate): a compositor plugin, built by
--- setup/hyprimate.sh into ~/.local/lib/atelier/hyprimate.so. Only Showcase mode loads it.
--- hl.plugin.load works only while the config is read, so (like hyprbars in conf/traditional.lua)
--- it is loaded from outside and the mode applied again once it is in.
-local HYPRIMATE = HOME .. "/.local/lib/atelier/hyprimate.so"
-function M.hyprimate(want, o)
-    -- hyprimate adds no hl.plugin.* namespace; its options only exist while it is loaded
-    local loaded = hl.get_config("plugin:hyprimate:window:style") ~= nil
-    if not want then
-        if loaded then hl.exec_cmd("hyprctl plugin unload " .. HYPRIMATE) end
-        return
-    end
-    local f = io.open(HYPRIMATE, "r")
-    if not f then
-        hl.notification.create({ text = "Showcase: hyprimate is not built (run setup/hyprimate.sh)", timeout = 6000 })
-        return
-    end
-    f:close()
-    if not loaded then
-        hl.exec_cmd("sh -c 'hyprctl plugin load " .. HYPRIMATE .. " >/dev/null && hyprctl eval \"atelier_mode_reapply()\" >/dev/null'")
-        return
-    end
-    local ws = o.workspace_style
-    local cfg = { window = { enabled = true, style = o.window_style or "liquid" }, workspace = { enabled = ws ~= nil and ws ~= "off" } }
-    if cfg.workspace.enabled then cfg.workspace.style = ws end
-    cfg.window.open     = { enabled = o.on_open ~= false }
-    cfg.window.close    = { enabled = o.on_close ~= false }
-    cfg.window.movement = { enabled = o.on_move ~= false }
-    hl.config({ plugin = { hyprimate = cfg } })
-    -- per-style knobs: not every style has every option, so each goes in on its own
-    local style = cfg.window.style
-    local function opt(key, value)
-        pcall(hl.config, { plugin = { hyprimate = { window = { options = { [style] = { [key] = value } } } } } })
-    end
-    if tonumber(o.strength) then opt("strength", tonumber(o.strength)) end
-    if (tonumber(o.duration) or 0) > 0 then opt("duration", tonumber(o.duration)) end
-end
-function atelier_mode_reapply() if atelier_mode == "showcase" then M.apply("showcase") end end
-
 function M.apply(mode)
     local t = M.settings()
     atelier_mode = mode      -- global: Settings' live apply re-applies the current mode after it
-    if mode ~= "showcase" then M.hyprimate(false) end
-    if mode == "showcase" then
-        local o = mode_opts(t, "showcase")
-        pcall(hl.config, { decoration = { wobble = { enabled = false } } })   -- conflicts with hyprimate
-        hl.config({
-            general    = { allow_tearing = false },
-            decoration = {
-                active_opacity = t.active_opacity, inactive_opacity = t.inactive_opacity, dim_inactive = t.dim_inactive,
-                blur = { enabled = true, passes = math.max(t.blur_passes, tonumber(o.blur_passes) or 2) },
-                shadow = { enabled = true },
-            },
-            animations = { enabled = true },
-        })
-        M.animations("normal", 1)   -- the plugin takes over window open / close / move; the rest stays glide
-        M.hyprimate(true, o)
-    elseif mode == "game" or mode == "dev" or mode == "saver" then
+    if mode == "game" or mode == "dev" or mode == "saver" then
         local o = mode_opts(t, mode)
         local blur = { enabled = o.blur ~= "off" and t.blur }
         if o.blur == "light" then blur.passes = 1 elseif o.blur == "normal" then blur.passes = t.blur_passes end

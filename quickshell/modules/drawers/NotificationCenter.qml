@@ -99,6 +99,7 @@ Item {
                         font.pixelSize: Atelier.fsMd
                         font.weight: Font.Medium
                         color: clearMa.containsMouse ? Atelier.text : Atelier.subtext
+                        Behavior on color { CAnim {} }
                         MouseArea { id: clearMa; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Notifs.clearAll() }
                     }
                 }
@@ -153,6 +154,7 @@ Item {
                     text: "Show " + root.hiddenCount + " more"
                     font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.Medium
                     color: moreMa.containsMouse ? Atelier.text : Atelier.subtext
+                    Behavior on color { CAnim {} }
                     MouseArea { id: moreMa; anchors.fill: parent; anchors.margins: -8; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         onClicked: root.showAll = true }
                 }
@@ -167,8 +169,9 @@ Item {
         property bool active: false
         signal clicked()
         implicitWidth: 26; implicitHeight: 26; radius: 13
-        color: active ? Qt.alpha(Atelier.accent, 0.16) : rbMa.containsMouse ? Atelier.containerHigh : "transparent"
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+        color: active ? Qt.alpha(Atelier.accent, 0.16) : "transparent"
+        Behavior on color { CAnim {} }
+        StateLayer { mouseArea: rbMa }
         Text { anchors.centerIn: parent; text: rb.icon; font.family: Atelier.font; font.pixelSize: 13
             color: rb.active ? Atelier.accent : rbMa.containsMouse ? Atelier.text : Atelier.subtext }
         MouseArea { id: rbMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: rb.clicked() }

@@ -13,12 +13,13 @@ Rectangle {
     implicitWidth: cpRow.implicitWidth + 24
     implicitHeight: 30
     radius: Atelier.radiusMd
-    color: on ? Atelier.accentFill : (cpMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+    color: on ? Atelier.accentFill : Atelier.container
     border.width: on ? 0 : 1
     border.color: Atelier.outline
-    scale: cpMa.pressed ? 0.95 : 1
-    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-    Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+    scale: cpMa.pressed ? 0.96 : 1
+    Behavior on color { CAnim {} }
+    Behavior on scale { Anim { type: "fastSpatial" } }
+    StateLayer { mouseArea: cpMa; color: cp.on ? Atelier.onFill : Atelier.text }
     Row {
         id: cpRow
         anchors.centerIn: parent

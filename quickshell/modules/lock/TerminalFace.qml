@@ -1,4 +1,5 @@
 import QtQuick
+import qs.components
 import qs.config
 import qs.services
 
@@ -127,6 +128,7 @@ Item {
             text: root.lr.checking ? "checking..." : root.lr.message ? "Sorry, try again.  (" + root.lr.message + ")" : ph.capsOn ? "warning: Caps Lock is on" : ""
             font.family: root.mono; font.pixelSize: Atelier.fsXl * ph.ts * 1.7
             color: root.lr.message ? Atelier.red : root.lr.checking ? Atelier.accent : Atelier.yellow
+            Behavior on color { CAnim {} }
         }
         Text {
             text: ph.isPreview ? "# preview: esc to go back" : "# enter to submit, esc to cancel"

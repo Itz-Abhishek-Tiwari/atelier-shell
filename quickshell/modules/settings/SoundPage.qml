@@ -151,7 +151,7 @@ ColumnLayout {
             Rectangle {
                 implicitWidth: 34; implicitHeight: 34; radius: Atelier.radiusLg
                 color: vr.muted ? Qt.alpha(Atelier.red, 0.16) : Qt.alpha(Atelier.accent, 0.14)
-                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                Behavior on color { CAnim {} }
                 Text { anchors.centerIn: parent; text: vr.muted ? (vr.input ? "󰍭" : "󰝟") : vr.icon
                     font.family: Atelier.font; font.pixelSize: Atelier.fsXl; color: vr.muted ? Atelier.red : Atelier.accent }
                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; enabled: vr.ok

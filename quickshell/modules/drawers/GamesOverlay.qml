@@ -200,7 +200,7 @@ Item {
                     color: Atelier.container
                     border.width: 1
                     border.color: searchField.activeFocus ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
-                    Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
+                    Behavior on border.color { CAnim {} }
                     RowLayout {
                         anchors.fill: parent
                         anchors.leftMargin: 14
@@ -314,8 +314,8 @@ Item {
                         radius: height / 2
                         color: playMa.containsMouse ? Qt.lighter(Atelier.accentFill, 1.08) : Atelier.accentFill
                         scale: playMa.pressed ? 0.94 : (playMa.containsMouse ? 1.04 : 1)
-                        Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        Behavior on scale { Anim { type: "fastSpatial" } }
+                        Behavior on color { CAnim {} }
                         RowLayout {
                             id: playRow
                             anchors.centerIn: parent
@@ -364,7 +364,7 @@ Item {
                         scrollAnim.to = Math.max(0, Math.min(target, Math.max(0, contentHeight - height)));
                         scrollAnim.restart();
                     }
-                    NumberAnimation { id: scrollAnim; target: grid; property: "contentY"; duration: Atelier.durFast; easing.type: Easing.OutCubic }
+                    NumberAnimation { id: scrollAnim; target: grid; property: "contentY"; duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel }
                     Keys.onLeftPressed: go(currentIndex - 1)
                     Keys.onRightPressed: go(currentIndex + 1)
                     Keys.onUpPressed: { if (currentIndex < cols) searchField.forceActiveFocus(); else go(currentIndex - cols); }
@@ -399,7 +399,7 @@ Item {
                             anchors.fill: parent
                             anchors.margins: 6
                             scale: tileMa.pressed ? 0.96 : (tileMa.containsMouse ? 1.03 : 1)
-                            Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+                            Behavior on scale { Anim { type: "fastSpatial" } }
 
                             Poster { anchors.fill: parent; game: tile.modelData; radius: Atelier.radiusMd }
 
@@ -412,7 +412,7 @@ Item {
                                 border.width: 2
                                 border.color: Atelier.accent
                                 opacity: tile.isCurrent ? 1 : 0
-                                Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                                Behavior on opacity { Anim { type: "effects" } }
                             }
                         }
                         MouseArea {
@@ -467,8 +467,9 @@ Item {
         implicitWidth: plRow.implicitWidth + 22
         implicitHeight: 30
         radius: Atelier.radiusMd
-        color: on ? Atelier.accentFill : (plMa.containsMouse ? Atelier.containerHigh : Atelier.container)
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+        color: on ? Atelier.accentFill : Atelier.container
+        Behavior on color { CAnim {} }
+        StateLayer { mouseArea: plMa }
         Row {
             id: plRow
             anchors.centerIn: parent
@@ -511,6 +512,7 @@ Item {
                     text: po.game ? po.game.title.charAt(0).toUpperCase() : ""
                     font.family: Atelier.fontUi; font.pixelSize: Math.round(po.width * 0.36); font.weight: Font.DemiBold
                     color: po.game ? gv.tintFor(po.game.source) : Atelier.accent
+                    Behavior on color { CAnim {} }
                 }
                 Text {
                     Layout.fillWidth: true
@@ -553,7 +555,7 @@ Item {
             maskThresholdMin: 0.5
             maskSpreadAtMin: 1.0
             opacity: po.ready ? 1 : 0
-            Behavior on opacity { NumberAnimation { duration: Atelier.durMedium } }
+            Behavior on opacity { Anim { type: "slowEffects" } }
         }
     }
 }

@@ -13,7 +13,7 @@ Rectangle {
         width: Math.max(parent.height, parent.width * Math.min(1, Math.max(0, lb.value)))
         height: parent.height
         radius: parent.radius
-        Behavior on width { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
+        Behavior on width { Anim { type: "spatial" } }
         gradient: Gradient {
             orientation: Gradient.Horizontal
             GradientStop { position: 0; color: Qt.alpha(lb.tint, 0.55) }

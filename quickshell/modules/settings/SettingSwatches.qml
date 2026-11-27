@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import qs.components
 import qs.config
 import qs.services
 
@@ -104,7 +105,8 @@ Item {
             // pick from the screen
             Rectangle {
                 implicitWidth: 30; implicitHeight: 30; radius: Atelier.radiusLg
-                color: root.awaitingPick ? Qt.alpha(Atelier.accent, 0.16) : (pkMa.containsMouse ? Atelier.containerHigh : "transparent")
+                color: root.awaitingPick ? Qt.alpha(Atelier.accent, 0.16) : "transparent"
+                StateLayer { mouseArea: pkMa }
                 Text { anchors.centerIn: parent; text: "󰈊"; font.family: Atelier.font; font.pixelSize: 14
                        color: root.awaitingPick ? Atelier.accent : (pkMa.containsMouse ? Atelier.text : Atelier.subtext) }
                 MouseArea { id: pkMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
@@ -135,7 +137,7 @@ Item {
                         anchors.centerIn: parent
                         width: 20; height: 20; radius: Atelier.radiusSm
                         scale: swMa.containsMouse && !sw.on ? 1.15 : 1
-                        Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+                        Behavior on scale { Anim { type: "fastSpatial" } }
                         border.width: 1
                         border.color: Atelier.outline
                         color: sw.id_ === "text" ? Atelier.text
@@ -148,6 +150,7 @@ Item {
                             text: sw.id_ === "auto" ? "A" : "T"
                             font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMicro; font.weight: Font.Bold
                             color: sw.id_ === "text" ? Atelier.base : Atelier.text
+                            Behavior on color { CAnim {} }
                         }
                     }
                     MouseArea {

@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import qs.components
 import qs.config
 
 // Sleep / restart / power buttons for a custom password screen (power asks once).
@@ -30,7 +31,7 @@ Row {
                 width: 56 * row.ph.u; height: width
                 radius: row.btnRadius < 0 ? width / 2 : row.btnRadius
                 color: pwMa.containsMouse ? Qt.alpha(row.ink, 0.22) : row.fill
-                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                Behavior on color { CAnim {} }
                 Text { anchors.centerIn: parent; text: pw.modelData.icon; font.family: Atelier.font; font.pixelSize: Atelier.fsXl * row.ph.ts * 1.3; color: row.ink }
                 MouseArea {
                     id: pwMa

@@ -1,4 +1,5 @@
 import QtQuick
+import qs.components
 import qs.config
 import qs.services
 
@@ -41,7 +42,7 @@ Item {
         anchors.fill: parent
         opacity: root.a ? 0 : 1
         visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: root.dur; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: root.dur; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel } }
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             y: root.height / 2 - cards.height / 2 - 70 * root.u + cards.height + 56 * root.u
@@ -71,7 +72,7 @@ Item {
         anchors.fill: parent
         opacity: root.a ? 1 : 0
         visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: root.dur; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: root.dur; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel } }
 
         Column {
             anchors.horizontalCenter: parent.horizontalCenter
@@ -115,7 +116,7 @@ Item {
                             font.family: ph.display; font.pixelSize: 40 * root.u; color: Atelier.text
                             scale: 0
                             Component.onCompleted: scale = 1
-                            Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack } }
+                            Behavior on scale { Anim { type: "fastSpatial" } }
                         }
                         Rectangle { y: parent.height / 2 - 1.5 * root.u; width: parent.width; height: 3 * root.u; color: Atelier.crust }
                         // the empty tile blinks like a cursor
@@ -135,6 +136,7 @@ Item {
                       : ph.isPreview ? "PREVIEW · ESC TO GO BACK" : "ENTER TO UNLOCK · ESC TO GO BACK").toUpperCase()
                 font.family: ph.display; font.pixelSize: Atelier.fsMd * ph.ts * 1.15; font.weight: Font.Medium; font.letterSpacing: 6 * root.u
                 color: root.lr.message ? Atelier.red : ph.capsOn ? Atelier.yellow : Atelier.subtext
+                Behavior on color { CAnim {} }
             }
         }
     }

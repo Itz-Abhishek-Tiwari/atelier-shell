@@ -8,6 +8,7 @@ import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
 import Quickshell.Services.SystemTray
 import Quickshell.Bluetooth
+import qs.components
 import qs.config
 import qs.services
 
@@ -188,7 +189,7 @@ Item {
             iconColor: Atelier.accent
             active: bar.activeOverlay === "apps"
             rotation: bar.activeOverlay === "apps" ? 180 : 0
-            Behavior on rotation { NumberAnimation { duration: 420; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
+            Behavior on rotation { Anim { type: "spatial" } }
             onClicked: bar.openLauncher()
         }
 
@@ -209,7 +210,7 @@ Item {
                     readonly property bool isOccupied: !!(ws && ws.toplevels.values.length > 0)
                     width: isActive ? 26 : 14
                     height: 22
-                    Behavior on width { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
+                    Behavior on width { Anim { type: "spatial" } }
                     Rectangle {
                         anchors.centerIn: parent
                         width: flatWs.isActive ? 18 : 6
@@ -217,7 +218,7 @@ Item {
                         radius: 3
                         color: flatWs.isActive ? Atelier.accent : Atelier.text
                         opacity: flatWs.isActive ? 1 : flatWs.isOccupied ? 0.75 : 0.28
-                        Behavior on width { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
+                        Behavior on width { Anim { type: "spatial" } }
                     }
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: bar.goToWorkspace(flatWs.wsId) }
                 }
@@ -284,7 +285,7 @@ Item {
                             radius: Atelier.radiusSm
                             color: Atelier.containerHigh
                             opacity: wsMa.containsMouse && !wsCell.isActive ? 1 : 0
-                            Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                            Behavior on opacity { Anim { type: "effects" } }
                         }
 
                         IconImage {
@@ -314,7 +315,7 @@ Item {
                             radius: 3
                             color: Atelier.overlay1
                             opacity: wsMa.containsMouse ? 0.95 : 0.65
-                            Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                            Behavior on opacity { Anim { type: "effects" } }
                         }
 
                         Rectangle {   // urgent
@@ -424,7 +425,7 @@ Item {
                 color: Atelier.subtext
                 elide: Text.ElideRight
                 opacity: text ? 0.9 : 0
-                Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                Behavior on opacity { Anim { type: "effects" } }
             }
             Text {
                 visible: !bar.vertical && !Atelier.flatBar
@@ -437,7 +438,7 @@ Item {
                 color: Atelier.subtext
                 elide: Text.ElideRight
                 opacity: text ? 0.9 : 0
-                Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                Behavior on opacity { Anim { type: "effects" } }
             }
         }
 
@@ -500,7 +501,8 @@ Item {
                     Rectangle {
                         anchors.fill: parent
                         radius: Atelier.radiusMd
-                        color: trayMa.containsMouse ? Atelier.containerHigh : "transparent"
+                        color: "transparent"
+                        StateLayer { mouseArea: trayMa }
                     }
                     IconImage {
                         anchors.centerIn: parent
@@ -771,6 +773,7 @@ Item {
                         font.family: Atelier.font
                         font.pixelSize: Atelier.fsXl
                         color: bar.charging ? Atelier.green : bar.batPct <= 0.15 ? Atelier.red : Atelier.text
+                        Behavior on color { CAnim {} }
                     }
                     Text {
                         text: Math.round(bar.batPct * 100)
@@ -834,7 +837,7 @@ Item {
         color: highlighted ? Qt.alpha(Atelier.accent, 0.18) : bar.pillFill
         border.width: bar.pillEdge.a > 0 ? bar.pillBorder : 0
         border.color: bar.pillEdge
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+        Behavior on color { CAnim {} }
 
         MouseArea {
             anchors.fill: parent
@@ -869,8 +872,9 @@ Item {
         Rectangle {
             anchors.fill: parent
             radius: width / 2
-            color: bi.active ? Qt.alpha(Atelier.accent, 0.25) : (biMa.containsMouse ? Atelier.containerHigh : "transparent")
-            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+            color: bi.active ? Qt.alpha(Atelier.accent, 0.25) : "transparent"
+            Behavior on color { CAnim {} }
+            StateLayer { mouseArea: biMa }
         }
         Text {
             anchors.centerIn: parent
@@ -879,7 +883,7 @@ Item {
             font.pixelSize: bi.size
             color: bi.iconColor
             scale: biMa.pressed ? 0.85 : (biMa.containsMouse ? 1.15 : 1)
-            Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
+            Behavior on scale { Anim { type: "fastSpatial" } }
         }
         MouseArea {
             id: biMa
