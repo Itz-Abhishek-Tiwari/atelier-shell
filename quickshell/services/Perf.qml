@@ -16,9 +16,6 @@ import qs.config
 //   saver   battery saver: opaque windows, no blur / shadows / animations / dimming, the
 //           power-saver profile, desktop widgets and the shell's shadows are not drawn. The
 //           biggest wins for battery life; kept across logins.
-//   showcase everything on, performance be damned: full blur, shadows, glass, and the hyprimate
-//           plugin's shader window animations (liquid, cloth, paper, swarm, bubble…). Per
-//           session like Game mode (the plugin is not loaded at login).
 //   game    maximum performance: no blur / shadows / animations, opaque windows, tearing
 //           allowed, performance power profile, Do Not Disturb, screen stays awake, desktop
 //           widgets and the shell's shadows are not drawn
@@ -27,25 +24,23 @@ import qs.config
 // With Settings > Behavior > "Game mode automatically", opening a game (Steam, gamescope,
 // Lutris, Heroic, ...) switches to Game mode and closing it switches back.
 //
-//   qs ipc call mode set game|dev|saver|showcase|normal     qs ipc call mode cycle|toggleGame|toggleDev|toggleSaver|toggleShowcase|get
+//   qs ipc call mode set game|dev|saver|normal     qs ipc call mode cycle|toggleGame|toggleDev|toggleSaver|get
 Singleton {
     id: root
 
-    property string mode: "normal"                       // normal | game | dev | saver | showcase
+    property string mode: "normal"                       // normal | game | dev | saver
     readonly property bool game: mode === "game"
     readonly property bool dev: mode === "dev"
     readonly property bool saver: mode === "saver"
-    readonly property bool showcase: mode === "showcase"
-    readonly property string label: mode === "game" ? "Game mode" : mode === "dev" ? "Programming mode" : mode === "saver" ? "Battery saver" : mode === "showcase" ? "Showcase" : "Normal"
-    readonly property var modes: ["normal", "dev", "game", "saver", "showcase"]
+    readonly property string label: mode === "game" ? "Game mode" : mode === "dev" ? "Programming mode" : mode === "saver" ? "Battery saver" : "Normal"
+    readonly property var modes: ["normal", "dev", "game", "saver"]
     // what the mode pickers (Settings → Modes, control center) show for each mode.
     // cost: how heavy it is on the GPU, 1 (lightest) to 5, as a hint, not a measurement
     readonly property var info: [
         { id: "normal",   label: "Normal",        short: "Normal", icon: "󰖲", blurb: "Your own look",             cost: 3, tint: Atelier.green },
         { id: "dev",      label: "Programming",   short: "Coding", icon: "󰅩", blurb: "Crisp text, snappy",        cost: 2, tint: Atelier.sapphire },
         { id: "game",     label: "Game",          short: "Game",   icon: "󰊴", blurb: "Maximum performance",       cost: 1, tint: Atelier.peach },
-        { id: "saver",    label: "Battery saver", short: "Saver",  icon: "󰌪", blurb: "Longest battery life",      cost: 1, tint: Atelier.yellow },
-        { id: "showcase", label: "Showcase",      short: "Show",   icon: "󰔉", blurb: "Everything on, animated",   cost: 5, tint: Atelier.mauve }
+        { id: "saver",    label: "Battery saver", short: "Saver",  icon: "󰌪", blurb: "Longest battery life",      cost: 1, tint: Atelier.yellow }
     ]
     function infoOf(id) { return info.find(i => i.id === id) || info[0]; }
     // the shell side (Settings → Modes): the desktop widget, shell shadows / glass
@@ -89,7 +84,6 @@ Singleton {
     function toggleGame() { set(root.mode === "game" ? "normal" : "game"); }
     function toggleDev() { set(root.mode === "dev" ? "normal" : "dev"); }
     function toggleSaver() { set(root.mode === "saver" ? "normal" : "saver"); }
-    function toggleShowcase() { set(root.mode === "showcase" ? "normal" : "showcase"); }
 
     function _enter() {
         const m = root._pending;
@@ -172,7 +166,7 @@ Singleton {
         }));
     }
 
-    // Startup: make Hyprland match the shell. Programming and Saver mode are kept across logins; Game and Showcase mode
+    // Startup: make Hyprland match the shell. Programming and Saver mode are kept across logins; Game mode
     // only within the same Hyprland session (a shell restart mid-game stays in Game mode, a new
     // login goes back to Normal and undoes Game mode's side effects).
     function _restore(raw) {
@@ -185,7 +179,7 @@ Singleton {
             root._hasSaved = true;
         }
         const m = o ? o.mode : "normal";
-        if (m === "dev" || m === "saver" || ((m === "game" || m === "showcase") && o.session === root.session)) {
+        if (m === "dev" || m === "saver" || (m === "game" && o.session === root.session)) {
             root.mode = m;
             reapply.restart();   // deferred: right at startup the process can't run yet
             if (root.opt(m, "Caffeine")) Atelier.caffeine = true;   // caffeine doesn't survive a restart

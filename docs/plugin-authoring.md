@@ -221,7 +221,7 @@ Read-only data is safest. Calling functions on services you don't own can change
 | `Battery` | `present`, `pct` (0-100, -1 if none), `onBattery`, `timeLeft()` |
 | `SysState` | `wifiConnected`, `ssid`, `wifiSignal`, `wifiIcon`, `brightness` (0-1), `setBrightness(v)` |
 | `SysMon` | CPU/RAM/etc. in `d` (only while `active`), `cpuHist`, `netHist`, `fmtBytes(b)`, `fmtRate(b)` |
-| `Perf` | `mode` (`normal\|dev\|game\|saver\|showcase`), `game`, `saver`, `hideWidgets` |
+| `Perf` | `mode` (`normal\|dev\|game\|saver`), `game`, `saver`, `hideWidgets` |
 | `Wallpaper` | `current` (path), `next()`, `prev()`, `random()`, `set(path)` |
 | `Profile` | `login`, `realName`, `host`, `faceUrl` |
 | `NightLight` | `active`, `toggle()` |
