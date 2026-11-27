@@ -25,9 +25,14 @@ SettingRow {
             spacing: 2
             Repeater {
                 model: root.options
-                Rectangle {
+                ActionSurface {
+                    id: segment
                     required property var modelData
                     readonly property bool on: root.value === modelData.id
+                    accessibleLabel: modelData.label
+                    checkable: true
+                    checked: on
+                    onActivated: root.picked(modelData.id)
                     width: label.implicitWidth + 26
                     height: 26
                     radius: 13
@@ -39,12 +44,12 @@ SettingRow {
                         anchors.centerIn: parent
                         text: modelData.label
                         font.family: Atelier.fontUi
-                        font.pixelSize: Atelier.fsSm
+                        font.pixelSize: Atelier.fsMd
                         font.weight: Font.DemiBold
                         color: parent.on ? Atelier.onFill : Atelier.text
                         Behavior on color { CAnim {} }
                     }
-                    MouseArea { id: ma; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.picked(modelData.id) }
+                    MouseArea { id: ma; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: segment.activated() }
                 }
             }
         }

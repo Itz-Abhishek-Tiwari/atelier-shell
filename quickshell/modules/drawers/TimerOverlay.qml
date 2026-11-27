@@ -179,7 +179,7 @@ Item {
                                     Text { visible: !parent.text; anchors.verticalCenter: parent.verticalCenter
                                            text: "12m  or  5m tea"; font: entry.font; color: Atelier.subtext; opacity: 0.7 }
                                 }
-                                IconButton { icon: "󰐊"; size: 28; glyphSize: 13; active: entry.text.trim() !== ""; onClicked: root.startTyped() }
+                                IconButton { accessibleLabel: "Start timer"; icon: "󰐊"; size: 28; glyphSize: 13; active: entry.text.trim() !== ""; onClicked: root.startTyped() }
                             }
                         }
                         GridLayout {
@@ -261,10 +261,11 @@ Item {
                                                        text: (card.modelData.label ? card.modelData.label + "  ·  " : "") + Timers.fmt(card.modelData.total, false)
                                                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
                                             }
-                                            IconButton { icon: card.modelData.done ? "󰑐" : card.modelData.running ? "󰏤" : "󰐊"
+                                            IconButton { accessibleLabel: card.modelData.done ? "Restart timer" : card.modelData.running ? "Pause timer" : "Resume timer"
+                                                icon: card.modelData.done ? "󰑐" : card.modelData.running ? "󰏤" : "󰐊"
                                                          onClicked: Timers.toggle(card.modelData.id) }
-                                            IconButton { visible: !card.modelData.done; icon: "󰑙"; onClicked: Timers.restart(card.modelData.id) }
-                                            IconButton { icon: "󰅖"; hoverTint: Atelier.red; onClicked: Timers.remove(card.modelData.id) }
+                                            IconButton { accessibleLabel: "Restart timer"; visible: !card.modelData.done; icon: "󰑙"; onClicked: Timers.restart(card.modelData.id) }
+                                            IconButton { accessibleLabel: "Remove timer"; icon: "󰅖"; hoverTint: Atelier.red; onClicked: Timers.remove(card.modelData.id) }
                                         }
                                     }
                                 }
@@ -295,9 +296,9 @@ Item {
                         RowLayout {
                             Layout.alignment: Qt.AlignHCenter
                             spacing: 18
-                            IconButton { icon: "󰑙"; size: 40; glyphSize: 17; enabled: Timers.swElapsed > 0; onClicked: Timers.swReset() }
-                            PrimaryButton { icon: Timers.swRunning ? "󰏤" : "󰐊"; onClicked: Timers.swToggle() }
-                            IconButton { icon: "󰈻"; size: 40; glyphSize: 17; enabled: Timers.swRunning; onClicked: Timers.swLap() }
+                            IconButton { accessibleLabel: "Reset stopwatch"; icon: "󰑙"; size: 40; glyphSize: 17; enabled: Timers.swElapsed > 0; onClicked: Timers.swReset() }
+                            PrimaryButton { accessibleLabel: Timers.swRunning ? "Pause stopwatch" : "Start stopwatch"; icon: Timers.swRunning ? "󰏤" : "󰐊"; onClicked: Timers.swToggle() }
+                            IconButton { accessibleLabel: "Record lap"; icon: "󰈻"; size: 40; glyphSize: 17; enabled: Timers.swRunning; onClicked: Timers.swLap() }
                         }
                         Item { Layout.fillHeight: true }
                     }
@@ -392,9 +393,9 @@ Item {
                         RowLayout {
                             Layout.topMargin: 4
                             spacing: 14
-                            IconButton { icon: "󰑙"; size: 40; glyphSize: 17; onClicked: Timers.pomoReset() }
-                            PrimaryButton { icon: Timers.pomoRunning ? "󰏤" : "󰐊"; onClicked: Timers.pomoToggle() }
-                            IconButton { icon: "󰒭"; size: 40; glyphSize: 17; onClicked: Timers.pomoSkip() }
+                            IconButton { accessibleLabel: "Reset Pomodoro"; icon: "󰑙"; size: 40; glyphSize: 17; onClicked: Timers.pomoReset() }
+                            PrimaryButton { accessibleLabel: Timers.pomoRunning ? "Pause Pomodoro" : "Start Pomodoro"; icon: Timers.pomoRunning ? "󰏤" : "󰐊"; onClicked: Timers.pomoToggle() }
+                            IconButton { accessibleLabel: "Skip Pomodoro phase"; icon: "󰒭"; size: 40; glyphSize: 17; onClicked: Timers.pomoSkip() }
                             Item { implicitWidth: 6 }
                             ColumnLayout {
                                 spacing: 5

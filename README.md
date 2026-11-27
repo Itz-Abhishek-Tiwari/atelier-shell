@@ -179,6 +179,9 @@ qs ipc call mode set game|dev|saver|normal      # also: cycle, toggleGame, toggl
 | Action | How |
 |---|---|
 | Launcher | `SUPER + Space` |
+| Ask ChatGPT | Type `?? your question` in the launcher and press Enter. The answer appears in the launcher using your signed-in Codex CLI. |
+| Ask Claude | Type `??? your question` and press Enter to get an inline answer from Claude Code using Haiku. |
+| Ask Gemini | Type `???? your question` and press Enter, or choose **Gemini** from the provider row after typing `??`. Requires `GEMINI_API_KEY` or an owner-only `~/.config/atelier/gemini-api-key` file. |
 | App grid (also the bar logo) | `SUPER + D` |
 | Wallpaper: next / previous / random | `SUPER + ALT + →` / `←` / `I` |
 | Control center | `SUPER + C` |

@@ -14,7 +14,7 @@ import qs.services
 // wallpaper / wifi / bluetooth / clipboard / calendar / session drawers, lock,
 // sleep, reboot, screenshot...), an inline calculator, shell commands and web search.
 //
-// Prefixes:  =  calculator   ?  web search   >  actions only   $  run a command
+// Prefixes: = calculator, ? web, ?? Codex, ??? Claude, ???? Gemini, > actions, $ command
 Item {
     id: launchRoot
     visible: false
@@ -43,7 +43,21 @@ Item {
     readonly property int maxRows: 7
     readonly property real cardWidth: Math.min(600, launchRoot.width - 48)
     readonly property real listHeight: Math.max(1, Math.min(results.length, maxRows)) * (rowHeight + rowSpacing) - rowSpacing
-    readonly property real cardHeight: 14 * 2 + listHeight + 8 + 1 + 8 + 44
+    readonly property real answerHeight: Math.min(Math.max(rowHeight, answerText.height), Math.max(rowHeight, Math.min(320, height - 115)))
+    readonly property real cardHeight: 14 * 2 + (questionMode ? 42 : 0) + (showAnswer ? answerHeight : listHeight) + 8 + 1 + 8 + 44
+    readonly property var questionPrefixes: ({ Codex: "??", Claude: "???", Gemini: "????" })
+    readonly property bool questionMode: query.trim().startsWith("??")
+    readonly property string questionCli: query.trim().startsWith("????") ? "Gemini" : query.trim().startsWith("???") ? "Claude" : "Codex"
+    readonly property string question: questionMode ? query.trim().slice(questionPrefixes[questionCli].length).trim() : ""
+    property string submittedQuestion: ""
+    property string submittedCli: ""
+    property string answer: ""
+    property string answerProgress: ""
+    property string answerError: ""
+    property bool answerReady: false
+    property bool cancellingAnswer: false
+    readonly property bool showAnswer: question !== "" && question === submittedQuestion && questionCli === submittedCli
+    readonly property Item bodyItem: launchCard.contentItem
 
     readonly property string terminal: Settings.behavior.terminal
 
@@ -151,6 +165,8 @@ Item {
     readonly property string query: searchInput.text
     readonly property var results: {
         var raw = query.trim();
+        if (raw.startsWith("??")) return question ? [questionItem(question, questionCli)] : [];
+
         var prefix = raw.length > 0 && "=?>$".indexOf(raw[0]) >= 0 ? raw[0] : "";
         var q = (prefix ? raw.slice(1) : raw).trim().toLowerCase();
         var out = [];
@@ -255,12 +271,90 @@ Item {
         };
     }
 
+    function questionItem(question, cli) {
+        return {
+            kind: "web", title: "Ask " + cli + ": “" + question + "”", subtitle: "Answer here using " + cli + " CLI",
+            glyph: "󰭹", color: Atelier.teal, tag: cli,
+            run: function () { launchRoot.submitQuestion(question, cli); }
+        };
+    }
+
+    function submitQuestion(question, cli) {
+        const sameQuestion = question === submittedQuestion && cli === submittedCli;
+        if (chatProcess.running) {
+            if (!sameQuestion)
+                toastRequested(submittedCli + " is still answering your previous question", "󰭹", Atelier.teal);
+            return;
+        }
+        if (sameQuestion && answerReady) return;
+        submittedQuestion = question;
+        submittedCli = cli;
+        answer = "";
+        answerError = "";
+        answerProgress = "Asking " + cli + "…";
+        answerReady = false;
+        cancellingAnswer = false;
+        answerView.contentY = 0;
+        const prompt = "Give the direct answer first, in plain text. Default to one short paragraph unless the question asks for more. Do not use tools.\n\n" + question;
+        const commands = {
+            Gemini: ["python3", Quickshell.shellDir + "/scripts/gemini-question.py", prompt],
+            Claude: ["claude", "-p", "--model", "haiku", "--tools", "", "--strict-mcp-config", "--no-session-persistence", "--", prompt],
+            Codex: ["codex", "--ask-for-approval", "never", "exec", "--ignore-user-config", "--skip-git-repo-check",
+                    "--ephemeral", "--sandbox", "read-only", "--color", "never", "--", prompt]
+        };
+        chatProcess.command = ["sh", "-c", 'PATH="$PATH:$HOME/.local/bin"; export PATH; exec "$@" </dev/null',
+                               "atelier-launcher", "timeout", "--kill-after=5s", "90s"].concat(commands[cli]);
+        chatProcess.running = true;
+    }
+
+    Process {
+        id: chatProcess
+        workingDirectory: "/tmp"
+        stdout: StdioCollector {
+            id: chatOutput
+            waitForEnd: false
+            onDataChanged: {
+                const reply = text.trim();
+                if (reply && !launchRoot.cancellingAnswer) launchRoot.answer = reply;
+            }
+        }
+        stderr: SplitParser {
+            onRead: line => {
+                const marker = "ATELIER_GEMINI: ";
+                if (launchRoot.submittedCli === "Gemini" && line.startsWith(marker))
+                    launchRoot.answerError = line.slice(marker.length);
+                if (/^Reconnecting\.\.\. \d+\/\d+/i.test(line.trim()))
+                    launchRoot.answerProgress = "Reconnecting to " + launchRoot.submittedCli + "…";
+            }
+        }
+        onExited: (code, status) => {
+            if (launchRoot.cancellingAnswer)
+                launchRoot.answer = "Cancelled. Press Enter to retry.";
+            else if (code === 0 && status === 0 && launchRoot.answer !== "")
+                launchRoot.answerReady = true;
+            else if (code === 124 || code === 137)
+                launchRoot.answer = launchRoot.submittedCli + " did not return an answer within 90 seconds. Press Enter to retry.";
+            else if (code === 127)
+                launchRoot.answer = launchRoot.submittedCli + " CLI was not found.";
+            else if (code === 0 && status === 0)
+                launchRoot.answer = launchRoot.submittedCli + " returned an empty answer. Press Enter to retry.";
+            else if (launchRoot.answerError)
+                launchRoot.answer = launchRoot.answerError;
+            else
+                launchRoot.answer = launchRoot.submittedCli + " could not answer. Check your CLI login and connection, then press Enter to retry.";
+        }
+    }
+
     function exec(argv) {
         launchRoot.close();
         Quickshell.execDetached(argv);
     }
 
     function activate(index) {
+        if (showAnswer) {
+            submitQuestion(question, questionCli);
+            return;
+        }
         if (index >= 0 && index < results.length) results[index].run();
     }
 
@@ -337,9 +431,54 @@ Item {
             anchors.margins: 14
             spacing: 8
 
+            RowLayout {
+                visible: launchRoot.questionMode
+                Layout.fillWidth: true
+                Layout.preferredHeight: 34
+                spacing: 6
+
+                Repeater {
+                    model: ["Codex", "Claude", "Gemini"]
+                    Chip {
+                        required property string modelData
+                        text: modelData
+                        variant: "secondary"
+                        selected: modelData === launchRoot.questionCli
+                        interactive: true
+                        onClicked: {
+                            launchRoot.openWith(launchRoot.questionPrefixes[modelData] + " " + launchRoot.question);
+                            searchInput.forceActiveFocus();
+                        }
+                    }
+                }
+
+                Item { Layout.fillWidth: true }
+
+                Chip {
+                    visible: launchRoot.showAnswer && launchRoot.answerReady
+                    text: "Copy"
+                    interactive: true
+                    onClicked: {
+                        Quickshell.execDetached(["wl-copy", "--", launchRoot.answer]);
+                        launchRoot.toastRequested("Answer copied", "󰆏", Atelier.teal);
+                    }
+                }
+
+                Chip {
+                    visible: launchRoot.showAnswer && !chatProcess.running
+                    text: "New"
+                    interactive: true
+                    onClicked: {
+                        launchRoot.openWith(launchRoot.questionPrefixes[launchRoot.questionCli] + " ");
+                        searchInput.forceActiveFocus();
+                    }
+                }
+            }
+
             // ── Results (best match sits right above the search field) ──────
             ListView {
                 id: resultsList
+                visible: !launchRoot.showAnswer
                 verticalLayoutDirection: ListView.BottomToTop
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -456,11 +595,41 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     visible: launchRoot.results.length === 0
-                    text: launchRoot.query.trim().length > 1 ? "No results" : "Type a command, sum, or app"
+                    text: launchRoot.questionMode ? "Type a question for " + launchRoot.questionCli
+                        : launchRoot.query.trim().length > 1 ? "No results" : "Type a command, sum, or app"
                     font.family: Atelier.fontUi
                     font.pixelSize: Atelier.fsMd
                     color: launchRoot.colSubtext
                     opacity: 0.7
+                }
+            }
+
+            Flickable {
+                id: answerView
+                visible: launchRoot.showAnswer
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                contentWidth: width
+                contentHeight: answerText.height
+                flickableDirection: Flickable.VerticalFlick
+                boundsBehavior: Flickable.StopAtBounds
+                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+
+                TextEdit {
+                    id: answerText
+                    width: Math.max(1, answerView.width - 20)
+                    height: contentHeight + topPadding + bottomPadding
+                    padding: 8
+                    readOnly: true
+                    selectByMouse: true
+                    wrapMode: TextEdit.Wrap
+                    textFormat: TextEdit.PlainText
+                    text: launchRoot.answer || (chatProcess.running ? launchRoot.answerProgress : "")
+                    font.family: Atelier.fontUi
+                    font.pixelSize: Atelier.fsMd
+                    color: launchRoot.colText
+                    Keys.onEscapePressed: launchRoot.close()
                 }
             }
 
@@ -522,11 +691,23 @@ Item {
                 Text {
                     visible: !searchInput.text
                     Layout.alignment: Qt.AlignVCenter
-                    text: "= calc   ? web   > actions   $ run"
+                    text: "= calc   ? web   ?? ask AI   > actions   $ run"
                     font.family: Atelier.fontUi
                     font.pixelSize: Atelier.fsMicro
                     color: launchRoot.colSubtext
                     opacity: 0.55
+                }
+
+                Chip {
+                    visible: chatProcess.running
+                    interactive: !launchRoot.cancellingAnswer
+                    tint: Atelier.red
+                    text: launchRoot.cancellingAnswer ? "Cancelling…" : "Cancel"
+                    onClicked: {
+                        launchRoot.cancellingAnswer = true;
+                        chatProcess.signal(15); // SIGTERM, forwarded to Codex by timeout
+                        searchInput.forceActiveFocus();
+                    }
                 }
 
                 Rectangle {

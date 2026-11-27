@@ -1,53 +1,79 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls.Basic as Controls
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import qs.components
 import qs.config
 
-// Settings → Displays. Lists every output Hyprland knows (`hyprctl monitors all -j`); a change
-// writes that output's entry in Settings.displays.monitors, which Settings.qml applies live
-// (atelier-mode.lua M.apply_monitors) and conf/monitors.lua applies at login. Every change asks
+// Settings → Displays. Lists every output Hyprland knows (`hyprctl -j monitors all`); a change
+// writes that output's entry in Settings.displays.monitors. Settings.qml saves the monitor
+// rules and reloads Hyprland, which applies them through conf/monitors.lua. Every change asks
 // "Keep these settings?" and goes back by itself after 15 s, so a bad mode can't strand you.
 ColumnLayout {
     id: page
     Layout.fillWidth: true
-    spacing: 20
+    spacing: 18
 
     property var mons: []
     readonly property var saved: Settings.displays.monitors || []
-    readonly property int enabledCount: mons.filter(m => !m.disabled).length
+    property string monitorError: ""
+    property string monitorSnapshot: ""
+    readonly property var arranged: mons.filter(m => !m.disabled && (!m.mirrorOf || m.mirrorOf === "none"))
 
     Process {
         id: monProc
-        command: ["hyprctl", "monitors", "all", "-j"]
+        command: ["hyprctl", "-j", "monitors", "all"]
         stdout: StdioCollector {
-            onStreamFinished: { try { page.mons = JSON.parse(text); } catch (e) {} }
+            onStreamFinished: {
+                try {
+                    const monitors = JSON.parse(text);
+                    if (!Array.isArray(monitors)) throw new Error("Expected a monitor list");
+                    page.monitorError = "";
+                    if (!arr.dragging && text !== page.monitorSnapshot) {
+                        page.monitorSnapshot = text;
+                        page.mons = monitors;
+                        if (!monitors.some(m => m.name === page.selected))
+                            page.selected = page.selectedOutput;
+                    }
+                } catch (e) {
+                    page.monitorError = "Could not read displays from Hyprland";
+                }
+            }
         }
     }
     function refresh() { monProc.running = true; }
-    onVisibleChanged: if (visible) refresh()
+    onVisibleChanged: {
+        if (visible) refresh();
+        else if (pending) revert();
+    }
     Component.onCompleted: refresh()
     Connections { target: Quickshell; function onScreensChanged() { refreshTimer.restart(); } }
+    Timer { interval: 1500; repeat: true; running: page.visible; onTriggered: page.refresh() }
     Timer { id: refreshTimer; interval: 900; onTriggered: page.refresh() }
 
     // ── helpers ─────────────────────────────────────────────────────────────
-    function entry(name) { return page.saved.find(x => x.output === name); }
+    function entry(name) { return page.saved.find(x => x && x.output === name); }
     function niceName(m) {
         if (/^eDP/.test(m.name)) return "Built-in display";
         const d = ((m.make || "") + " " + (m.model || "")).trim();
         return d || m.description || m.name;
     }
-    function modeOf(m) { return m.width + "x" + m.height + "@" + m.refreshRate.toFixed(2) + "Hz"; }
     function parseMode(s) {
         const r = /^(\d+)x(\d+)@([\d.]+)/.exec(s || "");
         return r ? { w: +r[1], h: +r[2], hz: +r[3] } : null;
     }
-    // the mode this output is set to: its saved entry, else what it runs at
-    function curMode(m) {
-        const e = entry(m.name);
-        return (e && parseMode(e.mode)) || { w: m.width, h: m.height, hz: m.refreshRate };
+    function supportsMode(m, mode) {
+        const requested = parseMode(mode);
+        return requested && (m.availableModes || []).some(s => {
+            const offered = parseMode(s);
+            return offered && offered.w === requested.w && offered.h === requested.h && offered.hz === requested.hz;
+        });
+    }
+    function scaleFits(mode, scale) {
+        if (typeof scale !== "number" || !mode) return true;
+        return [mode.w, mode.h].every(n => Math.abs(n / scale - Math.round(n / scale)) < 0.001);
     }
     function resolutions(m) {
         const seen = {}, out = [];
@@ -65,9 +91,9 @@ ColumnLayout {
             const p = parseMode(s);
             if (p && p.w + "x" + p.h === res) out.push(p.hz);
         }
-        return out.sort((a, b) => b - a);
+        return Array.from(new Set(out)).sort((a, b) => b - a);
     }
-    function hzLabel(hz) { return (Math.round(hz * 100) / 100).toString().replace(/\.?0+$/, "") + " Hz"; }
+    function hzLabel(hz) { return (Math.round(hz * 100) / 100).toString() + " Hz"; }
 
     // ── change / keep / revert ──────────────────────────────────────────────
     property bool pending: false
@@ -84,10 +110,12 @@ ColumnLayout {
         const list = page.saved.map(x => Object.assign({}, x));
         let i = list.findIndex(x => x.output === m.name);
         if (i < 0) {
-            list.push({ output: m.name, mode: modeOf(m), position: "auto", scale: m.scale, transform: m.transform });
+            list.push({ output: m.name, mode: "preferred", position: "auto", scale: m.scale || 1, transform: m.transform || 0 });
             i = list.length - 1;
         }
-        Object.assign(list[i], patch);
+        const next = Object.assign(list[i], patch);
+        if (m.availableModes && m.availableModes.length && parseMode(next.mode) && !supportsMode(m, next.mode)) next.mode = "preferred";
+        if (patch.mode && !scaleFits(parseMode(next.mode), next.scale)) next.scale = 1;
         begin();
         Settings.displays.monitors = list;
     }
@@ -108,16 +136,43 @@ ColumnLayout {
         onTriggered: { page.countdown--; if (page.countdown <= 0) page.revert(); }
     }
 
-    // ── the confirmation banner ─────────────────────────────────────────────
-    SettingCard {
-        visible: page.pending
-        SettingRow {
-            label: "Keep these display settings?"
-            description: "Going back to the previous ones in " + page.countdown + " s"
-            RowLayout {
-                spacing: 8
-                Chip { icon: "󰜺"; text: "Revert"; tint: Atelier.red; interactive: true; implicitHeight: 32; onClicked: page.revert() }
-                Chip { icon: "󰄬"; text: "Keep"; tint: Atelier.green; interactive: true; implicitHeight: 32; onClicked: page.keep() }
+    Controls.Popup {
+        id: confirmation
+        parent: Controls.Overlay.overlay
+        visible: page.pending && page.visible
+        closePolicy: Controls.Popup.NoAutoClose
+        focus: true
+        width: parent ? Math.min(parent.width - 24, 600) : 600
+        x: parent ? (parent.width - width) / 2 : 0
+        y: parent ? parent.height - height - 16 : 0
+        padding: 14
+        background: Rectangle {
+            radius: Atelier.radiusMd
+            color: Atelier.base
+            border.color: Atelier.accent
+        }
+        contentItem: ColumnLayout {
+            spacing: 8
+            SettingRow {
+                label: "Keep these display settings?"
+                description: "Reverting in " + page.countdown + " s"
+                Row {
+                    spacing: 6
+                    Chip { text: "Revert"; variant: "secondary"; interactive: true; onClicked: page.revert() }
+                    Chip { text: "Keep"; variant: "primary"; interactive: true; onClicked: page.keep() }
+                }
+            }
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: 3
+                radius: 2
+                color: Atelier.outline
+                Rectangle {
+                    width: parent.width * page.countdown / 15
+                    height: parent.height
+                    radius: parent.radius
+                    color: Atelier.accent
+                }
             }
         }
     }
@@ -128,14 +183,24 @@ ColumnLayout {
     // theirs), so there are never gaps or overlaps; letting go writes "XxY" as its position
     // through change() → the usual Keep / Revert banner.
     property string selected: ""
+    readonly property string selectedOutput: mons.some(m => m.name === selected) ? selected
+        : (arranged.find(m => m.focused) || arranged[0] || mons[0] || {}).name || ""
     SettingCard {
-        visible: page.enabledCount >= 1
-        title: "Arrangement"
-        Item {
+        visible: page.arranged.length >= 1
+        SettingRow {
+            label: "Display arrangement"
+            description: page.arranged.length > 1 ? "Drag displays to match their physical placement" : ""
+            Chip { icon: "󰍹"; text: "Identify"; variant: "secondary"; interactive: true; onClicked: identify.show() }
+        }
+        Rectangle {
             id: arr
             Layout.fillWidth: true
-            implicitHeight: page.enabledCount > 1 ? 210 : 150
-            readonly property var boxes: page.mons.filter(m => !m.disabled).map(m => {
+            Layout.bottomMargin: 12
+            implicitHeight: page.arranged.length > 1 ? 230 : 164
+            radius: Atelier.radiusMd
+            color: Qt.alpha(Atelier.outline, 0.18)
+            clip: true
+            readonly property var boxes: page.arranged.map(m => {
                 const rot = m.transform % 2 === 1;
                 const w = Math.round((rot ? m.height : m.width) / m.scale), h = Math.round((rot ? m.width : m.height) / m.scale);
                 return { name: m.name, mon: m, x: m.x, y: m.y, w: w, h: h, focused: m.focused };
@@ -150,12 +215,13 @@ ColumnLayout {
                 const spanW = Math.max.apply(null, bs.map(b => b.x + b.w).concat([1])) - minX;
                 const spanH = Math.max.apply(null, bs.map(b => b.y + b.h).concat([1])) - minY;
                 // leave room around the layout to drag into
-                const padX = page.enabledCount > 1 ? spanW * 0.45 : spanW * 0.1;
-                const padY = page.enabledCount > 1 ? spanH * 0.45 : spanH * 0.1;
+                const padX = page.arranged.length > 1 ? spanW * 0.45 : spanW * 0.1;
+                const padY = page.arranged.length > 1 ? spanH * 0.45 : spanH * 0.1;
                 const k = Math.min((arr.width - 24) / (spanW + 2 * padX), (arr.height - 24) / (spanH + 2 * padY));
                 return { minX: minX, minY: minY, spanW: spanW, spanH: spanH, k: k > 0 ? k : 0.05 };
             }
-            onWidthChanged: frame = computeFrame(boxes)
+            onWidthChanged: if (!dragging) frame = computeFrame(boxes)
+            onHeightChanged: if (!dragging) frame = computeFrame(boxes)
             function toView(lx, ly) {
                 const f = frame;
                 return { x: (arr.width - f.spanW * f.k) / 2 + (lx - f.minX) * f.k, y: (arr.height - f.spanH * f.k) / 2 + (ly - f.minY) * f.k };
@@ -192,10 +258,21 @@ ColumnLayout {
                 return best ? best : { x: b.x, y: b.y };
             }
 
-            // faint grid
-            Repeater {
-                model: 9
-                Rectangle { required property int index; x: arr.width * (index + 1) / 10; width: 1; height: arr.height; color: Atelier.outline; opacity: 0.5 }
+            Canvas {
+                anchors.fill: parent
+                property color dotColor: Atelier.subtext
+                onDotColorChanged: requestPaint()
+                onWidthChanged: requestPaint()
+                onHeightChanged: requestPaint()
+                onPaint: {
+                    const ctx = getContext("2d");
+                    ctx.clearRect(0, 0, width, height);
+                    ctx.fillStyle = dotColor;
+                    ctx.globalAlpha = 0.22;
+                    for (let y = 12; y < height; y += 16)
+                        for (let x = 12; x < width; x += 16)
+                            ctx.fillRect(x, y, 2, 2);
+                }
             }
 
             Repeater {
@@ -204,16 +281,21 @@ ColumnLayout {
                     id: box
                     required property var modelData
                     readonly property var b: modelData
-                    readonly property bool sel: page.selected === b.name
-                    readonly property bool movable: page.enabledCount > 1
+                    readonly property bool sel: page.selectedOutput === b.name
+                    readonly property bool movable: page.arranged.length > 1
                     // where it is drawn: its real spot, or the snapped spot while dragging
                     property var live: null
                     readonly property var at: arr.toView(live ? live.x : b.x, live ? live.y : b.y)
                     x: at.x + 2; y: at.y + 2
-                    width: b.w * arr.frame.k - 4; height: b.h * arr.frame.k - 4
-                    z: dragMa.drag.active ? 10 : (sel ? 2 : 1)
+                    width: Math.max(1, b.w * arr.frame.k - 4)
+                    height: Math.max(1, b.h * arr.frame.k - 4)
+                    clip: true
+                    z: dragMa.pressed ? 10 : (sel ? 2 : 1)
                     radius: Atelier.radiusSm
-                    color: dragMa.pressed ? Qt.alpha(Atelier.accent, 0.30) : Qt.alpha(Atelier.accent, sel ? 0.22 : 0.10)
+                    gradient: Gradient {
+                        GradientStop { position: 0; color: Qt.tint(Atelier.containerHigh, Qt.alpha(Atelier.accent, box.sel ? 0.32 : 0.12)) }
+                        GradientStop { position: 1; color: Qt.tint(Atelier.container, Qt.alpha(Atelier.accent, box.sel ? 0.16 : 0.04)) }
+                    }
                     border.width: sel ? 2 : 1
                     border.color: Qt.alpha(Atelier.accent, sel ? 0.9 : 0.5)
                     Behavior on x { enabled: !dragMa.pressed; NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel } }
@@ -241,6 +323,11 @@ ColumnLayout {
                             const l = arr.toLayout(p.x - 2, p.y - 2);
                             box.live = arr.snap(box.b, l.x, l.y);
                         }
+                        onCanceled: {
+                            box.live = null;
+                            arr.dragging = false;
+                            arr.frame = arr.computeFrame(arr.boxes);
+                        }
                         onReleased: {
                             arr.dragging = false;
                             const l = box.live;
@@ -253,17 +340,25 @@ ColumnLayout {
                 }
             }
 
-            Text {
-                visible: page.enabledCount <= 1
-                anchors.bottom: parent.bottom; anchors.horizontalCenter: parent.horizontalCenter
-                text: "Connect another display to arrange them by dragging"
-                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
-            }
         }
-        SettingRow {
-            label: page.enabledCount > 1 ? "Drag a display to move it" : "Your display"
-            description: page.enabledCount > 1 ? "It snaps to the edges of the others · click one to select it" : "Identify shows each display's name on it"
-            Chip { icon: "󰍹"; text: "Identify"; tint: Atelier.accent; interactive: true; implicitHeight: 30; onClicked: identify.show() }
+    }
+
+    Flow {
+        Layout.fillWidth: true
+        visible: page.mons.length > 1
+        spacing: 8
+        Repeater {
+            model: page.mons
+            Chip {
+                required property var modelData
+                text: modelData.name + (modelData.disabled ? " · Off" : "")
+                icon: selected ? "󰄬" : "󰍹"
+                variant: "secondary"
+                selected: page.selectedOutput === modelData.name
+                interactive: true
+                implicitHeight: 34
+                onClicked: page.selected = modelData.name
+            }
         }
     }
 
@@ -320,12 +415,12 @@ ColumnLayout {
     }
 
     Text {
-        visible: page.mons.length === 0
-        text: "Looking for displays…"
+        visible: page.mons.length === 0 || page.monitorError !== ""
+        text: page.monitorError || "Looking for displays…"
         font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext
     }
 
-    // ── one card per output ─────────────────────────────────────────────────
+    // Show controls for the selected connector.
     Repeater {
         model: page.mons
         SettingCard {
@@ -333,33 +428,33 @@ ColumnLayout {
             required property var modelData
             readonly property var m: modelData
             readonly property var e: page.entry(m.name)
-            readonly property var cur: page.curMode(m)
+            readonly property var cur: ({ w: m.width || 0, h: m.height || 0, hz: m.refreshRate || 0 })
             readonly property string res: cur.w + "x" + cur.h
-            readonly property var others: page.mons.filter(x => x.name !== m.name)
-            title: page.niceName(m) + "  ·  " + m.name
-            highlighted: page.selected === m.name
+            readonly property var others: page.arranged.filter(x => x.name !== m.name)
+            readonly property bool canDisable: !page.arranged.includes(m) || page.arranged.length > 1
+            visible: page.selectedOutput === m.name
 
             SettingRow {
-                label: m.disabled ? "Off" : (m.width + " × " + m.height + " at " + page.hzLabel(m.refreshRate))
-                description: m.disabled ? "This display is turned off"
-                    : ("Scale " + (Math.round(m.scale * 100) / 100) + "×" + (m.transform ? " · rotated" : "")
-                       + (m.mirrorOf && m.mirrorOf !== "none" ? " · mirrors " + m.mirrorOf : "")
-                       + (card.e ? " · your settings" : " · automatic"))
-                Chip { visible: !!card.e; icon: "󰦛"; text: "Automatic"; tint: Atelier.lavender; interactive: true; implicitHeight: 30
+                label: page.niceName(card.m)
+                description: card.m.name + "  ·  " + (card.m.disabled ? "Off"
+                    : card.m.width + " × " + card.m.height + "  ·  " + page.hzLabel(card.m.refreshRate)
+                      + (card.m.mirrorOf && card.m.mirrorOf !== "none" ? "  ·  Mirrors " + card.m.mirrorOf : "")
+                      + (!card.m.make && !card.m.model && !card.m.physicalWidth ? "\nOnly fallback modes may be available." : ""))
+                Chip { visible: !!card.e; icon: "󰦛"; text: "Reset to automatic"; variant: "secondary"; interactive: true
                     onClicked: page.forget(card.m) }
             }
             SettingSwitch {
                 visible: page.mons.length > 1
                 label: "Use this display"
-                description: !card.m.disabled && page.enabledCount <= 1 ? "Your only display can't be turned off" : ""
+                description: !card.m.disabled && !card.canDisable ? "Keep one extended display on" : ""
                 checked: !card.m.disabled
                 onToggled: (v) => {
-                    if (!v && page.enabledCount <= 1) { checked = true; return; }
+                    if (!v && !card.m.disabled && !card.canDisable) return;
                     page.change(card.m, { disabled: !v });
                 }
             }
-            Stepper {
-                visible: !card.m.disabled
+            DisplayChoice {
+                visible: !card.m.disabled && options.length > 0
                 label: "Resolution"
                 options: page.resolutions(card.m)
                 value: card.res
@@ -368,30 +463,31 @@ ColumnLayout {
                     page.change(card.m, { mode: id + "@" + hz.toFixed(2) + "Hz" });
                 }
             }
-            Stepper {
+            DisplayChoice {
                 visible: !card.m.disabled && options.length > 1
                 label: "Refresh rate"
                 options: page.rates(card.m, card.res).map(hz => ({ id: hz.toFixed(2), label: page.hzLabel(hz) }))
                 value: card.cur.hz.toFixed(2)
                 onPicked: (id) => page.change(card.m, { mode: card.res + "@" + id + "Hz" })
             }
-            SettingChoice {
+            DisplayChoice {
                 visible: !card.m.disabled
                 label: "Scale"
                 options: [{ id: "1", label: "100%" }, { id: "1.25", label: "125%" }, { id: "1.5", label: "150%" },
                           { id: "2", label: "200%" }, { id: "auto", label: "Auto" }]
-                value: card.e ? String(card.e.scale) : String(Math.round(card.m.scale * 100) / 100)
+                    .filter(option => option.id === "auto" || page.scaleFits(card.cur, Number(option.id)))
+                value: card.e && card.e.scale === "auto" ? "auto" : String(Math.round(card.m.scale * 100) / 100)
                 onPicked: (id) => page.change(card.m, { scale: id === "auto" ? "auto" : parseFloat(id) })
             }
-            SettingChoice {
+            DisplayChoice {
                 visible: !card.m.disabled
                 label: "Rotation"
                 options: [{ id: "0", label: "Normal" }, { id: "1", label: "90°" }, { id: "2", label: "180°" }, { id: "3", label: "270°" }]
-                value: String(card.e ? (card.e.transform || 0) : card.m.transform)
+                value: String(card.m.transform)
                 onPicked: (id) => page.change(card.m, { transform: parseInt(id) })
             }
-            SettingChoice {
-                visible: !card.m.disabled && page.enabledCount > 1
+            DisplayChoice {
+                visible: page.arranged.includes(card.m) && page.arranged.length > 1
                 label: "Position"
                 description: "Or drag it in Arrangement above"
                 readonly property string pos: card.e ? (card.e.position || "auto") : "auto"
@@ -401,54 +497,22 @@ ColumnLayout {
                 value: pos
                 onPicked: (id) => page.change(card.m, { position: id })
             }
-            SettingChoice {
+            DisplayChoice {
                 visible: !card.m.disabled && card.others.length > 0
                 label: "Mirror"
                 description: "Show the same picture as another display"
                 options: [{ id: "", label: "Off" }].concat(card.others.map(x => ({ id: x.name, label: x.name })))
-                value: card.e && card.e.mirror ? card.e.mirror : ""
+                value: card.m.mirrorOf && card.m.mirrorOf !== "none" ? card.m.mirrorOf : ""
                 onPicked: (id) => page.change(card.m, { mirror: id })
             }
-            SettingChoice {
-                visible: !card.m.disabled
+            DisplayChoice {
+                visible: !card.m.disabled && (!card.m.hardwareDetails || card.m.hardwareDetails.vrrCapable)
                 label: "Variable refresh rate"
                 description: "Adaptive sync (FreeSync / G-Sync), if the display supports it"
                 options: [{ id: "0", label: "Off" }, { id: "1", label: "On" }, { id: "2", label: "Fullscreen" }]
                 value: card.e && card.e.vrr !== undefined ? String(card.e.vrr) : (card.m.vrr ? "1" : "0")
                 onPicked: (id) => page.change(card.m, { vrr: parseInt(id) })
             }
-        }
-    }
-
-    Text {
-        Layout.fillWidth: true
-        Layout.leftMargin: 4
-        wrapMode: Text.Wrap
-        text: "Displays you plug in later use their best mode automatically until you change them here. Settings are remembered per connector (eDP-1, HDMI-A-1…)."
-        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
-    }
-
-    // ‹ value › picker for long lists (resolutions, refresh rates)
-    component Stepper: SettingRow {
-        id: st
-        property var options: []
-        property string value: ""
-        signal picked(string id)
-        readonly property int idx: options.findIndex(o => o.id === value)
-        RowLayout {
-            spacing: 6
-            Chip { icon: "󰅁"; tint: Atelier.accent; interactive: st.idx < st.options.length - 1; implicitHeight: 30
-                opacity: interactive ? 1 : 0.35
-                onClicked: st.picked(st.options[Math.min(st.options.length - 1, st.idx + 1)].id) }
-            Text {
-                Layout.minimumWidth: 110
-                horizontalAlignment: Text.AlignHCenter
-                text: st.idx >= 0 ? st.options[st.idx].label : st.value.replace("x", " × ")
-                font.family: Atelier.font; font.pixelSize: Atelier.fsMd; color: Atelier.text
-            }
-            Chip { icon: "󰅂"; tint: Atelier.accent; interactive: st.idx > 0; implicitHeight: 30
-                opacity: interactive ? 1 : 0.35
-                onClicked: st.picked(st.options[Math.max(0, st.idx - 1)].id) }
         }
     }
 }

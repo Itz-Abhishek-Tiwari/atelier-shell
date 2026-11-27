@@ -11,6 +11,7 @@ Singleton {
 
     property bool active: false
     property var bars: []
+    property string _last: ""
     readonly property int count: 48
 
     Process {
@@ -19,6 +20,9 @@ Singleton {
         command: ["cava", "-p", Quickshell.shellDir + "/backend/cava.conf"]
         stdout: SplitParser {
             onRead: (line) => {
+                // an unchanged frame (silence, a held note) would redraw for nothing: skip it
+                if (line === root._last) return;
+                root._last = line;
                 const parts = line.split(";");
                 const out = new Array(root.count);
                 for (let i = 0; i < root.count; i++) out[i] = (parseInt(parts[i]) || 0) / 100;
@@ -26,5 +30,5 @@ Singleton {
             }
         }
     }
-    onActiveChanged: if (!active) bars = []
+    onActiveChanged: if (!active) { bars = []; _last = ""; }
 }

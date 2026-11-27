@@ -31,6 +31,8 @@ SettingRow {
             color: Atelier.text
             clip: true
             selectByMouse: true
+            activeFocusOnTab: true
+            Accessible.name: root.label.trim()
             text: root.text
             onEditingFinished: if (text !== root.text) root.committed(text)
             // follow outside changes unless the user is typing
@@ -42,7 +44,6 @@ SettingRow {
                 font.family: Atelier.fontUi
                 font.pixelSize: Atelier.fsMd
                 color: Atelier.subtext
-                opacity: 0.6
             }
         }
     }

@@ -1,9 +1,10 @@
 import QtQuick
+import QtQuick.Controls.Basic as Controls
 import qs.config
 
 // A round, borderless glyph button (the control center / music drawer RoundBtn).
 // `hoverTint` colours the glyph under the pointer (red for destructive ones); `active` lights it.
-Rectangle {
+ActionSurface {
     id: ib
     property string icon: ""
     property int size: 32
@@ -11,6 +12,11 @@ Rectangle {
     property color hoverTint: Atelier.text
     property bool active: false
     signal clicked()
+    onActivated: clicked()
+
+    Controls.ToolTip.visible: ibMa.containsMouse && accessibleLabel !== ""
+    Controls.ToolTip.text: accessibleLabel
+    Controls.ToolTip.delay: 600
 
     implicitWidth: size
     implicitHeight: size
@@ -29,5 +35,5 @@ Rectangle {
         color: ib.active ? Atelier.accent : (ibMa.containsMouse ? ib.hoverTint : Atelier.subtext1)
         Behavior on color { CAnim {} }
     }
-    MouseArea { id: ibMa; anchors.fill: parent; enabled: ib.enabled; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ib.clicked() }
+    MouseArea { id: ibMa; anchors.fill: parent; enabled: ib.enabled; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: ib.activated() }
 }

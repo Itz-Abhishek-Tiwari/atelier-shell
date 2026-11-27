@@ -148,6 +148,29 @@ Item {
         Behavior on blur { NumberAnimation { duration: 320; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel } }
         Behavior on scale { Anim { type: "spatial" } }
     }
+    // While a song plays, its cover (blurred into colour) crossfades in over the wallpaper.
+    // Decoded tiny and blurred once per track: no per-frame cost. Not in style thumbnails.
+    Image {
+        id: coverBg
+        anchors.fill: parent
+        visible: false
+        source: !p.thumb && p.player && p.player.isPlaying ? (p.player.trackArtUrl || "") : ""
+        sourceSize: Qt.size(64, 64)
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+    }
+    MultiEffect {
+        anchors.fill: parent
+        source: coverBg
+        autoPaddingEnabled: false
+        blurEnabled: true; blurMax: 64; blur: 1.0; blurMultiplier: 2.0
+        saturation: 0.35
+        brightness: -0.18
+        scale: (p.leaving ? 1.08 : 1) * 1.3          // past the edges: the blur's soft border never shows
+        Behavior on scale { Anim { type: "spatial" } }
+        opacity: coverBg.status === Image.Ready && coverBg.source != "" ? 1 : 0
+        Behavior on opacity { Anim { type: "slowEffects"; duration: 900 } }
+    }
     // the wallpaper blurred once (static: costs nothing per frame); every Frost card shows its
     // own patch of it, so cards read as frosted glass instead of a thin tint over busy pixels
     MultiEffect {
@@ -1018,13 +1041,30 @@ Item {
         }
     }
 
-    // now playing (Cupertino): art · title/artist · play/pause
+    // now playing (Cupertino): art · title/artist · play/pause, and under it the line being
+    // sung when the song has synced lyrics (the card grows to hold it)
     component NowPlaying: Frost {
-        height: 92 * p.u
+        height: 92 * p.u + (lyr.visible ? lyr.implicitHeight + 18 * p.u : 0)
         radius: 24 * p.u
+        Behavior on height { Anim { type: "spatial" } }
+        Item { id: head; width: parent.width; height: 92 * p.u }
+        LockLyrics {
+            id: lyr
+            anchors.top: head.bottom
+            anchors.left: parent.left; anchors.right: parent.right
+            anchors.leftMargin: 20 * p.u; anchors.rightMargin: 20 * p.u
+            visible: lines.length > 0 && !p.thumb
+            player: p.player
+            active: !p.thumb && p.lockRoot.active && !!p.player && p.player.isPlaying
+            textColor: "white"
+            dimColor: Qt.rgba(1, 1, 1, 0.6)
+            fontFamily: p.display
+            fontSize: 22 * p.u
+            divider: false
+        }
         ClippingRectangle {
             id: art
-            x: 14 * p.u; anchors.verticalCenter: parent.verticalCenter
+            x: 14 * p.u; anchors.verticalCenter: head.verticalCenter
             width: 64 * p.u; height: 64 * p.u; radius: 14 * p.u
             color: Qt.rgba(1, 1, 1, 0.15)
             Image { anchors.fill: parent; source: p.player ? p.player.trackArtUrl : ""; fillMode: Image.PreserveAspectCrop; asynchronous: true
@@ -1033,7 +1073,7 @@ Item {
         Column {
             anchors.left: art.right; anchors.leftMargin: 16 * p.u
             anchors.right: ppBtn.left; anchors.rightMargin: 12 * p.u
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenter: head.verticalCenter
             spacing: 2 * p.u
             Text { width: parent.width; text: p.player ? (p.player.trackTitle || p.player.identity) : ""; elide: Text.ElideRight
                 font.family: p.display; font.pixelSize: 21 * p.u; font.weight: Font.DemiBold; color: "white" }
@@ -1042,7 +1082,7 @@ Item {
         }
         Text {
             id: ppBtn
-            anchors.right: parent.right; anchors.rightMargin: 26 * p.u; anchors.verticalCenter: parent.verticalCenter
+            anchors.right: parent.right; anchors.rightMargin: 26 * p.u; anchors.verticalCenter: head.verticalCenter
             text: p.player && p.player.isPlaying ? "󰏤" : "󰐊"
             font.family: Atelier.font; font.pixelSize: 34 * p.u; color: "white"
             MouseArea { anchors.fill: parent; anchors.margins: -10; enabled: !p.thumb; cursorShape: Qt.PointingHandCursor

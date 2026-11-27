@@ -115,6 +115,32 @@ Item {
         scale: c.lockRoot.unlocking ? 1.06 : 1
         Behavior on scale { Anim { type: "spatial" } }
     }
+    // While a song plays, its cover (blurred into colour) crossfades in over the wallpaper.
+    // Decoded tiny and blurred once per track: no per-frame cost.
+    Image {
+        id: coverBg
+        anchors.fill: parent
+        visible: false
+        source: c.player && c.player.isPlaying ? (c.player.trackArtUrl || "") : ""
+        sourceSize: Qt.size(64, 64)
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+    }
+    MultiEffect {
+        anchors.fill: parent
+        source: coverBg
+        autoPaddingEnabled: false
+        blurEnabled: true
+        blurMax: 64
+        blur: 1.0
+        blurMultiplier: 2.0
+        saturation: 0.35
+        brightness: -0.1
+        scale: (c.lockRoot.unlocking ? 1.06 : 1) * 1.3     // past the edges: the blur's soft border never shows
+        Behavior on scale { Anim { type: "spatial" } }
+        opacity: coverBg.status === Image.Ready && coverBg.source != "" ? 1 : 0
+        Behavior on opacity { Anim { type: "slowEffects"; duration: 900 } }
+    }
     Rectangle { anchors.fill: parent; color: Atelier.crust; opacity: 0.38 }
 
     // ═══ The panel ═══════════════════════════════════════════════════════════
@@ -509,6 +535,13 @@ Item {
                             TintButton { size: 34; icon: "󰒮"; tint: Atelier.text; onClicked: c.player.previous() }
                             TintButton { size: 42; icon: c.player && c.player.isPlaying ? "󰏤" : "󰐊"; tint: Atelier.pink; onClicked: c.player.togglePlaying() }
                             TintButton { size: 34; icon: "󰒭"; tint: Atelier.text; onClicked: c.player.next() }
+                        }
+                        // the line being sung (and the next), when the song has synced lyrics
+                        LockLyrics {
+                            Layout.fillWidth: true
+                            Layout.topMargin: 4
+                            player: c.player
+                            active: c.lockRoot.active && !!c.player && c.player.isPlaying
                         }
                     }
                 }

@@ -26,6 +26,6 @@ RowLayout {
         Text { Layout.fillWidth: true; text: dt.title; elide: Text.ElideRight
                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl; font.weight: Font.DemiBold; color: Atelier.text }
         Text { Layout.fillWidth: true; visible: dt.subtitle !== ""; text: dt.subtitle; elide: Text.ElideRight
-               font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
+               font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext }
     }
 }

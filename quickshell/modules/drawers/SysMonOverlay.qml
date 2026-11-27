@@ -321,7 +321,7 @@ Item {
                                                            : app.modelData.mem / Math.max(1, root.mem.total)
                                         }
                                     }
-                                    IconButton { icon: "󰅖"; size: 26; glyphSize: 12; hoverTint: Atelier.red; onClicked: SysMon.kill(app.modelData.pid) }
+                                    IconButton { accessibleLabel: "End process"; icon: "󰅖"; size: 26; glyphSize: 12; hoverTint: Atelier.red; onClicked: SysMon.kill(app.modelData.pid) }
                                 }
                             }
                             Item { Layout.fillHeight: true }

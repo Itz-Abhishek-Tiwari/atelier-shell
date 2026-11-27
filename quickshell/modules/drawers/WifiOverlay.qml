@@ -361,7 +361,7 @@ Item {
                         visible: wifiOverlayRoot.errorText !== ""
                         text: wifiOverlayRoot.errorText
                         font.family: Atelier.fontUi
-                        font.pixelSize: Atelier.fsSm
+                        font.pixelSize: Atelier.fsMd
                         color: Atelier.red
                         Layout.fillWidth: true
                     }
@@ -527,7 +527,7 @@ Item {
                                 ? (wifiOverlayRoot.scanRetries >= 8 ? "No networks found" : "Scanning…")
                                 : wifiOverlayRoot.scannedNetworks.length + " networks available"
                         font.family: Atelier.fontUi
-                        font.pixelSize: Atelier.fsSm
+                        font.pixelSize: Atelier.fsMd
                         color: wifiOverlayRoot.colSubtext
                     }
 

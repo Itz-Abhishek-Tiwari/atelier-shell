@@ -36,13 +36,16 @@ Item {
         color: Qt.alpha(Atelier.accent, 0.45)
     }
 
-    RowLayout {
+    GridLayout {
         id: inner
+        readonly property bool stacked: slot.implicitWidth > 0 && width < slot.implicitWidth + 180
+        columns: stacked ? 1 : 2
+        columnSpacing: 16
+        rowSpacing: 8
         anchors.leftMargin: row.indent
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 18
 
         ColumnLayout {
             Layout.fillWidth: true
@@ -61,7 +64,7 @@ Item {
                 visible: text.length > 0
                 text: row.description
                 font.family: Atelier.fontUi
-                font.pixelSize: Atelier.fsSm
+                font.pixelSize: Atelier.fsMd
                 color: Atelier.subtext
                 wrapMode: Text.Wrap
             }
@@ -69,7 +72,7 @@ Item {
 
         Item {
             id: slot
-            Layout.alignment: Qt.AlignVCenter
+            Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
             implicitWidth: childrenRect.width
             implicitHeight: childrenRect.height
         }

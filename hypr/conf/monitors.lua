@@ -1,8 +1,8 @@
 -- Monitors
 --
 -- Per-output settings come from Settings → Displays (atelier-settings.lua `monitors` list,
--- defaults in atelier-mode.lua, which also applies them: M.apply_monitors). The shell applies
--- changes live with hyprctl eval; this file applies them at login and on every reload.
+-- defaults in atelier-mode.lua, which also applies them: M.apply_monitors). The shell reloads
+-- Hyprland after saving display changes, so this file applies them at login and on every reload.
 local lib = require("conf.lib")
 
 -- Space the Quickshell frame covers on each screen edge (bar + border), written by the Settings

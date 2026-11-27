@@ -66,7 +66,7 @@ Item {
     }
 
     // a plain icon button with a hover wash; `dot` = a small accent dot in its corner
-    component Glyph: Item {
+    component Glyph: ActionSurface {
         id: g
         property string icon: ""
         property color tint: Atelier.text
@@ -75,6 +75,11 @@ Item {
         property bool dot: false
         property string hoverName: ""
         signal clicked()
+        color: "transparent"
+        radius: Atelier.radiusSm
+        accessibleLabel: hoverName === "wifi" ? "Wi-Fi" : hoverName === "bluetooth" ? "Bluetooth" : ""
+        actionable: accessibleLabel !== ""
+        onActivated: clicked()
         Layout.alignment: Qt.AlignCenter
         implicitWidth: root.cell
         implicitHeight: root.cell
@@ -104,7 +109,7 @@ Item {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onClicked: g.clicked()
+            onClicked: g.activated()
             onContainsMouseChanged: if (g.hoverName !== "") bar.setHover(g.hoverName, g, containsMouse)
         }
     }
@@ -455,6 +460,7 @@ Item {
         Glyph {
             visible: Settings.bar.showStatus
             active: bar.activeOverlay === "notifications"
+            accessibleLabel: "Notifications"
             icon: Notifs.dnd ? "󰂛" : "󰂚"
             tint: Notifs.dnd ? Atelier.subtext : Atelier.text
             dot: Notifs.count > 0 && !Notifs.dnd
@@ -463,6 +469,7 @@ Item {
         Glyph {
             visible: Settings.bar.showPower
             active: bar.activeOverlay === "power"
+            accessibleLabel: "Power menu"
             icon: "⏻"
             tint: Atelier.red
             onClicked: bar.openPower()

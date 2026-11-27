@@ -141,7 +141,7 @@ Item {
                         }
                     }
                 }
-                IconButton { icon: "󰑐"; size: 36; glyphSize: 15; onClicked: Packages.refresh() }
+                IconButton { accessibleLabel: "Refresh packages"; icon: "󰑐"; size: 36; glyphSize: 15; onClicked: Packages.refresh() }
             }
 
             // Find: the search field

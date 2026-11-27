@@ -53,7 +53,7 @@ ColumnLayout {
                     Text { visible: !!about.hw.device.summary; text: about.hw.device.summary || ""
                         font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext1 }
                     Text { text: (about.sys[1] || "") + " · Atelier desktop"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext }
-                    Text { visible: !!about.sys[6]; text: "Up " + (about.sys[6] || ""); font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext; opacity: 0.8 }
+                    Text { visible: !!about.sys[6]; text: "Up " + (about.sys[6] || ""); font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext; opacity: 0.8 }
                 }
             }
         }
@@ -104,7 +104,7 @@ ColumnLayout {
                             Layout.maximumWidth: 420
                             visible: !!modelData[2]
                             text: hwRow.copied ? "Copied" : (modelData[2] || "")
-                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
+                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext
                             elide: Text.ElideRight
                             horizontalAlignment: Text.AlignRight
                         }

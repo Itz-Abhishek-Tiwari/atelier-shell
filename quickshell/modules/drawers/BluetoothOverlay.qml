@@ -286,7 +286,7 @@ get_devices()
                             ? btOverlayRoot.deviceList.length + " devices (" + connCount + " connected)"
                             : btOverlayRoot.deviceList.length + " devices available"
                         font.family: Atelier.fontUi
-                        font.pixelSize: Atelier.fsSm
+                        font.pixelSize: Atelier.fsMd
                         color: btOverlayRoot.colSubtext
                     }
 

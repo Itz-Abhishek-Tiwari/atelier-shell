@@ -147,6 +147,9 @@ local layer_rules = {
     -- soft shadow above ignore_alpha got a frosted wallpaper patch behind it = a pale outline
     -- around the clock digits (user-reported 2026-11-20).
     { ns = "quickshell-desktop-widgets", blur = false, no_anim = true },
+    -- edge spectrum: thin bars redrawn at 60 fps while music plays; blur behind them would be
+    -- re-run on every frame, and they don't need it
+    { ns = "quickshell-spectrum",        blur = false, no_anim = true },
     { ns = "atelier-wallpaper",          no_anim = true },
     { ns = "notifications",              blur = true, ignore_alpha = 0.2 },
     { ns = "logout_dialog",              blur = true },

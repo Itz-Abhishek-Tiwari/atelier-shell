@@ -270,7 +270,7 @@ Rectangle {
                             }
                             Text {
                                 text: Notifs.timeAgo(Notifs.receivedAt(modelData))
-                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm
+                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd
                                 color: Atelier.subtext; opacity: 0.9
                             }
                         }
@@ -282,7 +282,7 @@ Rectangle {
                     Layout.leftMargin: 6
                     Layout.topMargin: 2
                     text: "Show less"
-                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.DemiBold
+                    font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold
                     color: lessMa.containsMouse ? Atelier.accent : Atelier.subtext
                     Behavior on color { CAnim {} }
                     MouseArea { id: lessMa; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true
@@ -443,7 +443,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 text: tb.glyph
                 font.family: Atelier.font
-                font.pixelSize: Atelier.fsSm
+                font.pixelSize: Atelier.fsMd
                 color: tb.accent ? Atelier.accent : Atelier.subtext
                 Behavior on color { CAnim {} }
             }
@@ -451,7 +451,7 @@ Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 text: tb.label
                 font.family: Atelier.fontUi
-                font.pixelSize: Atelier.fsSm
+                font.pixelSize: Atelier.fsMd
                 font.weight: Font.DemiBold
                 color: tb.accent ? Atelier.accent : Atelier.subtext
                 Behavior on color { CAnim {} }

@@ -112,7 +112,7 @@ Item {
                     segmentWidth: 84
                     onPicked: (id) => root.localOnly = id === "local"
                 }
-                IconButton { icon: "󰑐"; size: 34; glyphSize: 15; onClicked: root.refresh() }
+                IconButton { accessibleLabel: "Refresh ports"; icon: "󰑐"; size: 34; glyphSize: 15; onClicked: root.refresh() }
             }
 
             Panel {

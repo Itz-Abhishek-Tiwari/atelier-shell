@@ -35,7 +35,7 @@ Item {
     }
 
     // an icon button; `badge` is a small number beside (row) or under (column) the icon
-    component Cell: Item {
+    component Cell: ActionSurface {
         id: c
         property string icon: ""
         property string badge: ""
@@ -43,6 +43,11 @@ Item {
         property bool active: false
         property string hoverName: ""
         signal clicked()
+        color: "transparent"
+        radius: Atelier.radiusSm
+        accessibleLabel: hoverName === "wifi" ? "Wi-Fi" : hoverName === "bluetooth" ? "Bluetooth" : ""
+        actionable: accessibleLabel !== ""
+        onActivated: clicked()
         Layout.alignment: Qt.AlignCenter
         readonly property bool hasBadge: badge !== ""
         implicitWidth: root.v ? root.cell : (hasBadge ? 4 + glyph.implicitWidth + 2 + badgeText.implicitWidth + 6 : root.cell)
@@ -81,7 +86,7 @@ Item {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onClicked: c.clicked()
+            onClicked: c.activated()
             onContainsMouseChanged: if (c.hoverName !== "") bar.setHover(c.hoverName, c, containsMouse)
         }
     }
@@ -291,6 +296,7 @@ Item {
         }
         Cell {
             visible: Settings.bar.showStatus
+            accessibleLabel: bar.muted ? "Unmute audio" : "Mute audio"
             icon: bar.muted ? "󰝟" : bar.volume > 0.6 ? "󰕾" : bar.volume > 0.25 ? "󰖀" : "󰕿"
             tint: bar.muted ? Atelier.red : Atelier.text
             onClicked: if (bar.sink && bar.sink.audio) bar.sink.audio.muted = !bar.sink.audio.muted
@@ -312,6 +318,7 @@ Item {
         Cell {
             visible: Settings.bar.showStatus
             active: bar.activeOverlay === "notifications"
+            accessibleLabel: "Notifications"
             icon: Notifs.dnd ? "󰂛" : (Notifs.count > 0 ? "󰂚" : "󰂜")
             badge: Notifs.count > 0 && !Notifs.dnd ? String(Notifs.count) : ""
             tint: Notifs.count > 0 && !Notifs.dnd ? Atelier.accent : Atelier.text
@@ -323,6 +330,7 @@ Item {
         Cell {
             visible: Settings.bar.showPower
             active: bar.activeOverlay === "power"
+            accessibleLabel: "Power menu"
             icon: "⏻"
             tint: Atelier.red
             onClicked: bar.openPower()

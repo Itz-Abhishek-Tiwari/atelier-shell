@@ -231,6 +231,8 @@ ColumnLayout {
             checked: winLook.w.shadow; onToggled: (v) => Settings.windows.shadow = v }
         SettingSwitch { label: "Shell shadows"; description: "Under the drawers and along the frame"
             checked: Settings.appearance.shellShadow; onToggled: (v) => Settings.appearance.shellShadow = v }
+        SettingSwitch { label: "Edge spectrum"; description: "A soft audio visualizer along the bottom edge while music plays (Normal mode, nothing fullscreen)"
+            checked: Settings.appearance.edgeSpectrum; onToggled: (v) => Settings.appearance.edgeSpectrum = v }
         SettingSwitch { label: "Dim unfocused windows"; tint: Atelier.sky
             checked: winLook.w.dimInactive; onToggled: (v) => Settings.windows.dimInactive = v }
         SettingSlider { visible: winLook.w.dimInactive; label: "    Dim amount"; from: 0.02; to: 0.4; step: 0.01; decimals: 2; tint: Atelier.sky

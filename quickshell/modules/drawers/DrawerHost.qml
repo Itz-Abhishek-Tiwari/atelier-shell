@@ -4,10 +4,8 @@ import Quickshell.Wayland
 import qs.config
 import qs.services
 
-// One always-mapped, full-screen window that holds every drawer and pop-up (Caelestia's
-// "ContentWindow" design). Before, each drawer was its own PanelWindow that was created on
-// open and destroyed on close, and every open paid for a new surface, render thread and GL
-// context right as its animation started. Now a drawer is just an Item that becomes visible.
+// A fixed-screen surface for drawers and pop-ups. The shell attaches the shared
+// content to the current output's host.
 //
 // The window is click-through except where something is showing:
 //   - while an interactive drawer is open/animating: the whole screen (each drawer has its
@@ -19,7 +17,7 @@ PanelWindow {
     // Set by shell.qml
     property string activeOverlay: ""        // the open interactive drawer ("" = none)
     property bool drawerVisible: false       // any interactive drawer visible (incl. closing)
-    property bool popupVisible: false        // OSD / notifications / toast visible
+    property bool popupRequested: false     // a popup can request a map while children are hidden
     property Item osdItem: null              // input areas while no drawer is open
     property Item notifItem: null
     property Item airdropItem: null          // the AirDrop card (AirDropPopup)
@@ -28,6 +26,7 @@ PanelWindow {
     // lets clicks elsewhere through (only its body is in the mask), and closes shortly after
     // the pointer is neither on it nor on its bar icon (barHover === activeOverlay).
     property bool hoverMode: false
+    property bool panelOnly: false            // an open launcher answer leaves the desktop clickable
     property Item hoverBody: null            // the open drawer's body (EdgeDrawer)
     property string barHover: ""             // bar item under the pointer (Waybar.hoverTarget)
     property var barZones: []                // [{name, a, b, c}]: spans ALONG the bar of the hover icons
@@ -36,39 +35,35 @@ PanelWindow {
     signal hoverSwitch(string name, real centerY)   // pointer rests on another hover icon
     signal hoverPin()                                // clicked the open drawer's own icon
 
-    default property alias content: holder.data
+    readonly property alias contentItem: holder
+    property bool hostingContent: false
 
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
 
     // re-map after a glass change so Hyprland applies the new blur threshold (Atelier.remapToken)
     property bool remapping: false
-    visible: !remapping
+    readonly property bool wantsMap: activeOverlay !== "" || popupRequested
+    onWantsMapChanged: if (wantsMap) closeHold.stop(); else closeHold.restart()
+    visible: hostingContent && !remapping && (wantsMap || closeHold.running)
+    Timer { id: closeHold; interval: Math.max(320, Atelier.durClose + 50) }
     Connections { target: Atelier; function onRemapTokenChanged() { host.remapping = true; hostRemap.restart(); } }
     Timer { id: hostRemap; interval: 60; onTriggered: host.remapping = false }
 
-    // Idle: shrink the surface to 1×1 px (top-left) with margins. Hyprland blurs this layer
-    // for real (pop-ups blur the window behind them), and blurring a full-screen transparent
-    // layer re-blurred the whole screen on every app redraw. A 1-px surface costs nothing.
-    // Resizing keeps the window, render thread and GL context (unlike unmapping), and the
-    // content keeps its full-screen layout (holder is screen-sized), so nothing jumps.
-    readonly property bool showing: drawerVisible || popupVisible
+    // Leave the surface unmapped when idle. Its first configure on every output
+    // requests the full monitor geometry, so the compositor never keeps an idle size.
     readonly property int scrW: screen ? screen.width : 1920
     readonly property int scrH: screen ? screen.height : 1080
-    margins.right: showing ? 0 : scrW - 1
-    margins.bottom: showing ? 0 : scrH - 1
 
     WlrLayershell.namespace: "quickshell-drawers"
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
-    // Above fullscreen windows only while something is on screen; otherwise sit in the Top
-    // layer like the frame, so fullscreen games/video keep direct scanout.
-    WlrLayershell.layer: (drawerVisible || popupVisible) ? WlrLayer.Overlay : WlrLayer.Top
+    WlrLayershell.layer: WlrLayer.Overlay
     // Keyboard only while a drawer is open; the control center types only on demand.
     WlrLayershell.keyboardFocus: activeOverlay === "" ? (Notifs.replying ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None)
-        : (hoverMode || activeOverlay === "controlcenter") ? WlrKeyboardFocus.OnDemand
+        : (hoverMode || panelOnly || activeOverlay === "controlcenter") ? WlrKeyboardFocus.OnDemand
         : WlrKeyboardFocus.Exclusive
 
-    readonly property bool fullMask: drawerVisible && !hoverMode
+    readonly property bool fullMask: drawerVisible && !hoverMode && !panelOnly
     readonly property bool hoverActive: drawerVisible && hoverMode
 
     // While a hover-opened drawer shows, THIS window also covers the stretch of the bar that holds
@@ -96,7 +91,7 @@ PanelWindow {
     // The hover-opened drawer's rectangle in window coordinates, with the bar strip cut off.
     readonly property rect hoverRect: {
         const b = hoverBody;
-        if (!drawerVisible || !hoverMode || !b) return Qt.rect(0, 0, 0, 0);
+        if (!drawerVisible || (!hoverMode && !panelOnly) || !b) return Qt.rect(0, 0, 0, 0);
         // touch the geometry so the binding re-evaluates when the drawer moves/resizes
         const _deps = [b.x, b.y, b.width, b.height, host.width, host.height, Atelier.barEdge];
         const p = b.mapToItem(holder, 0, 0);
@@ -125,7 +120,7 @@ PanelWindow {
 
     Item {
         id: holder
-        // always screen-sized (not window-sized): the window shrinks to 1 px when idle
+        // Keep drawer geometry available while the window is unmapped.
         width: host.scrW
         height: host.scrH
 

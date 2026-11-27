@@ -65,9 +65,7 @@ M.defaults = {
         saver = { opaque = true, dim = false, blur = "off", shadows = false },
     },
     -- Settings → Displays (conf/monitors.lua): one hl.monitor spec per output
-    monitors = {
-        { output = "HDMI-A-1", mode = "1366x768@59.79Hz", position = "auto", scale = "auto", transform = 3 },
-    },
+    monitors = {},
     -- Settings → Shortcuts (conf/keybinds.lua): new keys for built-in shortcuts ("" = off) + your own
     binds = { overrides = {}, custom = {} },
 }

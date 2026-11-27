@@ -1,4 +1,6 @@
 import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls.Basic as Controls
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Widgets
@@ -17,16 +19,30 @@ Item {
 
     // a strip along the right edge of the shared DrawerHost window
     anchors { top: parent.top; bottom: parent.bottom; right: parent.right }
-    width: 170 + Atelier.maxInset
+    width: drawer.itemDepth + Atelier.maxInset
     visible: drawer.visible || shown
     readonly property Item inputItem: drawer        // the host makes only this clickable
 
     property bool suppressed: false       // e.g. while the control center (with its own sliders) is open
     property bool shown: false
+    property bool choosingOutput: false
+    onShownChanged: if (!shown) choosingOutput = false
+
+    readonly property var outputs: choosingOutput ? Pipewire.nodes.values
+        .filter(node => node.isSink && !node.isStream && node.audio)
+        .map(node => ({ id: node.id, label: node.description || node.nickname || node.name || "Audio device" })) : []
+
+    function selectOutput(id) {
+        const output = Pipewire.nodes.values.find(node => node.id === id && node.isSink && !node.isStream && node.audio);
+        if (output) Pipewire.preferredDefaultAudioSink = output;
+    }
     property string focusKind: "volume"   // which slider triggered the OSD
 
-    function show(kind) {
+    signal opening(var screen)
+
+    function show(kind, screen) {
         if (suppressed || !armed) return;
+        if (!shown || screen) opening(screen || null);
         focusKind = kind;
         shown = true;
         hideTimer.restart();
@@ -89,33 +105,131 @@ Item {
         id: drawer
         edge: "right"
         open: root.shown
-        bodyWidth: 124
-        bodyHeight: 246
+        bodyWidth: root.choosingOutput ? 270 : 124
+        bodyHeight: 274
+        color: root.choosingOutput ? Atelier.base : Atelier.surface
 
         HoverHandler { id: hover; onHoveredChanged: if (!hovered) hideTimer.restart() }
 
-        Row {
+        Column {
             anchors.centerIn: parent
-            spacing: 12
+            visible: !root.choosingOutput
+            spacing: 8
 
-            OsdLevel {
-                focused: root.focusKind === "volume"
-                hovered: hover.hovered
-                value: root.volume
-                dimmed: root.muted
-                tint: Atelier.accent
-                icon: root.muted || root.volume === 0 ? "󰝟" : root.volume > 0.66 ? "󰕾" : root.volume > 0.33 ? "󰖀" : "󰕿"
-                onMoved: (v) => root.setVolume(v)
-                onIconClicked: if (root.audio) root.audio.muted = !root.audio.muted
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 12
+
+                OsdLevel {
+                    focused: root.focusKind === "volume"
+                    hovered: hover.hovered
+                    value: root.volume
+                    dimmed: root.muted
+                    tint: Atelier.accent
+                    icon: root.muted || root.volume === 0 ? "󰝟" : root.volume > 0.66 ? "󰕾" : root.volume > 0.33 ? "󰖀" : "󰕿"
+                    onMoved: (v) => root.setVolume(v)
+                    onIconClicked: if (root.audio) root.audio.muted = !root.audio.muted
+                }
+
+                OsdLevel {
+                    focused: root.focusKind === "brightness"
+                    hovered: hover.hovered
+                    value: SysState.brightness
+                    tint: Atelier.yellow
+                    icon: SysState.brightness > 0.66 ? "󰃠" : SysState.brightness > 0.33 ? "󰃟" : "󰃞"
+                    onMoved: (v) => root.setBrightness(v)
+                }
             }
 
-            OsdLevel {
-                focused: root.focusKind === "brightness"
-                hovered: hover.hovered
-                value: SysState.brightness
-                tint: Atelier.yellow
-                icon: SysState.brightness > 0.66 ? "󰃠" : SysState.brightness > 0.33 ? "󰃟" : "󰃞"
-                onMoved: (v) => root.setBrightness(v)
+            Chip {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: "Output"
+                variant: "secondary"
+                icon: "󰅀"
+                interactive: true
+                onClicked: {
+                    root.choosingOutput = true;
+                    hideTimer.restart();
+                }
+            }
+        }
+
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 14
+            visible: root.choosingOutput
+            spacing: 8
+
+            RowLayout {
+                Layout.fillWidth: true
+                Text {
+                    Layout.fillWidth: true
+                    text: "Audio output"
+                    font.family: Atelier.fontUi
+                    font.pixelSize: Atelier.fsLg
+                    font.weight: Font.DemiBold
+                    color: Atelier.text
+                }
+                Chip {
+                    text: "Back"
+                    icon: "󰅁"
+                    variant: "secondary"
+                    interactive: true
+                    onClicked: root.choosingOutput = false
+                }
+            }
+
+            ListView {
+                id: outputList
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+                clip: true
+                spacing: 3
+                model: root.outputs
+                Controls.ScrollBar.vertical: Controls.ScrollBar {}
+
+                delegate: Controls.ItemDelegate {
+                    id: outputRow
+                    required property var modelData
+                    readonly property bool selected: !!root.sink && root.sink.id === modelData.id
+                    width: outputList.width
+                    height: 42
+                    text: modelData.label
+                    onClicked: root.selectOutput(modelData.id)
+
+                    contentItem: RowLayout {
+                        Text {
+                            Layout.fillWidth: true
+                            text: outputRow.text
+                            elide: Text.ElideRight
+                            font.family: Atelier.fontUi
+                            font.pixelSize: Atelier.fsMd
+                            color: Atelier.text
+                        }
+                        Text {
+                            visible: outputRow.selected
+                            text: "󰄬"
+                            font.family: Atelier.font
+                            font.pixelSize: Atelier.fsMd
+                            color: Atelier.accent
+                        }
+                    }
+                    background: Rectangle {
+                        radius: Atelier.radiusSm
+                        color: outputRow.selected ? Qt.alpha(Atelier.accent, 0.16)
+                            : outputRow.hovered ? Atelier.containerHigh : Atelier.container
+                        border.color: outputRow.activeFocus ? Atelier.accent : "transparent"
+                    }
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    visible: outputList.count === 0
+                    text: "No audio outputs found"
+                    font.family: Atelier.fontUi
+                    font.pixelSize: Atelier.fsMd
+                    color: Atelier.subtext
+                }
             }
         }
     }

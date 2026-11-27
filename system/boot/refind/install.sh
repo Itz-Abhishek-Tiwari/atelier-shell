@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 # Install (or refresh) rEFInd with the Atelier theme, next to GRUB.
 #
-#   system/boot/refind/install.sh              run as your user; asks for sudo for the system steps
-#   system/boot/refind/install.sh --uninstall  remove rEFInd's boot entry and folder (GRUB boots again)
+#   system/boot/refind/install.sh                  run as your user; asks for sudo for the system steps
+#   system/boot/refind/install.sh --theme atelier  use the generated Atelier theme instead
+#   system/boot/refind/install.sh --uninstall      remove rEFInd's boot entry and folder (GRUB boots again)
 #
 # What it does:
 # - installs the `refind` package and copies its loader to <ESP>/EFI/refind
-# - builds the theme from the current Atelier palette + wallpaper (build-theme.py)
+# - installs the theme:
+#     minimal  (default) github.com/evanpurkhiser/rEFInd-minimal at a pinned commit,
+#              background rescaled to the panel's native resolution if it isn't 1920x1080
+#     atelier  built from the current Atelier palette + wallpaper (build-theme.py)
+# - pins rEFInd to the panel's native resolution (read from the eDP connector)
 # - writes refind.conf with clean, hand-made entries:
 #     Arch Linux   one per UKI in <ESP>/EFI/Linux (running kernel first, *-fallback skipped)
 #     GRUB         the existing GRUB, untouched, as a fallback
@@ -27,6 +32,14 @@ part="$(cat "/sys/class/block/$(basename "$dev")/partition")"
 
 entry_num() { efibootmgr | sed -nE 's/^Boot([0-9A-Fa-f]{4})\*? rEFInd.*/\1/p' | head -1; }
 
+theme=minimal
+MINIMAL_REPO=https://github.com/evanpurkhiser/rEFInd-minimal
+MINIMAL_COMMIT=56a06a4bd9ed76c05523a22017056dbecca4145d
+if [ "${1:-}" = "--theme" ]; then
+    theme="${2:-}"
+    case "$theme" in minimal|atelier) ;; *) echo "usage: $0 [--theme minimal|atelier] | --uninstall" >&2; exit 2 ;; esac
+fi
+
 if [ "${1:-}" = "--uninstall" ]; then
     n="$(entry_num)"
     [ -n "$n" ] && sudo efibootmgr -q -b "$n" -B && echo "removed boot entry Boot$n"
@@ -42,7 +55,30 @@ w="${res%x*}"; h="${res#*x}"
 
 build="$(mktemp -d)"
 trap 'rm -rf "$build"' EXIT
-python3 -I "$here/build-theme.py" "$build/atelier" --width "$w" --height "$h"
+if [ "$theme" = minimal ]; then
+    tdir=rEFInd-minimal                     # its theme.conf hard-codes this folder name
+    git init -q "$build/src"
+    git -C "$build/src" fetch -q --depth 1 "$MINIMAL_REPO" "$MINIMAL_COMMIT"
+    git -C "$build/src" checkout -q FETCH_HEAD
+    mkdir "$build/$tdir"
+    cp -r "$build/src/icons" "$build/src/theme.conf" "$build/src/background.png" \
+          "$build/src/selection_big.png" "$build/src/selection_small.png" "$build/$tdir/"
+    # the background ships at 1920x1080; match other panels pixel for pixel
+    if [ "${w}x${h}" != 1920x1080 ]; then
+        python3 -I -c 'import sys; from PIL import Image
+p, w, h = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+Image.open(p).convert("RGB").resize((w, h), Image.LANCZOS).save(p)' "$build/$tdir/background.png" "$w" "$h"
+    fi
+    arch_icon="/EFI/refind/themes/$tdir/icons/os_arch.png"
+    grub_icon="/EFI/refind/themes/$tdir/icons/os_linux.png"
+    tools=""                                # the theme sets its own (shutdown only)
+else
+    tdir=atelier
+    python3 -I "$here/build-theme.py" "$build/$tdir" --width "$w" --height "$h"
+    arch_icon="/EFI/refind/themes/$tdir/icons/os_arch.png"
+    grub_icon="/EFI/refind/themes/$tdir/icons/os_grub.png"
+    tools="showtools shutdown,reboot,firmware"
+fi
 
 sudo pacman -S --needed --noconfirm refind
 
@@ -50,7 +86,9 @@ sudo install -d -m 755 "$dest" "$dest/themes"
 sudo install -m 644 /usr/share/refind/refind_x64.efi "$dest/refind_x64.efi"
 # rEFInd's stock icons, for anything our theme has no icon for (a USB stick, a disc, ...)
 sudo rm -rf "$dest/icons" && sudo cp -r /usr/share/refind/icons "$dest/icons"
-sudo rm -rf "$dest/themes/atelier" && sudo cp -r "$build/atelier" "$dest/themes/atelier"
+# one theme at a time: drop whichever was installed before
+sudo rm -rf "$dest/themes" && sudo install -d -m 755 "$dest/themes"
+sudo cp -r "$build/$tdir" "$dest/themes/$tdir"
 
 # ── entries ──
 running="$(uname -r)"
@@ -69,13 +107,14 @@ cat > "$conf" <<EOF
 # rEFInd — written by system/boot/refind/install.sh (Atelier). Edit that script, not this file.
 timeout 3
 use_nvram false
-resolution max
+# the panel's native mode, so the theme is drawn 1:1 instead of stretched
+resolution $w $h
 # manual entries below + anything plugged in (USB sticks, discs); the internal disk is
 # not auto-scanned, or every UKI and GRUB would show up twice with long labels
 scanfor manual,external,optical
-showtools shutdown,reboot,firmware
+$tools
 default_selection "Arch Linux"
-include themes/atelier/theme.conf
+include themes/$tdir/theme.conf
 EOF
 n=0
 for f in $first $rest; do
@@ -85,7 +124,7 @@ for f in $first $rest; do
     cat >> "$conf" <<EOF
 
 menuentry "$title" {
-    icon /EFI/refind/themes/atelier/icons/os_arch.png
+    icon $arch_icon
     loader $(rel "$f")
 }
 EOF
@@ -94,7 +133,7 @@ if [ -n "$grub" ]; then
     cat >> "$conf" <<EOF
 
 menuentry "GRUB" {
-    icon /EFI/refind/themes/atelier/icons/os_grub.png
+    icon $grub_icon
     loader $(rel "$grub")
 }
 EOF

@@ -1,15 +1,22 @@
 import QtQuick
+import QtQuick.Controls.Basic as Controls
 import qs.config
 
 // The one filled action of a view (the music drawer's play button). Round with only an icon,
 // a pill when it has a label.
-Rectangle {
+ActionSurface {
     id: pb
     property string icon: ""
     property string label: ""
     property int size: label ? 36 : 50
     property color fill: Atelier.accentFill
     signal clicked()
+    accessibleLabel: label
+    onActivated: clicked()
+
+    Controls.ToolTip.visible: pbMa.containsMouse && accessibleLabel !== "" && label === ""
+    Controls.ToolTip.text: accessibleLabel
+    Controls.ToolTip.delay: 600
 
     implicitWidth: label ? pbRow.implicitWidth + 32 : size
     implicitHeight: size
@@ -28,5 +35,5 @@ Rectangle {
         Text { anchors.verticalCenter: parent.verticalCenter; visible: pb.label !== ""; text: pb.label
                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.DemiBold; color: Atelier.onFill }
     }
-    MouseArea { id: pbMa; anchors.fill: parent; enabled: pb.enabled; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: pb.clicked() }
+    MouseArea { id: pbMa; anchors.fill: parent; enabled: pb.enabled; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: pb.activated() }
 }

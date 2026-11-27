@@ -9,7 +9,8 @@ import qs.config
 // disappears on its own.
 Item {
     id: toastRoot
-    visible: toastTimer.running || toastDrawer.visible
+    readonly property bool requested: toastTimer.running
+    visible: requested || toastDrawer.visible
 
     // a click-through strip along the top of the shared DrawerHost window
     anchors { top: parent.top; left: parent.left; right: parent.right }

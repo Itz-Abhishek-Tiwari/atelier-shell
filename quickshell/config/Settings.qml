@@ -70,6 +70,7 @@ Singleton {
                 property string glassTone: "deep"       // deep (the theme's darkest colour) | base (its background colour, like most apps)
                 property bool shellBlur: true           // blur behind the bar and drawers
                 property bool shellShadow: true         // soft shadow under drawers and the frame
+                property bool edgeSpectrum: true        // audio spectrum along the bottom edge while music plays
                 property string barPosition: "left"     // left | right | top | bottom
                 property string layout: "atelier"       // atelier (tiling) | classic (Traditional: floating windows, title bars, dock)
                 // each layout remembers its own bar edge and file manager (setLayout)
@@ -343,9 +344,7 @@ Singleton {
             property JsonObject displays: JsonObject {  // Hyprland monitors (Settings → Displays)
                 // one entry per output you changed: { output, mode, position, scale, transform, vrr?, disabled?, mirror? }
                 // mode "preferred" | "WxH@R"; position "auto" | "XxY"; scale number | "auto"; transform 0–7
-                property var monitors: [
-                    { output: "HDMI-A-1", mode: "1366x768@59.79Hz", position: "auto", scale: "auto", transform: 3 }
-                ]
+                property var monitors: []
             }
 
             property JsonObject keybinds: JsonObject {  // Settings → Shortcuts (hypr/conf/keybinds.lua)
@@ -506,7 +505,7 @@ Singleton {
         return "    gestures = { " + root.luaGestureReg + ", invert = " + i.gestureInvert + ", create_new = " + i.gestureCreateNew
             + ", distance = " + Math.round(Math.max(100, Math.min(1000, i.gestureDistance))) + " },\n";
     }
-    readonly property string luaMonitors: {
+    readonly property string luaMonitorList: {
         const list = (adapter.displays.monitors || []).filter(m => m && m.output).map(m => {
             const o = { output: String(m.output), mode: m.mode || "preferred", position: m.position || "auto",
                         scale: m.scale === undefined ? "auto" : m.scale, transform: Math.round(m.transform || 0) };
@@ -515,7 +514,7 @@ Singleton {
             if (m.mirror) o.mirror = String(m.mirror);
             return o;
         });
-        return "    monitors = " + root.lua(list) + ",\n";
+        return root.lua(list);
     }
     readonly property string luaBinds: {
         const k = adapter.keybinds;
@@ -563,7 +562,7 @@ Singleton {
             + ", bottom = " + root._inset("bottom") + ", left = " + root._inset("left") + " },   -- shell frame: conf/monitors.lua\n"
             + "    -- Settings → Modes (atelier-mode.lua)\n" + root.luaModes
             + "    -- Settings → Keyboard & mouse (conf/input.lua)\n" + root.luaInput
-            + "    -- Settings → Displays (conf/monitors.lua)\n" + root.luaMonitors
+            + "    -- Settings → Displays (conf/monitors.lua)\n    monitors = " + root.luaMonitorList + ",\n"
             + "    -- Settings → Shortcuts (conf/keybinds.lua)\n" + root.luaBinds
             + "}\n";
     }
@@ -586,12 +585,23 @@ Singleton {
     property string _appliedReserved: ""
     property string _appliedBinds: ""
     property string _appliedGestures: ""
-    property var _monitorOutputs: []
+    property bool _reloadAfterSave: false
 
     FileView {
         id: hyprFile
         path: Quickshell.env("HOME") + "/.config/hypr/atelier-settings.lua"
         printErrors: false
+        onSaved: {
+            if (!root._reloadAfterSave) return;
+            root._reloadAfterSave = false;
+            hyprEval.command = ["hyprctl", "reload"];
+            hyprEval.running = true;
+        }
+        onSaveFailed: (error) => {
+            root._reloadAfterSave = false;
+            root._applied = "";
+            console.warn("Could not save Hyprland settings:", error);
+        }
     }
     Process { id: hyprEval }
 
@@ -600,9 +610,9 @@ Singleton {
         interval: 250
         onTriggered: {
             if (!root.ready || root.hyprLua === root._applied) return;
+            if (hyprEval.running || root._reloadAfterSave) { applyTimer.restart(); return; }
             const first = root._applied === "";
             root._applied = root.hyprLua;
-            hyprFile.setText(root.hyprLua);
             const mode = 'local m = dofile(os.getenv("HOME") .. "/.config/hypr/atelier-mode.lua"); ';
             let extra = "";
             // input / monitors / binds were applied by the config at login; at shell start only
@@ -611,18 +621,11 @@ Singleton {
                 if (!first) extra += "m.apply_input(t); ";
                 root._appliedInput = root.luaInput;
             }
-            const outs = (adapter.displays.monitors || []).filter(x => x && x.output).map(x => String(x.output));
-            // the bar moved to another edge: the reserved area lives on the monitor rules, so it is
-            // only re-applied by re-applying them (without this, windows keep the old bar's space)
+            // Re-read monitor rules from disk so changes also take effect on disabled outputs.
             const resKey = ["top", "right", "bottom", "left"].map(e => root._inset(e)).join(",");
-            const resChanged = resKey !== root._appliedReserved;
+            const monitorReload = !first && (root.luaMonitorList !== root._appliedMonitors || resKey !== root._appliedReserved);
             root._appliedReserved = resKey;
-            if (root.luaMonitors !== root._appliedMonitors || (resChanged && !first)) {
-                const forget = root._monitorOutputs.filter(o => outs.indexOf(o) < 0);
-                if (!first) extra += "m.apply_monitors(t, " + root.lua(forget) + "); ";
-                root._appliedMonitors = root.luaMonitors;
-            }
-            root._monitorOutputs = outs;
+            root._appliedMonitors = root.luaMonitorList;
             if (root.luaBinds !== root._appliedBinds) {
                 if (!first) extra += "if atelier_apply_binds then atelier_apply_binds(t.binds) end; ";
                 root._appliedBinds = root.luaBinds;
@@ -631,11 +634,9 @@ Singleton {
             // (it re-reads the file written above, so it also covers everything below)
             const gestReload = !first && root.luaGestureReg !== root._appliedGestures;
             root._appliedGestures = root.luaGestureReg;
-            if (gestReload) {
-                hyprEval.command = ["hyprctl", "reload"];
-                hyprEval.running = true;
-                return;
-            }
+            root._reloadAfterSave = monitorReload || gestReload;
+            hyprFile.setText(root.hyprLua);
+            if (monitorReload || gestReload) return;
             hyprEval.command = ["hyprctl", "eval",
                 'local t = dofile(os.getenv("HOME") .. "/.config/hypr/atelier-settings.lua"); ' + mode + extra + 'hl.config({ '
                 + 'general = { gaps_in = t.gaps_in, gaps_out = t.gaps_out }, '

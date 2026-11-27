@@ -2,6 +2,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import Quickshell.Wayland
 import Quickshell.Services.Mpris
 import qs.components
@@ -15,6 +16,7 @@ import qs.modules.lock
 import qs.modules.osd
 import qs.modules.screenshot
 import qs.modules.settings
+import qs.modules.spectrum
 import qs.services
 
 ShellRoot {
@@ -36,8 +38,25 @@ ShellRoot {
     property string barHover: ""          // bar item under the pointer (Waybar.hoverTarget)
     property var barZones: []             // where the hover icons are along the bar (Waybar.zones())
 
-    function hoverOverlay(name, centerY) {
-        if (!Settings.bar.openOnHover || activeOverlay === name) return;
+    // Keep the existing layer surface on its output when Quickshell reloads.
+    PersistentProperties {
+        id: drawerPlacement
+        reloadableId: "atelier-drawer-placement"
+        property string outputName: ""
+    }
+    readonly property ShellScreen drawerScreen: Quickshell.screens.find(s => s.name === drawerPlacement.outputName)
+        ?? Quickshell.screens[0] ?? null
+
+    function placeDrawer(screen) {
+        const target = screen || focusedScreen;
+        if (target) drawerPlacement.outputName = target.name;
+    }
+
+    readonly property ShellScreen focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
+        ?? Quickshell.screens[0] ?? null
+
+    function hoverOverlay(name, centerY, screen) {
+        if (!Settings.bar.openOnHover || (activeOverlay === name && (!screen || screen === drawerScreen))) return;
         if (activeOverlay !== "" && !hoverMode) return;   // never replace a drawer you clicked open
         const prev = activeOverlay;
         if (prev === "") closeAllOverlays();
@@ -45,8 +64,8 @@ ShellRoot {
         // Switching between bar drawers: open the new one FIRST, then drop the old one instantly.
         // Never go through closeAllOverlays() here: it clears hoverMode for a moment, the host's
         // bar strip loses the pointer, and the leave timer closes the new drawer (close → reopen).
-        openOverlay(name, centerY);
-        if (prev !== "" && lazyDrawers[prev]) lazyDrawers[prev].hideNow();
+        openOverlay(name, centerY, screen || drawerScreen);
+        if (prev !== name && prev !== "" && lazyDrawers[prev]) lazyDrawers[prev].hideNow();
     }
     property string edgeHover: ""         // "media" while the pointer is on the top-edge sensor
 
@@ -65,12 +84,16 @@ ShellRoot {
         if (d) d.prefetch();
     }
 
-    function toggleOverlay(name, centerY) {
+    function toggleOverlay(name, centerY, screen) {
         // the on-screen keyboard is independent: it stays open while other overlays come and go
         if (name === "keyboard") { osk.toggle(); return; }
         // Settings on a given page ("settings:<page>"): switch page if it is already open
         if (name.startsWith("settings:")) {
-            if (activeOverlay !== "settings") { closeAllOverlays(); activeOverlay = "settings"; }
+            if (activeOverlay !== "settings") {
+                placeDrawer(screen);
+                closeAllOverlays();
+                activeOverlay = "settings";
+            }
             hoverMode = false;
             settingsApp.open(name.slice(9));
             return;
@@ -90,24 +113,27 @@ ShellRoot {
             else screenshotTool.open(name === "screenshot-window" ? "window" : "region", 0);
             return;
         }
+        const targetScreen = screen || focusedScreen;
+        const sameScreen = targetScreen === drawerScreen;
         // emoji ⇄ GIFs are two tabs of one drawer: switch tab instead of closing and reopening
         if ((name === "emoji" || name === "gifs") && (activeOverlay === "emoji" || activeOverlay === "gifs")
-                && activeOverlay !== name) {
+                && activeOverlay !== name && sameScreen) {
             activeOverlay = name;
             emojiOverlay.call("setTab", name);
             return;
         }
         // clicking the icon of a hover-opened drawer pins it (instead of closing it)
-        if (hoverMode && activeOverlay === name) { hoverMode = false; return; }
-        if (activeOverlay === name) {
+        if (hoverMode && activeOverlay === name && sameScreen) { hoverMode = false; return; }
+        if (activeOverlay === name && sameScreen) {
             closeAllOverlays();
         } else {
             closeAllOverlays();
-            openOverlay(name, centerY);
+            openOverlay(name, centerY, targetScreen);
         }
     }
 
-    function openOverlay(name, centerY) {
+    function openOverlay(name, centerY, screen) {
+        placeDrawer(screen);
         shellRoot.lastCenterY = centerY || 0;
         activeOverlay = name;
         if (name === "emoji" || name === "gifs") emojiOverlay.open(name);        // two tabs of one drawer
@@ -139,29 +165,30 @@ ShellRoot {
         model: Quickshell.screens
 
         Frame {
+            id: frame
             required property ShellScreen modelData
             screen: modelData
-            onEdgeHovered: if (shellRoot.activeOverlay === "") osd.show(osd.focusKind)
+            onEdgeHovered: if (shellRoot.activeOverlay === "") osd.show(osd.focusKind, frame.screen)
             // music drawer from the top edge: hover opens it (only while a player exists), click pins/toggles
-            onTopHovered: if (Mpris.players.values.length > 0) shellRoot.hoverOverlay("media")
-            onTopClicked: shellRoot.toggleOverlay("media")
-            onOpenApps: shellRoot.toggleOverlay("apps")
+            onTopHovered: if (Mpris.players.values.length > 0) shellRoot.hoverOverlay("media", 0, frame.screen)
+            onTopClicked: shellRoot.toggleOverlay("media", 0, frame.screen)
+            onOpenApps: shellRoot.toggleOverlay("apps", 0, frame.screen)
             onTopHoverChanged: shellRoot.edgeHover = topHover ? "media" : ""
 
             Waybar {
                 id: waybar
                 activeOverlay: shellRoot.activeOverlay
-                onOpenWifi: (centerY) => shellRoot.toggleOverlay("wifi", centerY)
-                onOpenBluetooth: (centerY) => shellRoot.toggleOverlay("bluetooth", centerY)
-                onOpenPower: shellRoot.toggleOverlay("power")
-                onOpenLauncher: shellRoot.toggleOverlay("apps")   // bar logo → app grid (Super+Space is search)
-                onOpenCalendar: (centerY) => shellRoot.toggleOverlay("calendar", centerY)
-                onOpenPrivacy: (centerY) => shellRoot.toggleOverlay("privacy", centerY)
-                onOpenWallpaper: shellRoot.toggleOverlay("wallpaper")
-                onOpenControlCenter: shellRoot.toggleOverlay("controlcenter")
-                onOpenNotifications: shellRoot.toggleOverlay("notifications")
-                onOpenMedia: shellRoot.toggleOverlay("media")
-                onHoverOpen: (name, centerY) => { shellRoot.barZones = zones(); shellRoot.hoverOverlay(name, centerY); }
+                onOpenWifi: (centerY) => shellRoot.toggleOverlay("wifi", centerY, frame.screen)
+                onOpenBluetooth: (centerY) => shellRoot.toggleOverlay("bluetooth", centerY, frame.screen)
+                onOpenPower: shellRoot.toggleOverlay("power", 0, frame.screen)
+                onOpenLauncher: shellRoot.toggleOverlay("apps", 0, frame.screen)   // bar logo → app grid (Super+Space is search)
+                onOpenCalendar: (centerY) => shellRoot.toggleOverlay("calendar", centerY, frame.screen)
+                onOpenPrivacy: (centerY) => shellRoot.toggleOverlay("privacy", centerY, frame.screen)
+                onOpenWallpaper: shellRoot.toggleOverlay("wallpaper", 0, frame.screen)
+                onOpenControlCenter: shellRoot.toggleOverlay("controlcenter", 0, frame.screen)
+                onOpenNotifications: shellRoot.toggleOverlay("notifications", 0, frame.screen)
+                onOpenMedia: shellRoot.toggleOverlay("media", 0, frame.screen)
+                onHoverOpen: (name, centerY) => { shellRoot.barZones = zones(); shellRoot.hoverOverlay(name, centerY, frame.screen); }
                 onHoverTargetChanged: {
                     shellRoot.barHover = hoverTarget;
                     shellRoot.prefetch(hoverTarget);   // build its drawer in the background before the hover opens it
@@ -195,35 +222,53 @@ ShellRoot {
     // Desktop Bento Widgets Suite (Clock, System Health, Media, Quick Apps, Daily Focus)
     DesktopWidgets {
         id: desktopWidgets
-        onRequestOverlay: (name) => shellRoot.toggleOverlay(name)
+        onRequestOverlay: (name) => shellRoot.toggleOverlay(name, 0, desktopWidgets.screen)
     }
 
     // User plugins' desktop widgets (docs/plugins.md)
     PluginWidgets {}
 
-    // 2. Every drawer and pop-up lives in ONE always-mapped window (DrawerHost), Caelestia-style:
-    //    opening a drawer only shows an Item. No new window / render thread / GL context.
-    //    Order = stacking: drawers, then notifications, OSD, toast on top.
-    DrawerHost {
-        id: drawerHost
-        activeOverlay: shellRoot.activeOverlay
-        drawerVisible: {
-            for (const k in shellRoot.lazyDrawers) if (shellRoot.lazyDrawers[k].shown) return true;
-            return false;
+    // audio spectrum along the bottom edge while music plays (its own thin window, only then)
+    EdgeSpectrum {}
+
+    // Each monitor has a fixed layer surface. Move the shared drawer content between
+    // those surfaces so a mapped Wayland window never has to change its screen.
+    readonly property var drawerHost: drawerHosts.instances.find(host => host.modelData === drawerScreen) ?? null
+    readonly property bool drawerVisible: {
+        for (const name in lazyDrawers) if (lazyDrawers[name].shown) return true;
+        return false;
+    }
+
+    Variants {
+        id: drawerHosts
+        model: Quickshell.screens
+
+        DrawerHost {
+            required property ShellScreen modelData
+            readonly property bool selected: modelData === shellRoot.drawerScreen
+            screen: modelData
+            hostingContent: selected
+            activeOverlay: selected ? shellRoot.activeOverlay : ""
+            drawerVisible: selected && shellRoot.drawerVisible
+            popupRequested: selected && (osd.shown || notificationPopups.hasPopups || toastPopup.requested || airDropPopup.showing)
+            osdItem: selected && osd.visible ? osd.inputItem : null
+            notifItem: selected && notificationPopups.visible ? notificationPopups.inputItem : null
+            airdropItem: selected && airDropPopup.visible ? airDropPopup.inputItem : null
+            hoverMode: selected && shellRoot.hoverMode
+            panelOnly: selected && activeOverlay === "launcher" && (launcherOverlay.item?.showAnswer ?? false)
+            barHover: shellRoot.barHover
+            hoverBody: selected ? shellRoot.lazyDrawers[shellRoot.activeOverlay]?.bodyItem ?? null : null
+            barZones: shellRoot.barZones
+            edgeHover: shellRoot.edgeHover
+            onHoverLeft: if (selected) shellRoot.closeAllOverlays()
+            onHoverSwitch: (name, centerY) => shellRoot.hoverOverlay(name, centerY, modelData)
+            onHoverPin: shellRoot.hoverMode = false
         }
-        popupVisible: notificationPopups.visible || osd.visible || toastPopup.visible || airDropPopup.visible
-        osdItem: osd.visible ? osd.inputItem : null
-        notifItem: notificationPopups.visible ? notificationPopups.inputItem : null
-        airdropItem: airDropPopup.visible ? airDropPopup.inputItem : null
-        hoverMode: shellRoot.hoverMode
-        barHover: shellRoot.barHover
-        // the hover drawers (wifi, bluetooth, calendar, media) have a body; the rest give null
-        hoverBody: shellRoot.lazyDrawers[shellRoot.activeOverlay] ? shellRoot.lazyDrawers[shellRoot.activeOverlay].bodyItem : null
-        barZones: shellRoot.barZones
-        edgeHover: shellRoot.edgeHover
-        onHoverLeft: shellRoot.closeAllOverlays()
-        onHoverSwitch: (name, centerY) => shellRoot.hoverOverlay(name, centerY)
-        onHoverPin: shellRoot.hoverMode = false
+    }
+
+    Item {
+        parent: shellRoot.drawerHost?.contentItem ?? null
+        anchors.fill: parent
 
         // Desktop overview (Super+Tab)
         LazyDrawer {
@@ -267,7 +312,7 @@ ShellRoot {
             persistent: true
             sourceComponent: Component {
                 ControlCenter {
-                    onRequestOverlay: (name) => shellRoot.toggleOverlay(name)
+                    onRequestOverlay: (name) => shellRoot.toggleOverlay(name, 0, shellRoot.drawerScreen)
                     onClosedSignal: {
                         if (shellRoot.activeOverlay === "controlcenter") shellRoot.activeOverlay = "";
                     }
@@ -335,7 +380,7 @@ ShellRoot {
             sourceComponent: Component {
                 LauncherOverlay {
                     isLight: shellRoot.isLight
-                    onRequestOverlay: (name) => shellRoot.toggleOverlay(name)
+                    onRequestOverlay: (name) => shellRoot.toggleOverlay(name, 0, shellRoot.drawerScreen)
                     onToastRequested: (msg, icon, clr) => toastPopup.showToast(msg, icon, clr)
                     onClosedSignal: {
                         if (shellRoot.activeOverlay === "launcher") shellRoot.activeOverlay = "";
@@ -510,7 +555,7 @@ ShellRoot {
             sourceComponent: Component {
                 SettingsApp {
                     isLight: shellRoot.isLight
-                    onRequestOverlay: (name) => shellRoot.toggleOverlay(name)
+                    onRequestOverlay: (name) => shellRoot.toggleOverlay(name, 0, shellRoot.drawerScreen)
                     onClosedSignal: {
                         if (shellRoot.activeOverlay === "settings") shellRoot.activeOverlay = "";
                     }
@@ -525,6 +570,10 @@ ShellRoot {
         // Volume / brightness OSD (one slider that updates in place)
         Osd {
             id: osd
+            onOpening: (screen) => {
+                if (shellRoot.activeOverlay === "")
+                    shellRoot.placeDrawer(screen);
+            }
             suppressed: shellRoot.activeOverlay === "controlcenter" || shellRoot.activeOverlay === "notifications"
         }
         ToastPopup {

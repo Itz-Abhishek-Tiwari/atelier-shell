@@ -723,7 +723,7 @@ Item {
         color: Atelier.subtext
     }
 
-    component RoundBtn: Rectangle {
+    component RoundBtn: ActionSurface {
         id: rb
         property string icon
         property int size: 34
@@ -732,6 +732,8 @@ Item {
         property string tip: ""
         property bool active: false          // lit (e.g. Do Not Disturb on)
         signal clicked()
+        accessibleLabel: tip
+        onActivated: clicked()
         implicitWidth: size
         implicitHeight: size
         radius: size / 2
@@ -748,7 +750,7 @@ Item {
             Behavior on color { CAnim {} }
         }
         Tip { text: rb.tip; shown: rbMa.containsMouse }
-        MouseArea { id: rbMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: if (rb.enabled) rb.clicked() }
+        MouseArea { id: rbMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: if (rb.enabled) rb.activated() }
     }
 
     // a small tooltip under its parent, after a short hover
@@ -761,7 +763,7 @@ Item {
         anchors.top: parent.bottom; anchors.topMargin: 6
         z: 100
         width: tipText.implicitWidth + 14; height: 22; radius: Atelier.radiusSm
-        color: Atelier.containerHigh
+        color: Atelier.base
         border.width: 1; border.color: Atelier.outline
         Text { id: tipText; anchors.centerIn: parent; text: tip.text; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.text }
         Timer { id: tipDelay; property bool done: false; interval: 550; running: tip.shown && !done; onTriggered: done = true }
@@ -769,11 +771,14 @@ Item {
     }
 
     // pill switch (the site's .tg)
-    component PillSwitch: Rectangle {
+    component PillSwitch: ActionSurface {
         id: ps
         property bool on: false
         property bool warn: false
         signal toggled()
+        checkable: true
+        checked: on
+        onActivated: toggled()
         implicitWidth: 36
         implicitHeight: 20
         radius: Atelier.radiusSm
@@ -788,7 +793,7 @@ Item {
             color: ps.on ? Atelier.onFill : Atelier.subtext
             Behavior on x { Anim { type: "fastSpatial" } }
         }
-        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: ps.toggled() }
+        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: ps.activated() }
     }
 
     // ═══ Layout: TILES — wide Wi-Fi/Bluetooth tiles + a 4-across grid of the rest ═══
@@ -815,11 +820,15 @@ Item {
         }
     }
 
-    component WideTile: Rectangle {
+    component WideTile: ActionSurface {
         id: wt
         property string tid
         readonly property var d: root.t(tid)
         readonly property bool on: d.on
+        accessibleLabel: d.label
+        checkable: true
+        checked: on
+        onActivated: root.act(tid)
         Layout.fillWidth: true
         Layout.preferredWidth: 1          // equal halves
         implicitHeight: 60
@@ -831,7 +840,7 @@ Item {
         Behavior on color { CAnim {} }
         Behavior on scale { Anim { type: "fastSpatial" } }
 
-        MouseArea { id: wtMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.act(wt.tid) }
+        MouseArea { id: wtMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: wt.activated() }
         RowLayout {
             anchors.fill: parent
             anchors.leftMargin: 12
@@ -854,24 +863,31 @@ Item {
                     font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm
                     color: Atelier.subtext }
             }
-            Rectangle {
+            ActionSurface {
+                id: detailsButton
+                accessibleLabel: wt.d.label + " details"
+                onActivated: root.details(wt.tid)
                 implicitWidth: 26; implicitHeight: 26; radius: 13
                 color: "transparent"
                 Behavior on color { CAnim {} }
                 StateLayer { mouseArea: detMa }
                 Text { anchors.centerIn: parent; text: "󰅂"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg
                     color: wt.on ? Atelier.accent : Atelier.subtext }
-                MouseArea { id: detMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.details(wt.tid) }
+                MouseArea { id: detMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: detailsButton.activated() }
             }
         }
     }
 
     // a square toggle: icon + one word, filled when on. Right-click = details. Hover = status line.
-    component QuickTile: Rectangle {
+    component QuickTile: ActionSurface {
         id: qt
         property string tid
         readonly property var d: root.t(tid)
         readonly property bool on: d.on
+        accessibleLabel: d.label
+        checkable: true
+        checked: on
+        onActivated: root.act(tid)
         Layout.fillWidth: true
         Layout.preferredWidth: 1
         implicitHeight: 68
@@ -899,7 +915,7 @@ Item {
             hoverEnabled: true
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             cursorShape: Qt.PointingHandCursor
-            onClicked: (m) => { if (m.button === Qt.RightButton) root.details(qt.tid); else root.act(qt.tid); }
+            onClicked: (m) => { if (m.button === Qt.RightButton) root.details(qt.tid); else qt.activated(); }
             onContainsMouseChanged: root.hint = containsMouse ? qt.d.label + " · " + qt.d.sub : (root.hint.startsWith(qt.d.label + " ·") ? "" : root.hint)
         }
     }
@@ -1003,7 +1019,7 @@ Item {
                 color: chMa.containsMouse ? Atelier.text : Atelier.subtext
                 MouseArea { id: chMa; anchors.fill: parent; anchors.margins: -8; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.details(lr.tid) }
             }
-            PillSwitch { on: lr.d.on; warn: lr.d.warn; onToggled: root.act(lr.tid) }
+            PillSwitch { accessibleLabel: lr.d.label; on: lr.d.on; warn: lr.d.warn; onToggled: root.act(lr.tid) }
         }
     }
 

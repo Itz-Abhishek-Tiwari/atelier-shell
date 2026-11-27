@@ -22,10 +22,14 @@ Rectangle {
         spacing: 2
         Repeater {
             model: sg.model
-            Rectangle {
+            ActionSurface {
                 id: seg
                 required property var modelData
                 readonly property bool on: sg.current === modelData.id
+                accessibleLabel: modelData.label
+                checkable: true
+                checked: on
+                onActivated: sg.picked(modelData.id)
                 width: sg.segmentWidth
                 height: segRow.height
                 radius: height / 2
@@ -42,7 +46,7 @@ Rectangle {
                            text: seg.modelData.label; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold
                            color: seg.on ? Atelier.onFill : Atelier.text }
                 }
-                MouseArea { id: segMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: sg.picked(seg.modelData.id) }
+                MouseArea { id: segMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: seg.activated() }
             }
         }
     }

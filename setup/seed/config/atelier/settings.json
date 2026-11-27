@@ -51,22 +51,7 @@
         "terminal": "ghostty"
     },
     "displays": {
-        "monitors": [
-            {
-                "mode": "1366x768@59.79Hz",
-                "output": "HDMI-A-1",
-                "position": "auto",
-                "scale": "auto",
-                "transform": 3
-            },
-            {
-                "mode": "1920x1080@120.21Hz",
-                "output": "eDP-1",
-                "position": "auto",
-                "scale": 1,
-                "transform": 0
-            }
-        ]
+        "monitors": []
     },
     "general": {
         "animSpeed": 1,

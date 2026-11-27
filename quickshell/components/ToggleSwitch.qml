@@ -5,10 +5,13 @@ import qs.config
 // implicitWidth/implicitHeight; the knob follows the height. It does not flip itself: bind `on` to
 // your state and change that state in onToggled.
 // Off: a faint track with a quiet knob. On: the accent fill with a bright knob. Pressing stretches the knob.
-Rectangle {
+ActionSurface {
     id: ts
     property bool on: false
     signal toggled()
+    checkable: true
+    checked: on
+    onActivated: toggled()
     implicitWidth: 40
     implicitHeight: 22
     radius: height / 2
@@ -35,5 +38,5 @@ Rectangle {
         Behavior on width { Anim { type: "fastSpatial" } }
         Behavior on color { CAnim {} }
     }
-    MouseArea { id: ma; anchors.fill: parent; enabled: ts.enabled; cursorShape: Qt.PointingHandCursor; onClicked: ts.toggled() }
+    MouseArea { id: ma; anchors.fill: parent; enabled: ts.enabled; cursorShape: Qt.PointingHandCursor; onClicked: ts.activated() }
 }

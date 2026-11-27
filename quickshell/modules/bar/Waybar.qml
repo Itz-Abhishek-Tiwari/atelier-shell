@@ -742,6 +742,7 @@ Item {
                 onClicked: bar.openBluetooth(bar.centerOf(btIcon))
             }
             BarIcon {
+                accessibleLabel: bar.muted ? "Unmute audio" : "Mute audio"
                 icon: bar.muted ? "󰝟" : bar.volume > 0.6 ? "󰕾" : bar.volume > 0.25 ? "󰖀" : "󰕿"
                 iconColor: bar.muted ? Atelier.red : Atelier.text
                 size: 15
@@ -785,6 +786,7 @@ Item {
                 }
             }
             BarIcon {
+                accessibleLabel: "Notifications"
                 icon: Notifs.dnd ? "󰂛" : (Notifs.count > 0 ? "󰂚" : "󰂜")
                 iconColor: Notifs.count > 0 && !Notifs.dnd ? Atelier.accent : Atelier.text
                 size: 15
@@ -809,6 +811,7 @@ Item {
         BarIcon {
             Layout.alignment: bar.crossAlign
             visible: Settings.bar.showPower
+            accessibleLabel: "Power menu"
             icon: "⏻"
             size: 16
             iconColor: Atelier.red
@@ -857,7 +860,7 @@ Item {
         }
     }
 
-    component BarIcon: Item {
+    component BarIcon: ActionSurface {
         id: bi
         property string icon
         property color iconColor: Atelier.text
@@ -865,6 +868,11 @@ Item {
         property bool active: false
         property string hoverName: ""       // opens its drawer on hover (see setHover)
         signal clicked()
+        color: "transparent"
+        radius: Atelier.radiusSm
+        accessibleLabel: hoverName === "wifi" ? "Wi-Fi" : hoverName === "bluetooth" ? "Bluetooth" : ""
+        actionable: accessibleLabel !== ""
+        onActivated: clicked()
 
         implicitWidth: 28
         implicitHeight: 28
@@ -890,7 +898,7 @@ Item {
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
-            onClicked: bi.clicked()
+            onClicked: bi.activated()
             onContainsMouseChanged: if (bi.hoverName !== "") bar.setHover(bi.hoverName, bi, containsMouse)
         }
     }

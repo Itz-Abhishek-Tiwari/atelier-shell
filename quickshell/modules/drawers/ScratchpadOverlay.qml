@@ -58,8 +58,8 @@ Item {
                     icon: "󰎞"; tint: Atelier.yellow; title: "Scratchpad"
                     subtitle: Scratchpad.words === 0 ? "Jot something down" : Scratchpad.words + (Scratchpad.words === 1 ? " word" : " words") + "  ·  saved as you type"
                 }
-                IconButton { icon: "󰆏"; size: 30; glyphSize: 14; onClicked: Scratchpad.copy() }
-                IconButton { icon: "󰩺"; size: 30; glyphSize: 14; onClicked: { Scratchpad.clear(); pad.forceActiveFocus(); } }
+                IconButton { accessibleLabel: "Copy note"; icon: "󰆏"; size: 30; glyphSize: 14; onClicked: Scratchpad.copy() }
+                IconButton { accessibleLabel: "Clear note"; icon: "󰩺"; size: 30; glyphSize: 14; onClicked: { Scratchpad.clear(); pad.forceActiveFocus(); } }
             }
 
             Rectangle {

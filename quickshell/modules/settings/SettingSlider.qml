@@ -29,6 +29,19 @@ SettingRow {
             id: area
             implicitWidth: 190
             implicitHeight: 28
+            activeFocusOnTab: true
+            Accessible.role: Accessible.Slider
+            Accessible.name: root.label.trim()
+            Accessible.onIncreaseAction: adjust(root.step)
+            Accessible.onDecreaseAction: adjust(-root.step)
+
+            function adjust(delta) {
+                const next = root.snap(root.value + delta);
+                if (next !== root.value) root.moved(next);
+            }
+
+            Keys.onLeftPressed: adjust(-root.step)
+            Keys.onRightPressed: adjust(root.step)
 
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
@@ -36,6 +49,8 @@ SettingRow {
                 height: 6
                 radius: 3
                 color: Atelier.containerHigh
+                border.width: area.activeFocus ? 1 : 0
+                border.color: Atelier.text
                 Rectangle {
                     width: Math.max(height, parent.width * ((root.value - root.from) / (root.to - root.from)))
                     height: parent.height
@@ -67,9 +82,9 @@ SettingRow {
                     const v = root.snap(root.from + (root.to - root.from) * Math.max(0, Math.min(1, x / width)));
                     if (v !== root.value) root.moved(v);
                 }
-                onPressed: (m) => apply(m.x)
+                onPressed: (m) => { area.forceActiveFocus(); apply(m.x); }
                 onPositionChanged: (m) => { if (pressed) apply(m.x); }
-                onWheel: (w) => { const v = root.snap(root.value + (w.angleDelta.y > 0 ? root.step : -root.step)); if (v !== root.value) root.moved(v); }
+                onWheel: (w) => area.adjust(w.angleDelta.y > 0 ? root.step : -root.step)
             }
         }
         Text {

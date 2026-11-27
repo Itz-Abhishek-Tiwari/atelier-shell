@@ -60,6 +60,7 @@ install_files() {
     install -d -m 755 "$DEST"
     install -m 644 "$REPO/greeter/shell.qml" "$DEST/shell.qml"
     install -m 755 "$REPO/greeter/session.sh" "$DEST/session.sh"
+    install -m 755 "$REPO/greeter/kiosk.sh" "$DEST/kiosk.sh"
     # the lock-screen styles (modules/lock = the shell's own files, through symlinks) and the
     # stand-ins they read (config/, services/, components/); -L copies the real files
     rm -rf "$DEST/config" "$DEST/services" "$DEST/components" "$DEST/modules" "$DEST/scripts"
@@ -97,7 +98,8 @@ vt = 1
 [default_session]
 # cage = single-window kiosk compositor; quickshell draws the login screen
 # QT_WAYLAND_DISABLE_WINDOWDECORATION + cage -d: no title bar / min-max-close buttons
-command = "env QT_WAYLAND_DISABLE_WINDOWDECORATION=1 cage -s -d -m last -- quickshell -p $DEST/shell.qml"
+# kiosk.sh switches every screen but the laptop panel off, then starts quickshell
+command = "env QT_WAYLAND_DISABLE_WINDOWDECORATION=1 cage -s -d -m extend -- $DEST/kiosk.sh"
 user = "greeter"
 EOF
     ok "Wrote /etc/greetd/config.toml"
@@ -106,8 +108,8 @@ EOF
 case "$MODE" in
 install|enable)
     command -v pacman >/dev/null || die "This installer targets Arch Linux (pacman not found)."
-    info "Installing greetd and cage..."
-    pacman -S --needed --noconfirm greetd cage
+    info "Installing greetd, cage and wlr-randr..."
+    pacman -S --needed --noconfirm greetd cage wlr-randr
     # make sure the 'greeter' system user exists (greetd ships a sysusers entry)
     systemd-sysusers 2>/dev/null || true
     id greeter >/dev/null 2>&1 || die "User 'greeter' is missing; create it: useradd -M -G video -s /usr/bin/nologin greeter"
@@ -131,6 +133,8 @@ install|enable)
     ;;
 refresh)
     [ -d "$DEST" ] || die "Greeter not installed yet. Run: sudo greeter/install.sh"
+    # kiosk.sh needs it to keep the login screen on the laptop panel
+    command -v wlr-randr >/dev/null || pacman -S --needed --noconfirm wlr-randr
     install_files
     refresh_assets
     write_config

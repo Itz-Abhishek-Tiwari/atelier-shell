@@ -26,7 +26,7 @@ return {
     mouse_curve = true,
     gestures = { workspace = true, workspace_fingers = 3, overview = true, launcher = true, pinch_fingers = 4, invert = true, create_new = true, distance = 300 },
     -- Settings → Displays (conf/monitors.lua)
-    monitors = { { ["output"] = "HDMI-A-1", ["mode"] = "1366x768@59.79Hz", ["position"] = "auto", ["scale"] = "auto", ["transform"] = 3 }, { ["output"] = "eDP-1", ["mode"] = "1920x1080@120.21Hz", ["position"] = "auto", ["scale"] = 1, ["transform"] = 0 } },
+    monitors = { { ["output"] = "HDMI-A-1", ["mode"] = "1360x768@59.80Hz", ["position"] = "1920x1271", ["scale"] = 1, ["transform"] = 0 }, { ["output"] = "eDP-1", ["mode"] = "preferred", ["position"] = "0x1152", ["scale"] = 1, ["transform"] = 0 } },
     -- Settings → Shortcuts (conf/keybinds.lua)
     binds = { overrides = {}, custom = {  } },
 }

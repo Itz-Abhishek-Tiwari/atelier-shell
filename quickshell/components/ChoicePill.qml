@@ -2,13 +2,17 @@ import QtQuick
 import qs.config
 
 // A pill you pick (presets, phases, filters): filled with the accent when chosen.
-Rectangle {
+ActionSurface {
     id: cp
     property string icon: ""
     property string label: ""
     property bool on: false
     property bool mono: false
     signal clicked()
+    accessibleLabel: label
+    checkable: true
+    checked: on
+    onActivated: clicked()
 
     implicitWidth: cpRow.implicitWidth + 24
     implicitHeight: 30
@@ -30,5 +34,5 @@ Rectangle {
                font.family: cp.mono ? Atelier.font : Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold
                color: cp.on ? Atelier.onFill : Atelier.text }
     }
-    MouseArea { id: cpMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: cp.clicked() }
+    MouseArea { id: cpMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: cp.activated() }
 }

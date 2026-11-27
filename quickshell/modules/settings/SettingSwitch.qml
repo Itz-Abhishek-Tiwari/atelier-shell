@@ -12,6 +12,7 @@ SettingRow {
 
     ToggleSwitch {
         implicitWidth: 44; implicitHeight: 26
+        accessibleLabel: root.label.trim()
         on: root.checked
         onToggled: root.toggled(!root.checked)
     }
