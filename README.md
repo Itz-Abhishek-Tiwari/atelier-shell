@@ -1,14 +1,26 @@
-# Quickshell Atelier
+<h1 align="center">Quickshell Atelier</h1>
 
-Arch Linux + Hyprland (Lua config) desktop built around a custom **Quickshell** shell
-(framed side bar with edge drawers, launcher, overview, control center, lock screen, notifications, OSD, settings,
-emoji picker and GIF finder), with one theme engine (`atelier-theme`) that recolours everything.
+<p align="center">
+  <img src="docs/atelier-banner.png" width="400" height="400" alt="Quickshell Atelier wordmark in a Kanagawa-colored desktop frame">
+</p>
 
-![The Atelier desktop: framed side bar and the typographic clock in the corner](docs/screenshots/desktop.webp)
+<p align="center">A custom Quickshell desktop for Arch Linux and Hyprland.</p>
+
+<p align="center">
+  <a href="#screenshots">Screenshots</a> ·
+  <a href="#installation">Installation</a> ·
+  <a href="#daily-use">Shortcuts</a> ·
+  <a href="#hardware-settings-and-profiles">Settings</a> ·
+  <a href="#plugins">Plugins</a>
+</p>
+
+Atelier puts the launcher, workspace overview, control center, and settings in drawers that open from the desktop frame. The same theme engine applies your palette to the shell, Hyprland, terminals, and supported apps. Display profiles can switch your setup when you plug in a monitor.
 
 ## Screenshots
 
-Every panel is a drawer that grows out of the frame. Shown in the Kanagawa theme.
+The desktop and drawers shown here use the Kanagawa theme.
+
+![The Atelier desktop with a framed sidebar and a large clock in the corner](docs/screenshots/desktop.webp)
 
 <table>
 <tr>
@@ -37,19 +49,21 @@ Every panel is a drawer that grows out of the frame. Shown in the Kanagawa theme
 </tr>
 </table>
 
-## Install (one command)
+## Installation
+
+Run these commands on Arch Linux.
 
 ```bash
-git clone https://github.com/<your-user>/quickshell-atelier.git ~/quickshell-atelier && ~/quickshell-atelier/install.sh
+git clone https://github.com/Itz-Abhishek-Tiwari/atelier-shell.git ~/quickshell-atelier
+cd ~/quickshell-atelier
+./install.sh
 ```
 
-**This folder is the source of truth.** Copy it (or clone it) to a new Arch machine, run
-`./install.sh`, reboot, and the machine matches this one: packages, drivers, system files,
-every config, themes, the login screen. Keep the folder where it is afterwards: your configs are
-**symlinks** into it, so editing either side edits the same file. When copying by hand, include
-`hypr/wall/` (the wallpapers; too big for git).
+Review the installer’s system changes below, or preview them with `./install.sh --dry-run`.
+Reboot after the full installation. Keep the checkout in place because your configs are symlinked
+to it. If you are moving an existing setup, copy your local wallpapers in `hypr/wall/` separately.
 
-Dotfiles only (no `sudo`, no packages, no `/etc` changes):
+To install just the user configuration, run:
 
 ```bash
 ~/quickshell-atelier/install.sh --dotfiles-only
