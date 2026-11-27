@@ -8,10 +8,11 @@
 pid=${1:-0}
 [[ $pid -gt 0 ]] || exit 0
 
-tree() {                       # pid and all its descendants, parents first
-    echo "$1"
-    local c
-    for c in $(pgrep -P "$1" 2>/dev/null); do tree "$c"; done
+tree() {                       # pid and all its descendants, parents first (one ps, not a pgrep per process)
+    ps -e -o pid=,ppid= | awk -v root="$1" '
+        { kids[$2] = kids[$2] " " $1 }
+        END { q[1] = root; n = 1
+              for (i = 1; i <= n; i++) { print q[i]; m = split(kids[q[i]], a, " "); for (j = 1; j <= m; j++) q[++n] = a[j] } }'
 }
 
 dir=""

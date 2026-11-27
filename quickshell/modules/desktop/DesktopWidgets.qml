@@ -4,6 +4,7 @@ import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import Quickshell.Widgets
 import Quickshell.Services.Mpris
 import Quickshell.Services.UPower
@@ -98,11 +99,21 @@ PanelWindow {
     property real disk: 0
     property string diskText: ""
 
+    // Only refresh what can be seen: the widgets sit on the wallpaper, so with any window on
+    // this monitor's workspace they're covered. Updating them anyway redraws the background
+    // layer, and translucent windows on top then re-blur it. Back on an empty desktop the
+    // timers restart and refresh at once (triggeredOnStart), so nothing looks stale.
+    readonly property var hyprMonitor: Hyprland.monitorFor(root.screen)
+    readonly property bool exposed: {
+        const ws = hyprMonitor ? hyprMonitor.activeWorkspace : null;
+        return !ws || !ws.toplevels || ws.toplevels.values.length === 0;
+    }
+
     FileView { id: procStat; path: "/proc/stat"; printErrors: false }
     FileView { id: procMem; path: "/proc/meminfo"; printErrors: false }
     Timer {
         interval: 4000      // stats update without animating: an idle desktop shouldn't redraw at 120 fps
-        running: true
+        running: root.exposed
         repeat: true
         triggeredOnStart: true
         onTriggered: {
@@ -140,7 +151,7 @@ PanelWindow {
             }
         }
     }
-    Timer { interval: 60000; running: true; repeat: true; onTriggered: dfProc.running = true }
+    Timer { interval: 60000; running: root.exposed; repeat: true; onTriggered: dfProc.running = true }
 
     readonly property var battery: UPower.displayDevice
     readonly property bool hasBattery: !!(battery && battery.isLaptopBattery)
@@ -152,7 +163,7 @@ PanelWindow {
     }
     Timer {   // MprisPlayer.position isn't reactive; poke it while playing
         interval: 1000
-        running: !!(root.player && root.player.isPlaying)
+        running: !!(root.player && root.player.isPlaying) && root.exposed
         repeat: true
         onTriggered: if (root.player) root.player.positionChanged()
     }
@@ -326,7 +337,7 @@ PanelWindow {
             font.weight: root.w.dateCaps ? Font.DemiBold : Font.Medium
             font.letterSpacing: (root.w.dateCaps ? 3 : 0.3) * root.k
             color: dateMa.containsMouse ? Qt.lighter(root.dateInk, 1.1) : root.dateInk
-            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+            Behavior on color { CAnim {} }
             MouseArea { id: dateMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.requestOverlay("calendar") }
         }
 
@@ -345,6 +356,7 @@ PanelWindow {
                 font.letterSpacing: (root.w.clockFont === "display" ? -px / 44 : root.w.clockFont === "serif" ? -px / 90 : 0)
                 font.features: { "tnum": 1 }
                 color: root.glassOn ? "white" : root.clockInk
+                Behavior on color { CAnim {} }
                 // in glass mode only the shape (the mask) for the glass below
                 visible: !root.glassOn
                 layer.enabled: root.glassOn
@@ -496,6 +508,7 @@ PanelWindow {
                 text: ln.glyph; font.family: Atelier.font; font.pixelSize: Math.round(15 * root.k)
                 // colourful: each line's own hue, mixed with the ink so it keeps its contrast
                 color: root.glyphsColourful ? Qt.tint(root.ink, Qt.alpha(ln.tint, 0.7)) : root.glyphInk
+                Behavior on color { CAnim {} }
             }
             Text {
                 anchors.verticalCenter: parent.verticalCenter
@@ -505,7 +518,7 @@ PanelWindow {
                 font.family: Atelier.fontUi; font.pixelSize: Math.round(14.5 * root.k)
                 font.features: { "tnum": 1 }
                 color: lnMa.containsMouse ? root.ink : root.inkSoft
-                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                Behavior on color { CAnim {} }
             }
         }
         MouseArea {
