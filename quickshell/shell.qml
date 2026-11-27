@@ -54,7 +54,7 @@ ShellRoot {
     readonly property var lazyDrawers: ({ overview: overviewOverlay, games: gamesOverlay, theme: themeOverlay,
         controlcenter: controlCenter, notifications: notificationCenter, wifi: wifiOverlay, bluetooth: bluetoothOverlay, power: powerOverlay,
         launcher: launcherOverlay, apps: appsOverlay, camera: cameraOverlay, clipboard: clipboardOverlay,
-        media: mediaOverlay, keybinds: keybindsOverlay, sysmon: sysMonOverlay, timers: timerOverlay,
+        media: mediaOverlay, keybinds: keybindsOverlay, sysmon: sysMonOverlay, timers: timerOverlay, scratchpad: scratchpadOverlay,
         colors: colorPickerOverlay, switcher: windowSwitcher, calendar: calendarOverlay,
         wallpaper: wallpaperOverlay, emoji: emojiOverlay, ports: portsOverlay, software: softwareOverlay, settings: settingsApp, privacy: privacyOverlay })
 
@@ -413,6 +413,15 @@ ShellRoot {
             }
         }
         LazyDrawer {
+            id: scratchpadOverlay
+            sourceComponent: Component {
+                ScratchpadOverlay {
+                    isLight: shellRoot.isLight
+                    onClosedSignal: { if (shellRoot.activeOverlay === "scratchpad") shellRoot.activeOverlay = ""; }
+                }
+            }
+        }
+        LazyDrawer {
             id: timerOverlay
             sourceComponent: Component {
                 TimerOverlay {
@@ -640,6 +649,15 @@ ShellRoot {
             function toggle(): void { shellRoot.toggleOverlay("software"); }
             function open(): void { if (shellRoot.activeOverlay !== "software") shellRoot.toggleOverlay("software"); }
             function close(): void { if (shellRoot.activeOverlay === "software") shellRoot.closeAllOverlays(); }
+        }
+        IpcHandler {
+            target: "scratchpad"
+            function toggle(): void { shellRoot.toggleOverlay("scratchpad"); }
+            function open(): void { if (shellRoot.activeOverlay !== "scratchpad") shellRoot.toggleOverlay("scratchpad"); }
+            function close(): void { if (shellRoot.activeOverlay === "scratchpad") shellRoot.closeAllOverlays(); }
+            function get(): string { return Scratchpad.text; }
+            function append(t: string): void { Scratchpad.append(t); }
+            function clear(): void { Scratchpad.clear(); }
         }
         IpcHandler {
             target: "timers"
@@ -894,15 +912,14 @@ ShellRoot {
             function toggleGame(): void { Perf.toggleGame(); }
             function toggleDev(): void { Perf.toggleDev(); }
             function toggleSaver(): void { Perf.toggleSaver(); }
-            function toggleShowcase(): void { Perf.toggleShowcase(); }
             function get(): string { return Perf.mode; }
         }
 
         Connections {
             target: Perf
             function onSwitched(mode, automatic) {
-                const icon = mode === "game" ? "󰊗" : mode === "dev" ? "󰅩" : mode === "saver" ? "󰌪" : mode === "showcase" ? "󰔉" : "󰍹";
-                const clr = mode === "game" ? Atelier.peach : mode === "dev" ? Atelier.sapphire : mode === "saver" ? Atelier.yellow : mode === "showcase" ? Atelier.mauve : Atelier.green;
+                const icon = mode === "game" ? "󰊗" : mode === "dev" ? "󰅩" : mode === "saver" ? "󰌪" : "󰍹";
+                const clr = mode === "game" ? Atelier.peach : mode === "dev" ? Atelier.sapphire : mode === "saver" ? Atelier.yellow : Atelier.green;
                 toastPopup.showToast((automatic ? "Auto: " : "") + Perf.label + (mode === "normal" ? " restored" : " on"), icon, clr);
             }
         }
