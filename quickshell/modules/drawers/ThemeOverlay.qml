@@ -226,7 +226,7 @@ Item {
                         color: Qt.alpha(Atelier.accent, 0.18)
                         border.width: 1
                         border.color: Qt.alpha(Atelier.accent, 0.4)
-                        Behavior on x { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
+                        Behavior on x { Anim { type: "spatial" } }
                     }
                     Row {
                         anchors.fill: parent
@@ -247,7 +247,7 @@ Item {
                                         text: modelData.label
                                         font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.DemiBold
                                         color: parent.parent.on ? Atelier.accent : Atelier.text
-                                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                                        Behavior on color { CAnim {} }
                                     }
                                 }
                                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.setFilter(modelData.id) }
@@ -279,11 +279,12 @@ Item {
                         height: 52
                         radius: Atelier.radiusMd
                         // selection only tints; the border is always there, so nothing shifts
-                        color: isSel ? Qt.alpha(Atelier.accent, 0.12) : (rowMa.containsMouse ? Atelier.container : "transparent")
+                        color: isSel ? Qt.alpha(Atelier.accent, 0.12) : "transparent"
+                        StateLayer { mouseArea: rowMa }
                         border.width: 1
                         border.color: isSel ? Qt.alpha(Atelier.accent, 0.35) : "transparent"
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                        Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
+                        Behavior on color { CAnim {} }
+                        Behavior on border.color { CAnim {} }
 
                         // the theme's own tile: its base with its accent
                         Rectangle {
@@ -591,9 +592,9 @@ Item {
                         color: inUse ? Qt.alpha(Atelier.green, 0.14) : Qt.alpha(Atelier.accent, applyMa.containsMouse ? 0.3 : 0.2)
                         border.width: 1
                         border.color: inUse ? Qt.alpha(Atelier.green, 0.4) : Qt.alpha(Atelier.accent, 0.5)
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        Behavior on color { CAnim {} }
                         scale: applyMa.pressed && !inUse ? 0.95 : 1
-                        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+                        Behavior on scale { Anim { type: "fastSpatial" } }
                         Row {
                             id: applyRow
                             anchors.centerIn: parent
@@ -604,6 +605,7 @@ Item {
                                 text: applyBtn.inUse ? "In use" : "Apply"
                                 font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.DemiBold
                                 color: applyBtn.inUse ? Atelier.green : Atelier.accent
+                                Behavior on color { CAnim {} }
                             }
                             Rectangle {
                                 visible: !applyBtn.inUse

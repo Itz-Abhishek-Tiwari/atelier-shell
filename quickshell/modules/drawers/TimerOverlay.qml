@@ -87,7 +87,7 @@ Item {
         Rectangle { visible: !r2.first; anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right
                     anchors.leftMargin: 14; anchors.rightMargin: 14; height: 1; color: Atelier.outline }
         Rectangle { anchors.fill: parent; anchors.margins: 3; radius: Atelier.radiusMd; color: Atelier.containerHigh
-                    opacity: r2Ma.containsMouse ? 0.6 : 0; Behavior on opacity { NumberAnimation { duration: Atelier.durFast } } }
+                    opacity: r2Ma.containsMouse ? 0.6 : 0; Behavior on opacity { Anim { type: "effects" } } }
         MouseArea { id: r2Ma; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
         RowLayout { id: r2Box; anchors.fill: parent; anchors.leftMargin: 12; anchors.rightMargin: 8; spacing: 10 }
     }
@@ -158,7 +158,7 @@ Item {
                             color: Atelier.container
                             border.width: 1
                             border.color: entry.activeFocus ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
-                            Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
+                            Behavior on border.color { CAnim {} }
                             RowLayout {
                                 anchors.fill: parent
                                 anchors.leftMargin: 14; anchors.rightMargin: 4
@@ -213,6 +213,7 @@ Item {
                                 text: "Clear finished"
                                 font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm
                                 color: cfMa.containsMouse ? Atelier.text : Atelier.subtext
+                                Behavior on color { CAnim {} }
                                 MouseArea { id: cfMa; anchors.fill: parent; anchors.margins: -4; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Timers.clearFinished() }
                             }
                         }
@@ -289,6 +290,7 @@ Item {
                             font.family: Atelier.font; font.pixelSize: 56; font.weight: Font.Bold
                             font.features: { "tnum": 1 }
                             color: Timers.swRunning || Timers.swElapsed === 0 ? Atelier.text : Atelier.subtext1
+                            Behavior on color { CAnim {} }
                         }
                         RowLayout {
                             Layout.alignment: Qt.AlignHCenter

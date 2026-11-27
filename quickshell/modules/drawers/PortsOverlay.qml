@@ -143,7 +143,7 @@ Item {
                                 Rectangle { visible: row.index > 0; anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right
                                             anchors.leftMargin: 14; anchors.rightMargin: 14; height: 1; color: Atelier.outline }
                                 Rectangle { anchors.fill: parent; anchors.margins: 3; radius: Atelier.radiusMd; color: Atelier.containerHigh
-                                            opacity: rowMa.containsMouse ? 0.6 : 0; Behavior on opacity { NumberAnimation { duration: Atelier.durFast } } }
+                                            opacity: rowMa.containsMouse ? 0.6 : 0; Behavior on opacity { Anim { type: "effects" } } }
                                 MouseArea { id: rowMa; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
                                 RowLayout {
                                     anchors.fill: parent

@@ -1,4 +1,5 @@
 import QtQuick
+import qs.components
 import qs.config
 
 // A little screen of nine spots: click where something should sit.
@@ -30,7 +31,7 @@ Rectangle {
                 width: (pad.width - 12 - 8) / 3; height: (pad.height - 12 - 8) / 3
                 radius: 4
                 color: on ? Atelier.fill(Atelier.accent) : (cellMa.containsMouse ? Qt.alpha(Atelier.text, 0.10) : "transparent")
-                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                Behavior on color { CAnim {} }
                 Rectangle { visible: !parent.on; anchors.centerIn: parent; width: 4; height: 4; radius: 2; color: Qt.alpha(Atelier.text, 0.3) }
                 Column {   // the widget, as two lines
                     visible: parent.on

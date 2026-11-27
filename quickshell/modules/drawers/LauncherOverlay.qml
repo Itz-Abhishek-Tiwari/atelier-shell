@@ -84,7 +84,7 @@ Item {
         { key: "emoji",     title: "Emoji",           subtitle: "Pick an emoji · Super+;",              glyph: "󰞅", color: Atelier.yellow, words: "emoji emoticon smiley face symbol picker", overlay: "emoji" },
         { key: "gifs",      title: "GIFs",            subtitle: "Find a GIF · Super+Shift+;",           glyph: "󰵸", color: Atelier.pink,   words: "gif gifs giphy tenor meme reaction animated", overlay: "gifs" },
         { key: "sysmon",    title: "System monitor",  subtitle: "CPU, memory, GPU, apps, battery (Super+Shift+M)", glyph: "󰍛", color: Atelier.accent, words: "system monitor task manager cpu ram memory gpu temperature processes htop battery health charge limit", overlay: "sysmon" },
-        { key: "timers",    title: "Timers",          subtitle: "Timer, stopwatch, pomodoro (Super+Alt+T)", glyph: "󱎫", color: Atelier.peach, words: "timer stopwatch pomodoro focus countdown alarm clock", overlay: "timers" },
+        { key: "scratchpad", title: "Scratchpad",      subtitle: "A quick note, saved as you type (Super+Alt+N)", glyph: "󰎞", color: Atelier.yellow, words: "scratchpad note notes jot memo sticky text", overlay: "scratchpad" },        { key: "timers",    title: "Timers",          subtitle: "Timer, stopwatch, pomodoro (Super+Alt+T)", glyph: "󱎫", color: Atelier.peach, words: "timer stopwatch pomodoro focus countdown alarm clock", overlay: "timers" },
         { key: "software",  title: "Software",        subtitle: "Install and remove apps (Arch repos and AUR)", glyph: "󰏖", color: Atelier.green, words: "software install remove uninstall package packages pacman aur yay paru apps store app store", overlay: "software" },
         { key: "ports",     title: "Ports",           subtitle: "What is listening on localhost (Super+Alt+O)", glyph: "󰛳", color: Atelier.teal, words: "ports listening localhost server dev kill process netstat", overlay: "ports" },
         { key: "colors",    title: "Colour picker",   subtitle: "Pick a colour from the screen",       glyph: "󰈈", color: Atelier.pink, words: "color colour picker eyedropper hex rgb pipette", overlay: "colors" },
@@ -362,7 +362,7 @@ Item {
                         anchors.fill: parent
                         radius: Atelier.radiusMd
                         color: row.isCurrent ? launchRoot.colRowActive : (rowMa.containsMouse ? launchRoot.colRowHover : "transparent")
-                        Behavior on color { ColorAnimation { duration: 100 } }
+                        Behavior on color { CAnim {} }
                     }
 
                     RowLayout {
@@ -433,6 +433,7 @@ Item {
                             font.family: Atelier.fontUi
                             font.pixelSize: Atelier.fsMicro
                             color: row.isCurrent ? launchRoot.colMauve : launchRoot.colSubtext
+                            Behavior on color { CAnim {} }
                             opacity: row.isCurrent ? 1 : 0.6
                         }
                     }

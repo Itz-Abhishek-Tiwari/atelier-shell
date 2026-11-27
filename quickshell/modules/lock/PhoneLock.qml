@@ -6,6 +6,7 @@ import Quickshell.Io
 import Quickshell.Widgets
 import Quickshell.Services.Mpris
 import Quickshell.Services.UPower
+import qs.components
 import qs.config
 import qs.services
 
@@ -144,8 +145,8 @@ Item {
         blur: p.auth && !p.owns ? 0.9 : 0
         saturation: p.variant === "dot" ? -1 : 0
         scale: p.leaving ? 1.08 : 1
-        Behavior on blur { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
-        Behavior on scale { NumberAnimation { duration: 420; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveClose } }
+        Behavior on blur { NumberAnimation { duration: 320; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel } }
+        Behavior on scale { Anim { type: "spatial" } }
     }
     // the wallpaper blurred once (static: costs nothing per frame); every Frost card shows its
     // own patch of it, so cards read as frosted glass instead of a thin tint over busy pixels
@@ -177,7 +178,7 @@ Item {
         color: "black"
         visible: !p.owns
         opacity: Math.min(1, (p.variant === "dot" ? (Settings.lockStyle.dotBackground === "black" ? 1 : 0.5) : 0) + (p.auth ? 0.28 : 0))
-        Behavior on opacity { NumberAnimation { duration: 320 } }
+        Behavior on opacity { Anim { type: "slowEffects" } }
     }
 
     // ═══ Status, top right: Wi-Fi · battery (Oxygen has them in its shelf) ══
@@ -187,7 +188,7 @@ Item {
         anchors.rightMargin: 40 * p.u; anchors.topMargin: 32 * p.u
         spacing: 22 * p.u
         opacity: p.leaving ? 0 : 0.95
-        Behavior on opacity { NumberAnimation { duration: Atelier.durMedium } }
+        Behavior on opacity { Anim { type: "slowEffects" } }
         readonly property string fam: p.variant === "dot" ? Atelier.font : p.display
         Text {
             anchors.verticalCenter: parent.verticalCenter
@@ -201,6 +202,7 @@ Item {
             text: (p.charging ? "󰂄 " : p.batPct <= 15 ? "󰂃 " : "󰁹 ") + p.batPct + "%"
             font.family: parent.fam; font.pixelSize: 22 * p.u; font.weight: Font.Normal
             color: p.batPct <= 15 && !p.charging ? Qt.tint("white", Qt.alpha(Atelier.red, 0.8)) : "white"
+            Behavior on color { CAnim {} }
         }
     }
 
@@ -209,10 +211,10 @@ Item {
         id: faceWrap
         anchors.fill: parent
         opacity: (p.owns ? p.leaving : (p.auth || p.leaving)) ? 0 : 1
-        Behavior on opacity { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
+        Behavior on opacity { Anim { type: "slowEffects" } }
         transform: Translate {
             y: !p.owns && (p.auth || p.leaving) ? -60 * p.u : 0
-            Behavior on y { NumberAnimation { duration: 380; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard } }
+            Behavior on y { Anim { type: "spatial" } }
         }
         layer.enabled: !p.thumb && !p.owns
         layer.effect: MultiEffect {
@@ -466,6 +468,7 @@ Item {
                     font.family: p.display; font.pixelSize: 400 * p.u; font.weight: Font.Light
                     font.letterSpacing: -12 * p.u
                     color: parent.parent.o.harmonyAccent ? Qt.tint("white", Qt.alpha(Atelier.accent, 0.7)) : "white"
+                    Behavior on color { CAnim {} }
                 }
                 Column {
                     anchors.top: parent.top; anchors.topMargin: 90 * p.u
@@ -588,7 +591,7 @@ Item {
                         width: 96 * p.u; height: 96 * p.u; radius: width / 2
                         color: shelf.parent.hot
                         scale: unlockMa.pressed ? 0.92 : unlockMa.containsMouse ? 1.05 : 1
-                        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+                        Behavior on scale { Anim { type: "fastSpatial" } }
                         Text { anchors.centerIn: parent; text: "󰌾"; font.family: Atelier.font; font.pixelSize: 40 * p.u; color: "white" }
                         MouseArea { id: unlockMa; anchors.fill: parent; enabled: !p.thumb; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                             onClicked: { p.lockRoot.authMode = true; p.forceActiveFocus(); } }
@@ -784,7 +787,7 @@ Item {
         anchors.fill: parent
         visible: opacity > 0
         opacity: p.auth && !p.leaving && !p.owns && !p.ownAuth ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
+        Behavior on opacity { Anim { type: "slowEffects" } }
         readonly property bool dotLook: p.variant === "dot"
         // per style: field corners, mono type
         readonly property real fieldRadius: dotLook ? 0 : p.variant === "material" ? 22 * p.u : 32 * p.u
@@ -796,7 +799,7 @@ Item {
             anchors.verticalCenterOffset: -40 * p.u
             spacing: 18 * p.u
             scale: p.auth ? 1 : 0.96
-            Behavior on scale { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
+            Behavior on scale { Anim { type: "spatial" } }
 
             ClippingRectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -829,7 +832,7 @@ Item {
                     color: authView.dotLook ? Qt.rgba(0, 0, 0, 0.35) : Qt.rgba(1, 1, 1, 0.16)
                     border.width: Math.max(1, 1.5 * p.u)
                     border.color: p.lockRoot.message ? Qt.alpha(Atelier.red, 0.85) : Qt.rgba(1, 1, 1, 0.35)
-                    Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
+                    Behavior on border.color { CAnim {} }
                 }
                 Text {
                     anchors.left: parent.left; anchors.leftMargin: 26 * p.u
@@ -852,7 +855,7 @@ Item {
                             color: "white"
                             scale: 0
                             Component.onCompleted: scale = 1
-                            Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack } }
+                            Behavior on scale { Anim { type: "fastSpatial" } }
                         }
                     }
                 }
@@ -908,7 +911,7 @@ Item {
                         width: 58 * p.u; height: 58 * p.u
                         radius: p.variant === "dot" ? 0 : p.variant === "material" ? 20 * p.u : width / 2
                         color: Qt.rgba(1, 1, 1, pwMa.containsMouse ? 0.3 : 0.16)
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        Behavior on color { CAnim {} }
                         Text { anchors.centerIn: parent; text: pw.modelData.icon; font.family: Atelier.font; font.pixelSize: 24 * p.u; color: "white" }
                         MouseArea {
                             id: pwMa
@@ -942,7 +945,7 @@ Item {
         ph: p
         visible: opacity > 0
         opacity: p.auth && !p.leaving && p.ownAuth ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
+        Behavior on opacity { Anim { type: "slowEffects" } }
     }
 
     // wrong password: shake the dots
@@ -1074,7 +1077,7 @@ Item {
         width: 64 * p.u; height: 64 * p.u; radius: width / 2
         color: Qt.rgba(1, 1, 1, rbMa.containsMouse ? 0.3 : 0.18)
         scale: rbMa.pressed ? 0.9 : 1
-        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+        Behavior on scale { Anim { type: "fastSpatial" } }
         Text { anchors.centerIn: parent; text: rb.icon; font.family: Atelier.font; font.pixelSize: 26 * p.u; color: "white" }
         MouseArea { id: rbMa; anchors.fill: parent; enabled: !p.thumb; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: rb.clicked() }
     }

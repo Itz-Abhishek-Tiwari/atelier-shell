@@ -88,6 +88,7 @@ LINKS=(
     # local/<path> -> ~/.local/<path>
     "local/bin/prime-run:$BIN/prime-run"
     "local/bin/audiotube:$BIN/audiotube"
+    "local/bin/atelier-music:$BIN/atelier-music"   # YouTube Music app (apps/music)
     "config/scripts/adguard-dns.sh:$BIN/adguard-dns"
     "local/share/kio/servicemenus/atelier-airdrop.desktop:$HOME/.local/share/kio/servicemenus/atelier-airdrop.desktop"   # Dolphin: Send with AirDrop
     "local/share/nautilus-python/extensions/atelier-open-terminal.py:$HOME/.local/share/nautilus-python/extensions/atelier-open-terminal.py"   # Nautilus: Open in Terminal (needs nautilus-python)

@@ -272,7 +272,7 @@ ColumnLayout {
         color: active ? Qt.alpha(Atelier.accent, 0.16) : (kbMa.containsMouse && enabled ? Atelier.containerHigh : "transparent")
         border.width: 1
         border.color: active ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+        Behavior on color { CAnim {} }
         Row {
             id: capsRow
             anchors.centerIn: parent

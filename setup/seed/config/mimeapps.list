@@ -5,7 +5,6 @@ x-scheme-handler/http=firefox.desktop;
 x-scheme-handler/https=firefox.desktop;
 x-scheme-handler/about=firefox.desktop;
 x-scheme-handler/unknown=firefox.desktop;
-x-scheme-handler/lastwave=lastwave.desktop
 x-scheme-handler/discord=vesktop.desktop
 inode/directory=org.kde.dolphin.desktop;
 application/zip=org.kde.ark.desktop;

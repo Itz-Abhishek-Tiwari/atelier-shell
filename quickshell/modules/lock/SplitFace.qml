@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Shapes
 import Quickshell.Widgets
+import qs.components
 import qs.config
 import qs.services
 
@@ -47,7 +48,7 @@ Item {
         spacing: 0
         opacity: root.a ? 0 : 1
         visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: root.dur; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: root.dur; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel } }
         Text {
             text: Qt.formatDate(ph.now, "dddd").toUpperCase()
             font.family: ph.display; font.pixelSize: Atelier.fsXl * ph.ts * 1.6; font.weight: Font.Bold; font.letterSpacing: 10 * root.u
@@ -117,7 +118,7 @@ Item {
         anchors.fill: parent
         opacity: root.a ? 1 : 0
         visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: root.dur; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: root.dur; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel } }
 
         // the time, small, at the top of the panel
         Row {
@@ -163,7 +164,7 @@ Item {
                             width: 16 * root.u; height: width; radius: Atelier.rounding > 0 ? width / 2 : 0; color: Atelier.text
                             scale: 0
                             Component.onCompleted: scale = 1
-                            Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack } }
+                            Behavior on scale { Anim { type: "fastSpatial" } }
                         }
                     }
                 }
@@ -177,13 +178,14 @@ Item {
                 }
                 Rectangle { anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom; height: 4 * root.u
                     color: root.lr.message ? Atelier.red : Atelier.accent
-                    Behavior on color { ColorAnimation { duration: Atelier.durFast } } }
+                    Behavior on color { CAnim {} } }
             }
             Text {
                 width: parent.width; wrapMode: Text.WordWrap
                 text: root.lr.message ? root.lr.message : ph.capsOn ? "Caps Lock is on" : ph.isPreview ? "Preview · Esc to go back" : "Enter to unlock · Esc to go back"
                 font.family: ph.display; font.pixelSize: Atelier.fsLg * ph.ts * 1.1
                 color: root.lr.message ? Atelier.red : ph.capsOn ? Atelier.yellow : Atelier.subtext1
+                Behavior on color { CAnim {} }
             }
         }
     }

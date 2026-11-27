@@ -89,11 +89,11 @@ Item {
                             opacity: 0
                             SequentialAnimation on scale {
                                 running: pulse.busy && root.visible; loops: Animation.Infinite
-                                NumberAnimation { from: 1; to: 1.35; duration: 1400; easing.type: Easing.OutCubic }
+                                NumberAnimation { from: 1; to: 1.35; duration: 1400; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel }
                             }
                             SequentialAnimation on opacity {
                                 running: pulse.busy && root.visible; loops: Animation.Infinite
-                                NumberAnimation { from: 0.6; to: 0; duration: 1400; easing.type: Easing.OutCubic }
+                                NumberAnimation { from: 0.6; to: 0; duration: 1400; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel }
                             }
                         }
                     }
@@ -158,6 +158,7 @@ Item {
                         visible: text !== ""
                         font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd
                         color: AirDrop.phase === "failed" || (root.sendView && AirDrop.sendPhase === "failed") ? Atelier.red : Atelier.subtext
+                        Behavior on color { CAnim {} }
                     }
                 }
 
@@ -166,8 +167,9 @@ Item {
                     Layout.alignment: Qt.AlignTop
                     implicitWidth: 26; implicitHeight: 26; radius: 13
                     visible: AirDrop.phase !== "asking" && AirDrop.phase !== "receiving"
-                    color: xMa.containsMouse ? Atelier.containerHigh : "transparent"
-                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                    color: "transparent"
+                    Behavior on color { CAnim {} }
+                    StateLayer { mouseArea: xMa }
                     Text { anchors.centerIn: parent; text: "\u{F0156}"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: Atelier.subtext }
                     MouseArea { id: xMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: AirDrop.dismiss() }
                 }
@@ -184,7 +186,7 @@ Item {
                     readonly property bool sendKnown: AirDrop.phase !== "receiving" && AirDrop.sendProgress >= 0
                     width: AirDrop.phase === "receiving" ? Math.max(6, parent.width * AirDrop.progress)
                          : sendKnown ? Math.max(6, parent.width * AirDrop.sendProgress) : parent.width * 0.35
-                    Behavior on width { NumberAnimation { duration: 240 } }
+                    Behavior on width { Anim { type: "fastSpatial" } }
                     gradient: Gradient {
                         orientation: Gradient.Horizontal
                         GradientStop { position: 0; color: Qt.alpha(Atelier.blue, 0.55) }
@@ -214,11 +216,12 @@ Item {
                         Layout.fillWidth: true
                         implicitHeight: 52
                         radius: Atelier.radiusMd
-                        color: dMa.containsMouse ? Atelier.containerHigh : Atelier.container
+                        color: Atelier.container
+                        StateLayer { mouseArea: dMa }
                         border.width: 1; border.color: Atelier.outline
                         scale: dMa.pressed ? 0.97 : 1
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+                        Behavior on color { CAnim {} }
+                        Behavior on scale { Anim { type: "fastSpatial" } }
                         RowLayout {
                             anchors.fill: parent
                             anchors.leftMargin: 10; anchors.rightMargin: 14
@@ -295,7 +298,7 @@ Item {
                             width: 18; height: 18; radius: 6
                             color: root.always ? Atelier.accentFill : "transparent"
                             border.width: root.always ? 0 : 1.5; border.color: Atelier.overlay0
-                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                            Behavior on color { CAnim {} }
                             Text { anchors.centerIn: parent; visible: root.always; text: "\u{F012C}"; font.family: Atelier.font; font.pixelSize: Atelier.fsMd; color: Atelier.onFill }
                         }
                         Text {
@@ -334,14 +337,15 @@ Item {
              : (bMa.containsMouse ? Atelier.containerHigh : Atelier.container)
         border.width: primary ? 0 : 1; border.color: Atelier.outline
         scale: bMa.pressed ? 0.94 : 1
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+        Behavior on color { CAnim {} }
+        Behavior on scale { Anim { type: "fastSpatial" } }
         Text {
             id: bt
             anchors.centerIn: parent
             text: b.label
             font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.DemiBold
             color: b.primary ? Atelier.onFill : Atelier.text
+            Behavior on color { CAnim {} }
         }
         MouseArea { id: bMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: b.clicked() }
     }

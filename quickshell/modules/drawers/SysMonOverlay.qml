@@ -161,7 +161,7 @@ Item {
                         height: parent.v < 0 ? 2 : Math.max(2, parent.height * Math.min(1, parent.v / Math.max(1, sp.maxValue)))
                         radius: width / 2
                         color: parent.v < 0 ? Atelier.containerHigh : Qt.alpha(sp.tint, parent.index === 39 ? 1 : 0.45)
-                        Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                        Behavior on height { Anim { type: "spatial" } }
                     }
                 }
             }
@@ -450,8 +450,8 @@ Item {
                                                 radius: Math.min(8, width / 2)
                                                 color: dayCol.modelData.t <= 0 ? Atelier.containerHigh
                                                      : Qt.alpha(Atelier.green, dayCol.picked ? 1 : (dayMa.containsMouse ? 0.7 : 0.4))
-                                                Behavior on height { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
-                                                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                                                Behavior on height { Anim { type: "spatial" } }
+                                                Behavior on color { CAnim {} }
                                             }
                                             MouseArea {
                                                 id: dayMa
@@ -467,6 +467,7 @@ Item {
                                                 : dayCol.modelData.key === ScreenTime.dayKey() ? "Today" : Qt.formatDate(dayCol.modelData.date, "ddd")
                                             font.family: dayMa.containsMouse ? Atelier.font : Atelier.fontUi; font.pixelSize: Atelier.fsMicro
                                             color: dayCol.picked && root.stKey !== "week" ? Atelier.text : Atelier.subtext
+                                            Behavior on color { CAnim {} }
                                         }
                                     }
                                 }

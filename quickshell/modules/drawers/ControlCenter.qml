@@ -249,7 +249,7 @@ Item {
                             font.family: Atelier.font; font.pixelSize: 46; font.weight: Font.Bold
                             color: Atelier.accent
                             opacity: root.now.getSeconds() % 2 ? 0.45 : 1
-                            Behavior on opacity { NumberAnimation { duration: 400 } }
+                            Behavior on opacity { Anim { type: "slowEffects" } }
                         }
                         Text { text: Qt.formatTime(root.now, "mm"); font.family: Atelier.font; font.pixelSize: 46; font.weight: Font.Bold; color: Atelier.text }
                         Text {
@@ -306,7 +306,7 @@ Item {
             height: 1
             color: Atelier.outline
             opacity: scroller.contentY > 2 ? 1 : 0
-            Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+            Behavior on opacity { Anim { type: "effects" } }
         }
 
         Flickable {
@@ -337,10 +337,11 @@ Item {
                 Layout.fillWidth: true
                 implicitHeight: wxCol.implicitHeight + 24
                 radius: Atelier.radiusMd
-                color: wxMa.containsMouse ? Atelier.containerHigh : Atelier.container
+                color: Atelier.container
+                StateLayer { mouseArea: wxMa }
                 border.width: 1
                 border.color: Atelier.outline
-                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                Behavior on color { CAnim {} }
                 readonly property var w: Weather.w
                 MouseArea { id: wxMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Weather.refresh() }
                 ColumnLayout {
@@ -405,10 +406,11 @@ Item {
                 Layout.fillWidth: true
                 implicitHeight: 54
                 radius: Atelier.radiusMd
-                color: phMa.containsMouse ? Atelier.containerHigh : Atelier.container
+                color: Atelier.container
+                StateLayer { mouseArea: phMa }
                 border.width: 1
                 border.color: Atelier.outline
-                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                Behavior on color { CAnim {} }
                 readonly property real pct: IPhone.battery
                 readonly property color hue: pct < 0 ? Atelier.subtext : pct <= 0.2 ? Atelier.red : pct <= 0.4 ? Atelier.yellow : Atelier.green
                 MouseArea { id: phMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { IPhone.openApp(); root.close(); } }
@@ -441,6 +443,7 @@ Item {
                             text: Math.round(parent.parent.parent.pct * 100) + "%"
                             font.family: root.mono; font.pixelSize: Atelier.fsMd; font.bold: true
                             color: parent.parent.parent.pct <= 0.2 ? Atelier.red : Atelier.text
+                            Behavior on color { CAnim {} }
                         }
                         Rectangle {
                             implicitWidth: 44; implicitHeight: 5; radius: 2.5
@@ -460,10 +463,11 @@ Item {
                 Layout.fillWidth: true
                 implicitHeight: 54
                 radius: Atelier.radiusMd
-                color: upMa.containsMouse ? Atelier.containerHigh : Atelier.container
+                color: Atelier.container
+                StateLayer { mouseArea: upMa }
                 border.width: 1
                 border.color: Atelier.outline
-                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                Behavior on color { CAnim {} }
                 MouseArea { id: upMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                     onClicked: { Updates.run(); root.close(); } }
                 RowLayout {
@@ -507,10 +511,11 @@ Item {
                     Layout.fillWidth: true
                     implicitHeight: 54
                     radius: Atelier.radiusMd
-                    color: drvMa.containsMouse ? Atelier.containerHigh : Atelier.container
+                    color: Atelier.container
+                    StateLayer { mouseArea: drvMa }
                     border.width: 1
                     border.color: Atelier.outline
-                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                    Behavior on color { CAnim {} }
                     MouseArea { id: drvMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         onClicked: { Drives.open(drv.modelData); root.close(); } }
                     RowLayout {
@@ -537,7 +542,7 @@ Item {
                         Rectangle {
                             implicitWidth: 30; implicitHeight: 30; radius: Atelier.radiusLg
                             color: ejMa.containsMouse ? Qt.alpha(Atelier.sapphire, 0.18) : "transparent"
-                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                            Behavior on color { CAnim {} }
                             Text { anchors.centerIn: parent; text: "󰇪"; font.family: Atelier.font; font.pixelSize: Atelier.fsXl
                                 color: ejMa.containsMouse ? Atelier.sapphire : Atelier.subtext }
                             MouseArea { id: ejMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
@@ -562,7 +567,7 @@ Item {
                 Layout.leftMargin: 4
                 text: root.hint
                 opacity: root.hint !== "" ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                Behavior on opacity { Anim { type: "effects" } }
                 elide: Text.ElideRight
                 font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext
             }
@@ -584,6 +589,7 @@ Item {
                         text: "Customise"
                         font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.Medium
                         color: cuMa.containsMouse ? Atelier.text : Atelier.subtext
+                        Behavior on color { CAnim {} }
                         MouseArea { id: cuMa; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                             onClicked: root.requestOverlay("settings:modes") }
                     }
@@ -602,19 +608,20 @@ Item {
                             readonly property bool on: Perf.mode === modelData.id
                             width: seg.cell; height: 60
                             radius: Atelier.radiusMd
-                            color: on ? Qt.alpha(modelData.tint, Atelier.isLight ? 0.18 : 0.24) : (tileMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+                            color: on ? Qt.alpha(modelData.tint, Atelier.isLight ? 0.18 : 0.24) : Atelier.container
+                            StateLayer { mouseArea: tileMa }
                             border.width: 1
                             border.color: on ? Qt.alpha(modelData.tint, 0.6) : Atelier.outline
                             scale: tileMa.pressed ? 0.95 : 1
-                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                            Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+                            Behavior on color { CAnim {} }
+                            Behavior on scale { Anim { type: "fastSpatial" } }
                             Column {
                                 anchors.centerIn: parent
                                 spacing: 3
                                 Text { anchors.horizontalCenter: parent.horizontalCenter; text: tile.modelData.icon
                                     font.family: Atelier.font; font.pixelSize: 20
                                     color: tile.on ? tile.modelData.tint : Atelier.subtext
-                                    Behavior on color { ColorAnimation { duration: Atelier.durFast } } }
+                                    Behavior on color { CAnim {} } }
                                 Text { anchors.horizontalCenter: parent.horizontalCenter; text: tile.modelData.short
                                     font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm
                                     font.weight: tile.on ? Font.DemiBold : Font.Medium
@@ -642,16 +649,18 @@ Item {
                             id: scBtn
                             anchors.horizontalCenter: parent.horizontalCenter
                             width: 42; height: 42; radius: Atelier.radiusMd
-                            color: scMa.containsMouse ? Atelier.containerHigh : Atelier.container
+                            color: Atelier.container
+                            StateLayer { mouseArea: scMa }
                             scale: scMa.pressed ? 0.92 : 1
-                            Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
-                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                            Behavior on scale { Anim { type: "fastSpatial" } }
+                            Behavior on color { CAnim {} }
                             Text {
                                 anchors.centerIn: parent
                                 text: modelData.icon
                                 font.family: Atelier.font
                                 font.pixelSize: 17
                                 color: scMa.containsMouse ? Atelier.text : Atelier.subtext
+                                Behavior on color { CAnim {} }
                             }
                         }
                         Text {
@@ -692,6 +701,7 @@ Item {
                     text: "Open"
                     font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.Medium
                     color: openNMa.containsMouse ? Atelier.text : Atelier.subtext
+                    Behavior on color { CAnim {} }
                     MouseArea { id: openNMa; anchors.fill: parent; anchors.margins: -6; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         onClicked: root.requestOverlay("notifications") }
                 }
@@ -726,14 +736,16 @@ Item {
         implicitHeight: size
         radius: size / 2
         opacity: enabled ? 1 : 0.35
-        color: active ? Qt.alpha(Atelier.accent, 0.16) : rbMa.containsMouse ? Atelier.containerHigh : "transparent"
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+        color: active ? Qt.alpha(Atelier.accent, 0.16) : "transparent"
+        Behavior on color { CAnim {} }
+        StateLayer { mouseArea: rbMa }
         Text {
             anchors.centerIn: parent
             text: rb.icon
             font.family: Atelier.font
             font.pixelSize: rb.glyphSize
             color: rb.active ? Atelier.accent : rbMa.containsMouse ? rb.hoverTint : Atelier.subtext
+            Behavior on color { CAnim {} }
         }
         Tip { text: rb.tip; shown: rbMa.containsMouse }
         MouseArea { id: rbMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: if (rb.enabled) rb.clicked() }
@@ -768,13 +780,13 @@ Item {
         color: on ? (warn ? Atelier.fill(Atelier.peach) : Atelier.accentFill) : Atelier.containerHigh
         border.width: on ? 0 : 1
         border.color: Atelier.outline
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+        Behavior on color { CAnim {} }
         Rectangle {
             width: 14; height: 14; radius: 7
             y: 3
             x: ps.on ? parent.width - width - 3 : 3
             color: ps.on ? Atelier.onFill : Atelier.subtext
-            Behavior on x { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
+            Behavior on x { Anim { type: "fastSpatial" } }
         }
         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: ps.toggled() }
     }
@@ -816,8 +828,8 @@ Item {
         border.width: 1
         border.color: on ? root.toneEdge(false) : Atelier.outline
         scale: wtMa.pressed ? 0.97 : 1
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+        Behavior on color { CAnim {} }
+        Behavior on scale { Anim { type: "fastSpatial" } }
 
         MouseArea { id: wtMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.act(wt.tid) }
         RowLayout {
@@ -844,8 +856,9 @@ Item {
             }
             Rectangle {
                 implicitWidth: 26; implicitHeight: 26; radius: 13
-                color: detMa.containsMouse ? Atelier.containerHigh : "transparent"
-                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                color: "transparent"
+                Behavior on color { CAnim {} }
+                StateLayer { mouseArea: detMa }
                 Text { anchors.centerIn: parent; text: "󰅂"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg
                     color: wt.on ? Atelier.accent : Atelier.subtext }
                 MouseArea { id: detMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.details(wt.tid) }
@@ -867,8 +880,8 @@ Item {
         border.width: d.warn ? 1.5 : 1
         border.color: d.warn ? Atelier.peach : on ? root.toneEdge(d.red) : Atelier.outline
         scale: qtMa.pressed ? 0.94 : 1
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+        Behavior on color { CAnim {} }
+        Behavior on scale { Anim { type: "fastSpatial" } }
         Column {
             anchors.centerIn: parent
             width: parent.width - 8
@@ -952,7 +965,7 @@ Item {
             radius: Atelier.radiusMd
             color: Atelier.containerHigh
             opacity: lrMa.containsMouse ? 0.6 : 0
-            Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+            Behavior on opacity { Anim { type: "effects" } }
         }
         MouseArea { id: lrMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.act(lr.tid) }
         RowLayout {
@@ -966,7 +979,7 @@ Item {
                 text: lr.d.icon
                 font.family: Atelier.font; font.pixelSize: Atelier.fsXl
                 color: lr.d.warn ? Atelier.peach : lr.d.on ? (lr.d.red ? Atelier.red : Atelier.text) : Atelier.subtext
-                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                Behavior on color { CAnim {} }
             }
             Text {
                 text: lr.d.label
@@ -981,6 +994,7 @@ Item {
                 elide: Text.ElideRight
                 font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm
                 color: lr.d.warn ? Atelier.peach : Atelier.subtext
+                Behavior on color { CAnim {} }
             }
             Text {    // a chevron where there's more (Wi-Fi networks, Bluetooth devices, night light…)
                 visible: lr.d.details !== ""
@@ -1010,9 +1024,10 @@ Item {
                         Layout.preferredWidth: 1
                         implicitHeight: 40
                         radius: 20
-                        color: chipMa.containsMouse ? Atelier.containerHigh : Atelier.container
+                        color: Atelier.container
+                        StateLayer { mouseArea: chipMa }
                         border.width: 1; border.color: d.on ? Qt.alpha(Atelier.accent, 0.45) : Atelier.outline
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        Behavior on color { CAnim {} }
                         MouseArea { id: chipMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                             acceptedButtons: Qt.LeftButton | Qt.RightButton
                             onClicked: (m) => { if (m.button === Qt.RightButton) root.act(parent.modelData); else root.details(parent.modelData); } }
@@ -1033,6 +1048,7 @@ Item {
                                 elide: Text.ElideRight
                                 font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.Medium
                                 color: parent.parent.d.on ? Atelier.text : Atelier.subtext
+                                Behavior on color { CAnim {} }
                             }
                         }
                     }
@@ -1051,8 +1067,8 @@ Item {
                         border.width: d.warn ? 1.5 : 1
                         border.color: d.warn ? Atelier.peach : d.on ? root.toneEdge(d.red) : Atelier.outline
                         scale: icMa.pressed ? 0.9 : (icMa.containsMouse ? 1.06 : 1)
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                        Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack } }
+                        Behavior on color { CAnim {} }
+                        Behavior on scale { Anim { type: "fastSpatial" } }
                         Text { anchors.centerIn: parent; text: parent.d.icon; font.family: Atelier.font; font.pixelSize: 16
                             color: parent.d.on ? root.toneInk(parent.d.red) : parent.d.warn ? Atelier.peach : Atelier.subtext }
                         MouseArea {
@@ -1099,8 +1115,9 @@ Item {
                             width: connCol.width
                             height: 52
                             radius: Atelier.radiusMd
-                            color: ccMa.containsMouse ? Atelier.containerHigh : "transparent"
-                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                            color: "transparent"
+                            Behavior on color { CAnim {} }
+                            StateLayer { mouseArea: ccMa }
                             MouseArea { id: ccMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                 acceptedButtons: Qt.LeftButton | Qt.RightButton
                                 onClicked: (m) => { if (m.button === Qt.RightButton || parent.d.details === "") root.act(parent.modelData); else root.details(parent.modelData); } }
@@ -1111,7 +1128,7 @@ Item {
                                 Rectangle {   // the round icon toggles
                                     implicitWidth: 32; implicitHeight: 32; radius: Atelier.radiusLg
                                     color: parent.parent.d.on ? (parent.parent.d.warn ? Qt.alpha(Atelier.peach, 0.25) : root.tone(false, true)) : Atelier.containerHigh
-                                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                                    Behavior on color { CAnim {} }
                                     Text { anchors.centerIn: parent; text: parent.parent.parent.d.icon; font.family: Atelier.font; font.pixelSize: 14
                                         color: parent.parent.parent.d.on ? (parent.parent.parent.d.warn ? Atelier.peach : Atelier.accent) : Atelier.subtext }
                                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.act(parent.parent.parent.modelData) }
@@ -1146,9 +1163,9 @@ Item {
                         color: d.on ? root.tone(d.red, chMa2.containsMouse) : (chMa2.containsMouse ? Atelier.containerHigh : Atelier.container)
                         border.width: d.warn ? 1.5 : 1
                         border.color: d.warn ? Atelier.peach : d.on ? root.toneEdge(d.red) : Atelier.outline
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        Behavior on color { CAnim {} }
                         scale: chMa2.pressed ? 0.96 : 1
-                        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+                        Behavior on scale { Anim { type: "fastSpatial" } }
                         Row {
                             anchors.verticalCenter: parent.verticalCenter
                             x: 12

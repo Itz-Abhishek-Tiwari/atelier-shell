@@ -216,8 +216,8 @@ ColumnLayout {
                     color: dragMa.pressed ? Qt.alpha(Atelier.accent, 0.30) : Qt.alpha(Atelier.accent, sel ? 0.22 : 0.10)
                     border.width: sel ? 2 : 1
                     border.color: Qt.alpha(Atelier.accent, sel ? 0.9 : 0.5)
-                    Behavior on x { enabled: !dragMa.pressed; NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
-                    Behavior on y { enabled: !dragMa.pressed; NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutCubic } }
+                    Behavior on x { enabled: !dragMa.pressed; NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel } }
+                    Behavior on y { enabled: !dragMa.pressed; NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel } }
 
                     Column {
                         anchors.centerIn: parent

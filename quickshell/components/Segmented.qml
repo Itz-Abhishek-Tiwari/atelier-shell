@@ -29,8 +29,9 @@ Rectangle {
                 width: sg.segmentWidth
                 height: segRow.height
                 radius: height / 2
-                color: on ? Atelier.accentFill : (segMa.containsMouse ? Atelier.containerHigh : "transparent")
-                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                color: on ? Atelier.accentFill : "transparent"
+                Behavior on color { CAnim {} }
+                StateLayer { mouseArea: segMa; color: parent.on ? Atelier.onFill : Atelier.text }
                 Row {
                     anchors.centerIn: parent
                     spacing: 6

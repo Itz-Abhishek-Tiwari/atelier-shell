@@ -17,6 +17,7 @@ import qs.services
 // surfaces, hairline cards, the accent colour), no art backgrounds.
 //
 //   Now playing   cover · app · title · artist · seek bar · shuffle / prev / play / next / repeat
+//   Up next       Atelier Music's queue (only for that player; services/AtelierMusic.qml)
 //   Lyrics        time-synced from lrclib.net (scripts/lyrics.py, cached), current line
 //                 highlighted and kept centred; click a line to jump there
 //   Output        every audio output (speakers, headphones, Bluetooth, HDMI): tap to switch
@@ -47,6 +48,17 @@ Item {
     readonly property string title: hasPlayer ? (player.trackTitle || "") : ""
     readonly property string artist: hasPlayer ? (player.trackArtist || "") : ""
     readonly property string trackKey: title + "\n" + artist
+
+    // Atelier Music (apps/music) adds an "Up next" tab: its queue, over the app's own socket
+    readonly property bool isAtelier: hasPlayer && player.identity === "Atelier Music"
+    readonly property var tabs: (isAtelier ? [{ id: "upnext", icon: "󰲸", label: "Up next" }] : []).concat([
+        { id: "lyrics", icon: "󰍡", label: "Lyrics" },
+        { id: "output", icon: "󰓃", label: "Output" },
+        { id: "recent", icon: "󰋚", label: "Recent" },
+        { id: "timer",  icon: "󰔛", label: "Timer" }
+    ])
+    onIsAtelierChanged: if (!isAtelier && tab === "upnext") tab = "lyrics"
+    Binding { target: AtelierMusic; property: "active"; value: root.visible && root.isAtelier }
 
     function open() { visible = true; animActive = true; }
     function close() { animActive = false; closeTimer.restart(); closedSignal(); }
@@ -198,7 +210,10 @@ Item {
         Keys.onSpacePressed: if (root.hasPlayer) root.player.togglePlaying()
         Keys.onLeftPressed: if (root.hasPlayer && root.player.canGoPrevious) root.player.previous()
         Keys.onRightPressed: if (root.hasPlayer && root.player.canGoNext) root.player.next()
-        Keys.onTabPressed: root.tab = ["lyrics", "output", "recent", "timer"][(["lyrics", "output", "recent", "timer"].indexOf(root.tab) + 1) % 4]
+        Keys.onTabPressed: {
+            const ids = root.tabs.map(t => t.id);
+            root.tab = ids[(ids.indexOf(root.tab) + 1) % ids.length];
+        }
     }
 
     EdgeDrawer {
@@ -294,7 +309,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         width: parent.width; height: seek.active ? 6 : 4; radius: height / 2
                         color: Atelier.containerHigh
-                        Behavior on height { NumberAnimation { duration: Atelier.durFast } }
+                        Behavior on height { Anim { type: "fastSpatial" } }
                         Rectangle {
                             width: Math.max(height, parent.width * seek.frac); height: parent.height; radius: parent.radius
                             color: Atelier.accent
@@ -306,7 +321,7 @@ Item {
                         width: 12; height: 12; radius: 6
                         color: Atelier.accent
                         scale: seek.active ? 1 : 0
-                        Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack } }
+                        Behavior on scale { Anim { type: "fastSpatial" } }
                     }
                     MouseArea {
                         id: seekMa
@@ -350,7 +365,7 @@ Item {
                     implicitWidth: 50; implicitHeight: 50; radius: 25
                     color: Atelier.accentFill
                     scale: playMa.pressed ? 0.9 : (playMa.containsMouse ? 1.06 : 1)
-                    Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+                    Behavior on scale { Anim { type: "fastSpatial" } }
                     Text {
                         anchors.centerIn: parent
                         anchors.horizontalCenterOffset: root.playing ? 0 : 2
@@ -388,8 +403,9 @@ Item {
                         implicitWidth: chipRow.implicitWidth + 20
                         implicitHeight: 28
                         radius: Atelier.radiusMd
-                        color: on ? Atelier.accentFill : (chipMa.containsMouse ? Atelier.containerHigh : Atelier.container)
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        color: on ? Atelier.accentFill : Atelier.container
+                        Behavior on color { CAnim {} }
+                        StateLayer { mouseArea: chipMa }
                         Row {
                             id: chipRow
                             anchors.centerIn: parent
@@ -406,6 +422,7 @@ Item {
                                 text: modelData.identity
                                 font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.DemiBold
                                 color: parent.parent.on ? Atelier.onFill : Atelier.text
+                                Behavior on color { CAnim {} }
                             }
                         }
                         MouseArea { id: chipMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.pickedId = modelData.uniqueId }
@@ -425,20 +442,16 @@ Item {
                     anchors.margins: 3
                     spacing: 2
                     Repeater {
-                        model: [
-                            { id: "lyrics", icon: "󰍡", label: "Lyrics" },
-                            { id: "output", icon: "󰓃", label: "Output" },
-                            { id: "recent", icon: "󰋚", label: "Recent" },
-                            { id: "timer",  icon: "󰔛", label: "Timer" }
-                        ]
+                        model: root.tabs
                         Rectangle {
                             required property var modelData
                             readonly property bool on: root.tab === modelData.id
-                            width: (tabsRow.width - 3 * tabsRow.spacing) / 4
+                            width: (tabsRow.width - (root.tabs.length - 1) * tabsRow.spacing) / root.tabs.length
                             height: tabsRow.height
                             radius: height / 2
-                            color: on ? Atelier.accentFill : (tabMa.containsMouse ? Atelier.containerHigh : "transparent")
-                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                            color: on ? Atelier.accentFill : "transparent"
+                            Behavior on color { CAnim {} }
+                            StateLayer { mouseArea: tabMa }
                             Row {
                                 anchors.centerIn: parent
                                 spacing: 6
@@ -448,6 +461,7 @@ Item {
                                     font.family: modelData.id === "timer" && root.sleepAt > 0 ? Atelier.font : Atelier.fontUi
                                     font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold
                                     color: parent.parent.on ? Atelier.onFill : Atelier.text
+                                    Behavior on color { CAnim {} }
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
                             }
@@ -519,9 +533,9 @@ Item {
                                 font.pixelSize: ln.current ? 17 : 14
                                 font.weight: ln.current ? Font.DemiBold : Font.Normal
                                 color: ln.current ? Atelier.accent : (lnMa.containsMouse ? Atelier.text : Atelier.subtext)
+                                Behavior on color { CAnim {} }
                                 opacity: ln.current ? 1 : Math.max(0.35, 1 - ln.dist * 0.16)
-                                Behavior on font.pixelSize { NumberAnimation { duration: 220 } }
-                                Behavior on color { ColorAnimation { duration: 220 } }
+                                Behavior on font.pixelSize { Anim { type: "fastSpatial" } }
                             }
                             MouseArea {
                                 id: lnMa
@@ -554,6 +568,75 @@ Item {
                     }
                 }
 
+                // ── Up next (Atelier Music's queue) ──
+                ListView {
+                    id: upView
+                    anchors.fill: parent
+                    anchors.margins: 6
+                    visible: root.tab === "upnext"
+                    clip: true
+                    spacing: 2
+                    model: AtelierMusic.upNext
+                    SmoothWheel { flickable: upView }
+                    delegate: Rectangle {
+                        id: ud
+                        required property var modelData
+                        required property int index
+                        readonly property string saved: AtelierMusic.files[modelData.id] || ""
+                        width: upView.width
+                        height: 50
+                        radius: Atelier.radiusMd
+                        color: "transparent"
+                        Behavior on color { CAnim {} }
+                        StateLayer { mouseArea: udMa }
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 8
+                            anchors.rightMargin: 12
+                            spacing: 12
+                            RoundImage {
+                                implicitWidth: 36; implicitHeight: 36
+                                radius: Atelier.radiusSm
+                                decode: 72
+                                tile: Atelier.containerHigh
+                                source: ud.modelData.thumb || ""
+                            }
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 1
+                                Text { Layout.fillWidth: true; text: ud.modelData.title || ""; elide: Text.ElideRight; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.Medium; color: Atelier.text }
+                                Text { Layout.fillWidth: true; text: ud.modelData.artist || ""; elide: Text.ElideRight; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
+                            }
+                            Text {
+                                visible: ud.saved !== "" && !udMa.containsMouse
+                                text: ud.saved === "download" ? "󰗠" : "󰋊"
+                                font.family: Atelier.font; font.pixelSize: 13
+                                color: ud.saved === "download" ? Atelier.accent : Atelier.overlay1
+                                Behavior on color { CAnim {} }
+                            }
+                            Text {
+                                text: udMa.containsMouse ? "󰐊" : (ud.modelData.duration || "")
+                                font.family: Atelier.font
+                                font.pixelSize: udMa.containsMouse ? 15 : 11
+                                color: udMa.containsMouse ? Atelier.accent : Atelier.subtext
+                                Behavior on color { CAnim {} }
+                            }
+                        }
+                        MouseArea {
+                            id: udMa
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: AtelierMusic.jump(AtelierMusic.index + 1 + ud.index)
+                        }
+                    }
+                    Placeholder {
+                        visible: upView.count === 0
+                        icon: AtelierMusic.connected ? "󰲸" : "󰑐"
+                        text: AtelierMusic.connected ? "Nothing queued after this song" : "Connecting to Atelier Music…"
+                    }
+                }
+
                 // ── Output ──
                 ListView {
                     id: outView
@@ -571,8 +654,9 @@ Item {
                         width: outView.width
                         height: 50
                         radius: Atelier.radiusMd
-                        color: odMa.containsMouse ? Atelier.containerHigh : "transparent"
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        color: "transparent"
+                        Behavior on color { CAnim {} }
+                        StateLayer { mouseArea: odMa }
                         RowLayout {
                             anchors.fill: parent
                             anchors.leftMargin: 12
@@ -618,8 +702,9 @@ Item {
                         width: recentView.width
                         height: 52
                         radius: Atelier.radiusMd
-                        color: rdMa.containsMouse ? Atelier.containerHigh : "transparent"
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        color: "transparent"
+                        Behavior on color { CAnim {} }
+                        StateLayer { mouseArea: rdMa }
                         RowLayout {
                             anchors.fill: parent
                             anchors.leftMargin: 8
@@ -644,6 +729,7 @@ Item {
                                 font.family: rdMa.containsMouse ? Atelier.font : Atelier.fontUi
                                 font.pixelSize: rdMa.containsMouse ? 15 : 11
                                 color: rdMa.containsMouse ? Atelier.accent : Atelier.subtext
+                                Behavior on color { CAnim {} }
                             }
                         }
                         MouseArea { id: rdMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.searchTrack(rd.modelData) }
@@ -665,6 +751,7 @@ Item {
                             : "Pause the music after a while"
                         font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm
                         color: root.sleepAt > 0 || root.sleepEndOfTrack ? Atelier.accent : Atelier.subtext
+                        Behavior on color { CAnim {} }
                         Layout.topMargin: -6
                     }
                     Flow {
@@ -726,13 +813,15 @@ Item {
         signal clicked()
         implicitWidth: size; implicitHeight: size; radius: size / 2
         opacity: enabled ? 1 : 0.35
-        color: on ? Qt.alpha(Atelier.accent, 0.16) : (rbMa.containsMouse ? Atelier.containerHigh : "transparent")
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+        color: on ? Qt.alpha(Atelier.accent, 0.16) : "transparent"
+        Behavior on color { CAnim {} }
+        StateLayer { mouseArea: rbMa }
         Text {
             anchors.centerIn: parent
             text: rb.icon
             font.family: Atelier.font; font.pixelSize: rb.glyphSize
             color: rb.on ? Atelier.accent : (rbMa.containsMouse ? Atelier.text : Atelier.subtext1)
+            Behavior on color { CAnim {} }
         }
         MouseArea { id: rbMa; anchors.fill: parent; enabled: rb.enabled; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: rb.clicked() }
     }
@@ -745,16 +834,18 @@ Item {
         implicitWidth: c2t.implicitWidth + 24
         implicitHeight: 30
         radius: Atelier.radiusMd
-        color: on ? Atelier.accentFill : (c2Ma.containsMouse ? Atelier.containerHigh : Atelier.container)
+        color: on ? Atelier.accentFill : Atelier.container
+        StateLayer { mouseArea: c2Ma }
         border.width: on ? 0 : 1
         border.color: Atelier.outline
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+        Behavior on color { CAnim {} }
         Text {
             id: c2t
             anchors.centerIn: parent
             text: c2.label
             font.family: c2.mono ? Atelier.font : Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold
             color: c2.on ? Atelier.onFill : Atelier.text
+            Behavior on color { CAnim {} }
         }
         MouseArea { id: c2Ma; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: c2.clicked() }
     }
@@ -807,7 +898,7 @@ Item {
             maskThresholdMin: 0.5
             maskSpreadAtMin: 1.0
             opacity: ri.ready ? 1 : 0
-            Behavior on opacity { NumberAnimation { duration: Atelier.durMedium } }
+            Behavior on opacity { Anim { type: "slowEffects" } }
         }
     }
     component Placeholder: ColumnLayout {

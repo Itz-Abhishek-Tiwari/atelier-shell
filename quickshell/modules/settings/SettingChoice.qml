@@ -1,4 +1,5 @@
 import QtQuick
+import qs.components
 import qs.config
 
 // Segmented choice row. options: [{ id, label }].
@@ -30,8 +31,9 @@ SettingRow {
                     width: label.implicitWidth + 26
                     height: 26
                     radius: 13
-                    color: on ? Atelier.fill(root.hue) : (ma.containsMouse ? Atelier.container : "transparent")
-                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                    color: on ? Atelier.fill(root.hue) : "transparent"
+                    Behavior on color { CAnim {} }
+                    StateLayer { mouseArea: ma }
                     Text {
                         id: label
                         anchors.centerIn: parent
@@ -40,6 +42,7 @@ SettingRow {
                         font.pixelSize: Atelier.fsSm
                         font.weight: Font.DemiBold
                         color: parent.on ? Atelier.onFill : Atelier.text
+                        Behavior on color { CAnim {} }
                     }
                     MouseArea { id: ma; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.picked(modelData.id) }
                 }

@@ -18,10 +18,11 @@ Rectangle {
     implicitHeight: 26
     implicitWidth: row.implicitWidth + 2 * pad
     radius: height / 2
-    color: Qt.alpha(tint, ma.containsMouse ? 0.24 : 0.14)
+    color: Qt.alpha(tint, 0.14)
     border.width: 1
     border.color: Qt.alpha(tint, 0.35)
-    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+    Behavior on color { CAnim {} }
+    StateLayer { mouseArea: ma; color: chip.tint; disabled: !chip.interactive }
 
     RowLayout {
         id: row

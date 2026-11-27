@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import qs.components
 import qs.config
 
 // Slider row with a live value label. `moved` fires while dragging (throttled).
@@ -54,7 +55,7 @@ SettingRow {
                     color: Atelier.onFill            // light ink, like every control on a fill (was text: a dark dot in light themes)
                     border.width: 3
                     border.color: root.hue
-                    Behavior on width { NumberAnimation { duration: Atelier.durFast } }
+                    Behavior on width { Anim { type: "fastSpatial" } }
                 }
             }
             MouseArea {

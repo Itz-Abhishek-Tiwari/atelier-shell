@@ -112,7 +112,7 @@ Item {
                         color: root.selected || Atelier.containerHigh
                         border.width: 1
                         border.color: Atelier.outline
-                        Behavior on color { ColorAnimation { duration: Atelier.durMedium } }
+                        Behavior on color { CAnim {} }
                         EmptyState { anchors.centerIn: parent; visible: !root.selected; icon: "󰈊"; text: "Pick one" }
                         Text {
                             visible: !!root.selected
@@ -138,7 +138,7 @@ Item {
                                 Rectangle { visible: fr.index > 0; anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right
                                             anchors.leftMargin: 6; anchors.rightMargin: 6; height: 1; color: Atelier.outline }
                                 Rectangle { anchors.fill: parent; anchors.margins: 2; radius: Atelier.radiusSm; color: Atelier.containerHigh
-                                            opacity: frMa.containsMouse ? 0.6 : 0; Behavior on opacity { NumberAnimation { duration: Atelier.durFast } } }
+                                            opacity: frMa.containsMouse ? 0.6 : 0; Behavior on opacity { Anim { type: "effects" } } }
                                 RowLayout {
                                     anchors.fill: parent
                                     anchors.leftMargin: 10; anchors.rightMargin: 8
@@ -169,6 +169,7 @@ Item {
                     text: "Clear"
                     font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm
                     color: clMa.containsMouse ? Atelier.red : Atelier.subtext
+                    Behavior on color { CAnim {} }
                     MouseArea { id: clMa; anchors.fill: parent; anchors.margins: -4; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                 onClicked: { ColorPicker.clear(); root.selected = ""; } }
                 }
@@ -197,7 +198,7 @@ Item {
                             border.width: on ? 2 : 1
                             border.color: on ? Atelier.text : Atelier.outline
                             scale: swMa.pressed ? 0.86 : (swMa.containsMouse ? 1.18 : 1)
-                            Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+                            Behavior on scale { Anim { type: "fastSpatial" } }
                             MouseArea { id: swMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                                         onClicked: { root.selected = sw.modelData; root.copy("HEX", sw.modelData.toUpperCase()); } }
                         }

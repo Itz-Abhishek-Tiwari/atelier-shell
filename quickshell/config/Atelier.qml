@@ -202,7 +202,7 @@ Singleton {
     // where segments meet). The 1.21 sets the bounce: higher = springier.
     readonly property var curveElastic: [0.38, 1.21, 0.22, 1, 1, 1]
     readonly property var curveSmooth: [0.05, 0.7, 0.1, 1, 1, 1]      // M3 emphasizedDecel, no overshoot
-    readonly property var curveOpen: Perf.mode === "normal" || Perf.showcase ? curveElastic : curveSmooth   // drawers, popups, indicators
+    readonly property var curveOpen: Perf.mode === "normal" ? curveElastic : curveSmooth   // drawers, popups, indicators
     readonly property var curveClose: [0.3, 0, 0.8, 0.15, 1, 1]       // emphasizedAccel
     readonly property var curveStandard: [0.2, 0, 0, 1, 1, 1]         // standard (hovers, colours)
     readonly property real modeSpeed: Perf.game || Perf.saver ? 1.9 : Perf.dev ? 1.3 : 1
@@ -212,4 +212,37 @@ Singleton {
     readonly property int durClose: Perf.saver ? 0 : Math.round(200 / speed)
     readonly property int durFast: Perf.saver ? 0 : Math.round(180 / speed)       // hovers, colour changes
     readonly property int durMedium: Perf.saver ? 0 : Math.round(300 / speed)     // small moves (indicators, toggles)
+
+    // ── Motion tokens: Caelestia's full Material 3 set (components/Anim.qml, CAnim.qml) ──
+    // Every animation picks one of these instead of its own easing + duration, so the whole
+    // shell moves as one system:
+    //   spatial  = position, size, scale. Expressive curves overshoot once (normal mode);
+    //              dev / game swap them for emphasizedDecel (no overshoot), like curveOpen.
+    //   effects  = opacity and colour. Never overshoot.
+    //   standard / emphasized = plain M3 curves for everything else.
+    // Durations follow `speed` (Settings → animation speed × the performance mode) and are 0
+    // in battery saver.
+    readonly property bool expressive: Perf.mode === "normal"
+    readonly property var m3: ({
+        standard:        [0.2, 0, 0, 1, 1, 1],
+        standardAccel:   [0.3, 0, 1, 1, 1, 1],
+        standardDecel:   [0, 0, 0, 1, 1, 1],
+        emphasized:      [0.05, 0, 2 / 15, 0.06, 1 / 6, 0.4, 5 / 24, 0.82, 0.25, 1, 1, 1],
+        emphasizedAccel: [0.3, 0, 0.8, 0.15, 1, 1],
+        emphasizedDecel: [0.05, 0.7, 0.1, 1, 1, 1],
+        fastSpatial:     expressive ? [0.42, 1.67, 0.21, 0.9, 1, 1] : [0.05, 0.7, 0.1, 1, 1, 1],
+        spatial:         expressive ? [0.38, 1.21, 0.22, 1, 1, 1] : [0.05, 0.7, 0.1, 1, 1, 1],
+        slowSpatial:     expressive ? [0.39, 1.29, 0.35, 0.98, 1, 1] : [0.05, 0.7, 0.1, 1, 1, 1],
+        fastEffects:     [0.31, 0.94, 0.34, 1, 1, 1],
+        effects:         [0.34, 0.8, 0.34, 1, 1, 1],
+        slowEffects:     [0.34, 0.88, 0.34, 1, 1, 1]
+    })
+    function ms(base) { return Perf.saver ? 0 : Math.round(base / speed); }
+    readonly property var m3dur: ({
+        small: ms(200), normal: ms(400), large: ms(600), extraLarge: ms(1000),
+        standard: ms(400), standardAccel: ms(200), standardDecel: ms(400),
+        emphasized: ms(500), emphasizedAccel: ms(200), emphasizedDecel: ms(400),
+        fastSpatial: ms(350), spatial: ms(500), slowSpatial: ms(650),
+        fastEffects: ms(150), effects: ms(200), slowEffects: ms(300)
+    })
 }

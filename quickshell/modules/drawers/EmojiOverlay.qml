@@ -265,8 +265,9 @@ Item {
                                 implicitWidth: tRow.implicitWidth + 22
                                 implicitHeight: 26
                                 radius: 13
-                                color: on ? Qt.alpha(modelData.tint, 0.18) : (tMa.containsMouse ? Atelier.containerHigh : "transparent")
-                                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                                color: on ? Qt.alpha(modelData.tint, 0.18) : "transparent"
+                                Behavior on color { CAnim {} }
+                                StateLayer { mouseArea: tMa }
                                 RowLayout {
                                     id: tRow
                                     anchors.centerIn: parent
@@ -338,7 +339,8 @@ Item {
                 Rectangle {           // skin tone (emoji) — click cycles
                     visible: root.tab === "emoji"
                     implicitWidth: 34; implicitHeight: 34; radius: Atelier.radiusLg
-                    color: toneMa.containsMouse ? Atelier.containerHigh : Atelier.container
+                    color: Atelier.container
+                    StateLayer { mouseArea: toneMa }
                     border.width: 1
                     border.color: Atelier.outline
                     Text { anchors.centerIn: parent; text: root.toneSwatches[Settings.emoji.tone] || "✋"; font.family: Atelier.fontEmoji; font.pixelSize: 17 }
@@ -371,16 +373,18 @@ Item {
                         Layout.fillWidth: true
                         implicitHeight: 32
                         radius: Atelier.radiusSm
-                        color: on ? Qt.alpha(Atelier.yellow, 0.16) : (cMa.containsMouse ? Atelier.containerHigh : "transparent")
+                        color: on ? Qt.alpha(Atelier.yellow, 0.16) : "transparent"
+                        StateLayer { mouseArea: cMa }
                         border.width: on ? 1 : 0
                         border.color: Qt.alpha(Atelier.yellow, 0.4)
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        Behavior on color { CAnim {} }
                         Text {
                             anchors.centerIn: parent
                             text: modelData.g < 0 ? modelData.icon : (root.groupIcons[modelData.name] || "•")
                             font.family: modelData.g < 0 ? Atelier.font : "Noto Color Emoji"
                             font.pixelSize: modelData.g < 0 ? 15 : 17
                             color: parent.on ? Atelier.yellow : Atelier.subtext
+                            Behavior on color { CAnim {} }
                             opacity: parent.on || cMa.containsMouse ? 1 : 0.7
                         }
                         MouseArea {
@@ -417,7 +421,8 @@ Item {
                         anchors.fill: parent
                         anchors.margins: 2
                         radius: Atelier.radiusSm
-                        color: ec.current ? Qt.alpha(Atelier.yellow, 0.18) : (eMa.containsMouse ? Atelier.containerHigh : "transparent")
+                        color: ec.current ? Qt.alpha(Atelier.yellow, 0.18) : "transparent"
+                        StateLayer { mouseArea: eMa }
                     }
                     Text {
                         anchors.centerIn: parent
@@ -425,7 +430,7 @@ Item {
                         font.family: Atelier.fontEmoji
                         font.pixelSize: 26
                         scale: eMa.pressed ? 0.86 : (eMa.containsMouse ? 1.15 : 1)
-                        Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack; easing.overshoot: 1.4 } }
+                        Behavior on scale { Anim { type: "fastSpatial" } }
                     }
                     MouseArea {
                         id: eMa

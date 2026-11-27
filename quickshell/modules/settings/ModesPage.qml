@@ -20,11 +20,6 @@ ColumnLayout {
     readonly property var blurOpts: [{ id: "off", label: "Off" }, { id: "light", label: "Light" }, { id: "normal", label: "Your usual" }]
     readonly property var powerOpts: [{ id: "performance", label: "Performance" }, { id: "balanced", label: "Balanced" },
                                       { id: "power-saver", label: "Power saver" }, { id: "unchanged", label: "Don't change" }]
-    readonly property var windowStyles: [{ id: "liquid", label: "Liquid" }, { id: "cloth", label: "Cloth" }, { id: "paper", label: "Paper" },
-                                         { id: "swarm", label: "Swarm" }, { id: "bubble", label: "Bubble" }, { id: "smoke", label: "Smoke" },
-                                         { id: "burn", label: "Burn" }, { id: "construction", label: "Construction" }]
-    readonly property var workspaceStyles: [{ id: "off", label: "Off" }, { id: "rotation", label: "Rotation" }, { id: "planet_hop", label: "Planet hop" },
-                                            { id: "cube", label: "Cube" }, { id: "lava", label: "Lava" }]
     // must match the defaults in config/Settings.qml (modes)
     readonly property var defaults: ({
         dev:  { Opaque: true, Dim: false, Blur: "light", Shadows: true, Animations: true, AnimSpeed: 0.6,
@@ -32,8 +27,7 @@ ColumnLayout {
         game: { Opaque: true, Blur: "off", Shadows: false, Animations: false, Tearing: true,
                 Power: "performance", Caffeine: true, Dnd: true, HideWidgets: true, LeanShell: true },
         saver: { Opaque: true, Dim: false, Blur: "off", Shadows: false,
-                 Power: "power-saver", Caffeine: false, Dnd: false, HideWidgets: true, LeanShell: true },
-        showcase: { WindowStyle: "liquid", WorkspaceStyle: "off", Strength: 0.65, Duration: 0, OnOpen: true, OnClose: true, OnMove: false, BlurPasses: 2, Power: "performance", Caffeine: false, Dnd: false }
+                 Power: "power-saver", Caffeine: false, Dnd: false, HideWidgets: true, LeanShell: true }
     })
     function reset(m) { const d = defaults[m]; for (const k in d) Settings.modes[m + k] = d[k]; }
     function isDefault(m) { const d = defaults[m]; for (const k in d) if (Settings.modes[m + k] !== d[k]) return false; return true; }
@@ -52,12 +46,13 @@ ColumnLayout {
                 Layout.preferredWidth: 1
                 implicitHeight: 128
                 radius: Atelier.radiusLg
-                color: on ? Qt.alpha(modelData.tint, Atelier.isLight ? 0.16 : 0.20) : (cardMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+                color: on ? Qt.alpha(modelData.tint, Atelier.isLight ? 0.16 : 0.20) : Atelier.container
+                StateLayer { mouseArea: cardMa }
                 border.width: on ? 2 : 1
                 border.color: on ? Qt.alpha(modelData.tint, 0.65) : Atelier.outline
                 scale: cardMa.pressed ? 0.97 : 1
-                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+                Behavior on color { CAnim {} }
+                Behavior on scale { Anim { type: "fastSpatial" } }
 
                 Column {
                     anchors.fill: parent
@@ -101,7 +96,7 @@ ColumnLayout {
     SettingCard {
         title: "Customise"
         SettingChoice { label: "Mode"; description: "Everything below applies to the mode you pick here"
-            options: [{ id: "dev", label: "Programming" }, { id: "game", label: "Game" }, { id: "saver", label: "Saver" }, { id: "showcase", label: "Showcase" }]
+            options: [{ id: "dev", label: "Programming" }, { id: "game", label: "Game" }, { id: "saver", label: "Saver" }]
             value: modesPage.editing; onPicked: (id) => modesPage.editing = id }
     }
 
@@ -191,71 +186,6 @@ ColumnLayout {
             visible: !modesPage.isDefault("saver")
             label: "Back to the defaults"
             Chip { icon: "󰑓"; text: "Reset"; tint: Atelier.yellow; interactive: true; implicitHeight: 30; onClicked: modesPage.reset("saver") }
-        }
-    }
-
-    SettingCard {
-        visible: modesPage.editing === "showcase"
-        title: "Showcase mode"; icon: "󰔉"; tint: Atelier.mauve
-        SettingRow { label: "Everything on, looks first"; description: "Full blur, shadows and glass, plus the hyprimate plugin's shader animations on windows. Costs battery and GPU; this mode is for showing the desktop off, and is not kept across logins. Build the plugin once with setup/hyprimate.sh." }
-        Item {   // the style picker: eight pills wrap onto lines instead of overflowing a row
-            id: stylePick
-            Layout.fillWidth: true
-            implicitHeight: pickCol.implicitHeight + 24
-            Rectangle { visible: stylePick.y > 1; anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right; height: 1; color: Atelier.outline }
-            ColumnLayout {
-                id: pickCol
-                anchors.left: parent.left; anchors.right: parent.right; anchors.top: parent.top; anchors.topMargin: 12
-                spacing: 8
-                ColumnLayout {
-                    spacing: 2
-                    Text { text: "Window animation"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.Medium; color: Atelier.text }
-                    Text { Layout.fillWidth: true; wrapMode: Text.Wrap
-                        text: "How windows open, close and move. Measured here: Liquid costs least, Bubble most. A shorter Duration and no Moving windows are cheaper still."
-                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
-                }
-                Flow {
-                    Layout.fillWidth: true
-                    spacing: 6
-                    Repeater {
-                        model: modesPage.windowStyles
-                        ChoicePill {
-                            required property var modelData
-                            label: modelData.label
-                            on: Settings.modes.showcaseWindowStyle === modelData.id
-                            onClicked: Settings.modes.showcaseWindowStyle = modelData.id
-                        }
-                    }
-                }
-            }
-        }
-        SettingSlider { label: "Strength"; description: "How much windows deform. Liquid, cloth, bubble and smoke only"
-            from: 0; to: 100; step: 5; decimals: 0; suffix: "%"; tint: Atelier.mauve
-            value: Settings.modes.showcaseStrength * 100; onMoved: (v) => Settings.modes.showcaseStrength = v / 100 }
-        SettingSlider { label: "Duration"; description: "0 = the style's own timing"
-            from: 0; to: 3000; step: 100; decimals: 0; suffix: " ms"; tint: Atelier.mauve
-            value: Settings.modes.showcaseDuration; onMoved: (v) => Settings.modes.showcaseDuration = Math.round(v) }
-        SettingSwitch { label: "Opening windows"; tint: Atelier.mauve
-            checked: Settings.modes.showcaseOnOpen; onToggled: (v) => Settings.modes.showcaseOnOpen = v }
-        SettingSwitch { label: "Closing windows"; tint: Atelier.mauve
-            checked: Settings.modes.showcaseOnClose; onToggled: (v) => Settings.modes.showcaseOnClose = v }
-        SettingSwitch { label: "Moving windows"; description: "Redrawn every frame while you drag, the costliest effect"; tint: Atelier.mauve
-            checked: Settings.modes.showcaseOnMove; onToggled: (v) => Settings.modes.showcaseOnMove = v }
-        SettingChoice { label: "Workspace transition"; tint: Atelier.mauve
-            options: modesPage.workspaceStyles; value: Settings.modes.showcaseWorkspaceStyle; onPicked: (id) => Settings.modes.showcaseWorkspaceStyle = id }
-        SettingSlider { label: "Blur passes"; description: "Your Windows setting is used if it is higher"
-            from: 1; to: 6; step: 1; decimals: 0; tint: Atelier.mauve
-            value: Settings.modes.showcaseBlurPasses; onMoved: (v) => Settings.modes.showcaseBlurPasses = Math.round(v) }
-        SettingChoice { label: "Power profile"; tint: Atelier.mauve
-            options: modesPage.powerOpts; value: Settings.modes.showcasePower; onPicked: (id) => Settings.modes.showcasePower = id }
-        SettingSwitch { label: "Keep the screen awake"; tint: Atelier.mauve
-            checked: Settings.modes.showcaseCaffeine; onToggled: (v) => Settings.modes.showcaseCaffeine = v }
-        SettingSwitch { label: "Do Not Disturb"; tint: Atelier.mauve
-            checked: Settings.modes.showcaseDnd; onToggled: (v) => Settings.modes.showcaseDnd = v }
-        SettingRow {
-            visible: !modesPage.isDefault("showcase")
-            label: "Back to the defaults"
-            Chip { icon: "󰑓"; text: "Reset"; tint: Atelier.mauve; interactive: true; implicitHeight: 30; onClicked: modesPage.reset("showcase") }
         }
     }
 

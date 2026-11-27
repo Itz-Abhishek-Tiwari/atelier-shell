@@ -99,4 +99,28 @@ Singleton {
     readonly property int durClose: Math.round(200 / speed)
     readonly property int durFast: Math.round(180 / speed)
     readonly property int durMedium: Math.round(300 / speed)
+
+    // Motion tokens (same as quickshell/config/Atelier.qml; read by Anim / CAnim / StateLayer)
+    readonly property var m3: ({
+        standard:        [0.2, 0, 0, 1, 1, 1],
+        standardAccel:   [0.3, 0, 1, 1, 1, 1],
+        standardDecel:   [0, 0, 0, 1, 1, 1],
+        emphasized:      [0.05, 0, 2 / 15, 0.06, 1 / 6, 0.4, 5 / 24, 0.82, 0.25, 1, 1, 1],
+        emphasizedAccel: [0.3, 0, 0.8, 0.15, 1, 1],
+        emphasizedDecel: [0.05, 0.7, 0.1, 1, 1, 1],
+        fastSpatial:     [0.42, 1.67, 0.21, 0.9, 1, 1],
+        spatial:         [0.38, 1.21, 0.22, 1, 1, 1],
+        slowSpatial:     [0.39, 1.29, 0.35, 0.98, 1, 1],
+        fastEffects:     [0.31, 0.94, 0.34, 1, 1, 1],
+        effects:         [0.34, 0.8, 0.34, 1, 1, 1],
+        slowEffects:     [0.34, 0.88, 0.34, 1, 1, 1]
+    })
+    function ms(base) { return Math.round(base / speed); }
+    readonly property var m3dur: ({
+        small: ms(200), normal: ms(400), large: ms(600), extraLarge: ms(1000),
+        standard: ms(400), standardAccel: ms(200), standardDecel: ms(400),
+        emphasized: ms(500), emphasizedAccel: ms(200), emphasizedDecel: ms(400),
+        fastSpatial: ms(350), spatial: ms(500), slowSpatial: ms(650),
+        fastEffects: ms(150), effects: ms(200), slowEffects: ms(300)
+    })
 }

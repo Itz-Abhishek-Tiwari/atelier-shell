@@ -24,7 +24,7 @@ Item {
         anchors.fill: parent
         color: "white"
         opacity: 0
-        NumberAnimation on opacity { id: flash; running: false; from: 0.55; to: 0; duration: 380; easing.type: Easing.OutCubic }
+        NumberAnimation on opacity { id: flash; running: false; from: 0.55; to: 0; duration: 380; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel }
     }
 
     Rectangle {

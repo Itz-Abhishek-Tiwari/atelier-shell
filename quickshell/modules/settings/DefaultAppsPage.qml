@@ -141,7 +141,7 @@ ColumnLayout {
                 color: pillMa.containsMouse || cr.open ? Atelier.containerHigh : "transparent"
                 border.width: 1
                 border.color: cr.open ? Qt.alpha(Atelier.accent, 0.5) : Atelier.outline
-                Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                Behavior on color { CAnim {} }
 
                 RowLayout {
                     id: pill
@@ -159,6 +159,7 @@ ColumnLayout {
                             : (cr.c && cr.c.currentName ? cr.c.currentName : "Not set")
                         font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.Medium
                         color: cr.current || (cr.c && cr.c.currentName) ? Atelier.text : Atelier.peach
+                        Behavior on color { CAnim {} }
                         Layout.maximumWidth: 200
                         elide: Text.ElideRight
                     }
@@ -203,9 +204,9 @@ ColumnLayout {
                     color: on ? Atelier.accentFill : (optMa.containsMouse ? Atelier.containerHigh : Atelier.surface)
                     border.width: 1
                     border.color: on ? "transparent" : Atelier.outline
-                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                    Behavior on color { CAnim {} }
                     scale: optMa.pressed ? 0.94 : 1
-                    Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack } }
+                    Behavior on scale { Anim { type: "fastSpatial" } }
 
                     RowLayout {
                         id: optRow
@@ -221,6 +222,7 @@ ColumnLayout {
                             text: opt.modelData.name
                             font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.Medium
                             color: opt.on ? Atelier.onFill : Atelier.text
+                            Behavior on color { CAnim {} }
                         }
                         Text {
                             visible: opt.on

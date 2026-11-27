@@ -205,10 +205,10 @@ Item {
                             : Atelier.container
                         scale: btnMa.pressed ? 0.90 : (btnMa.containsMouse ? 1.06 : 1.0)
 
-                        Behavior on radius { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
-                        Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                        Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
+                        Behavior on radius { Anim { type: "spatial" } }
+                        Behavior on scale { Anim { type: "fastSpatial" } }
+                        Behavior on color { CAnim {} }
+                        Behavior on border.color { CAnim {} }
 
                         Text {
                             anchors.centerIn: parent
@@ -217,7 +217,7 @@ Item {
                             font.family: powerRoot.fontMono
                             font.pixelSize: 24
                             color: sessBtn.isActive ? sessBtn.modelData.accent : powerRoot.colText
-                            Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                            Behavior on color { CAnim {} }
                         }
 
                         Text {
@@ -229,6 +229,7 @@ Item {
                             font.pixelSize: Atelier.fsMicro
                             font.weight: Font.Medium
                             color: sessBtn.isActive ? sessBtn.modelData.accent : powerRoot.colSubtext
+                            Behavior on color { CAnim {} }
                             opacity: 0.8
                         }
 

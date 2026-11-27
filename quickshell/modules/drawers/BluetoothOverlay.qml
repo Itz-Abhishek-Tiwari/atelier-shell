@@ -320,7 +320,7 @@ get_devices()
                                 anchors.fill: parent
                                 radius: Atelier.radiusSm
                                 color: devRowMa.containsMouse ? btOverlayRoot.colContainer : "transparent"
-                                Behavior on color { ColorAnimation { duration: 100 } }
+                                Behavior on color { CAnim {} }
                             }
 
                             RowLayout {
@@ -335,6 +335,7 @@ get_devices()
                                     font.family: btOverlayRoot.fontMono
                                     font.pixelSize: 14
                                     color: modelData.connected ? btOverlayRoot.colPrimary : btOverlayRoot.colSubtext
+                                    Behavior on color { CAnim {} }
                                 }
 
                                 // Device Name
@@ -344,6 +345,7 @@ get_devices()
                                     font.pixelSize: Atelier.fsMd
                                     font.bold: modelData.connected
                                     color: modelData.connected ? btOverlayRoot.colPrimary : btOverlayRoot.colText
+                                    Behavior on color { CAnim {} }
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
                                 }
@@ -364,6 +366,7 @@ get_devices()
                                         font.family: btOverlayRoot.fontMono
                                         font.pixelSize: Atelier.fsMd
                                         color: modelData.connected ? btOverlayRoot.colOnPrimary : btOverlayRoot.colText
+                                        Behavior on color { CAnim {} }
                                     }
 
                                     MouseArea {

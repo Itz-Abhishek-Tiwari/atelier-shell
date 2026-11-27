@@ -238,7 +238,7 @@ Item {
                 sourceSize.height: ov.cardH * 2
                 // empty desktops recede so the ones with windows stand out
                 opacity: card.wins.length > 0 ? 0.9 : (hover.hovered ? 0.55 : 0.3)
-                Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                Behavior on opacity { Anim { type: "effects" } }
             }
 
             // windows, where they really are
@@ -343,7 +343,7 @@ Item {
                 : card.current ? Atelier.accent
                 : ov.selected === card.wsId ? Qt.alpha(Atelier.accent, 0.5)
                 : hover.hovered ? Qt.alpha(Atelier.text, 0.25) : Atelier.outline
-            Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
+            Behavior on border.color { CAnim {} }
         }
 
         // number chip
@@ -360,6 +360,7 @@ Item {
                 font.pixelSize: Atelier.fsSm
                 font.bold: true
                 color: card.current ? Atelier.onFill : Atelier.text
+                Behavior on color { CAnim {} }
             }
         }
 

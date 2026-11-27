@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell.Widgets
+import qs.components
 import qs.config
 import qs.services
 
@@ -48,7 +49,7 @@ Item {
         anchors.fill: parent
         opacity: root.a ? 0 : 1
         visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: root.dur; easing.type: Easing.OutCubic } }
+        Behavior on opacity { NumberAnimation { duration: root.dur; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel } }
 
         Column {
             anchors.right: parent.right; anchors.rightMargin: 0.05 * root.width
@@ -118,8 +119,8 @@ Item {
         width: Math.min(0.55 * root.width, 980 * root.u); height: 640 * root.u
         opacity: root.a ? 1 : 0
         visible: opacity > 0
-        Behavior on opacity { NumberAnimation { duration: root.dur; easing.type: Easing.OutCubic } }
-        transform: Translate { y: root.a ? 0 : 50 * root.u; Behavior on y { NumberAnimation { duration: root.dur; easing.type: Easing.OutCubic } } }
+        Behavior on opacity { NumberAnimation { duration: root.dur; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel } }
+        transform: Translate { y: root.a ? 0 : 50 * root.u; Behavior on y { NumberAnimation { duration: root.dur; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel } } }
 
         Column {
             anchors.right: parent.right; anchors.bottom: parent.bottom
@@ -172,7 +173,7 @@ Item {
                             width: 42 * root.u; height: width; radius: width / 2; color: root.ink
                             scale: 0
                             Component.onCompleted: scale = 1
-                            Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.OutBack } }
+                            Behavior on scale { Anim { type: "fastSpatial" } }
                         }
                     }
                 }

@@ -112,7 +112,7 @@ ColumnLayout {
                             height: parent.height
                             width: Math.max(2, diskBar.width * (storage.used / storage.total) * modelData.bytes / Math.max(storage.counted, storage.used) - 2)
                             color: storage.col(modelData.color)
-                            Behavior on width { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveStandard } }
+                            Behavior on width { Anim { type: "spatial" } }
                         }
                     }
                 }
@@ -220,7 +220,7 @@ ColumnLayout {
                     readonly property bool can: !quickProc.running && !storage.scanning && quick.total > 0
                     opacity: can ? 1 : 0.45
                     color: quick.ask ? Atelier.fill(Atelier.red) : Atelier.fill(Atelier.accent)
-                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                    Behavior on color { CAnim {} }
                     Text {
                         id: cleanLabel
                         anchors.centerIn: parent

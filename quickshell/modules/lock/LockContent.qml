@@ -113,7 +113,7 @@ Item {
         blur: 0.75
         saturation: 0.05
         scale: c.lockRoot.unlocking ? 1.06 : 1
-        Behavior on scale { NumberAnimation { duration: 420; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveClose } }
+        Behavior on scale { Anim { type: "spatial" } }
     }
     Rectangle { anchors.fill: parent; color: Atelier.crust; opacity: 0.38 }
 
@@ -130,8 +130,8 @@ Item {
         Behavior on shown { NumberAnimation { duration: Atelier.durOpen; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
         opacity: c.lockRoot.unlocking ? 0 : Math.min(1, shown * 1.4)
         scale: c.lockRoot.unlocking ? 0.94 : 0.9 + 0.1 * shown
-        Behavior on opacity { NumberAnimation { duration: Atelier.durMedium } }
-        Behavior on scale { NumberAnimation { duration: 380; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveClose } }
+        Behavior on opacity { Anim { type: "slowEffects" } }
+        Behavior on scale { Anim { type: "spatial" } }
 
         RectangularShadow {
             anchors.fill: panel
@@ -290,7 +290,7 @@ Item {
                         color: "transparent"
                         border.width: 2
                         border.color: Qt.alpha(Atelier.accent, c.lockRoot.authMode ? 0.85 : 0.45)
-                        Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
+                        Behavior on border.color { CAnim {} }
                         ClippingRectangle {
                             anchors.fill: parent
                             anchors.margins: 5
@@ -335,7 +335,7 @@ Item {
                             border.width: c.lockRoot.authMode || c.lockRoot.message ? 2 : 1
                             border.color: c.lockRoot.message ? Qt.alpha(Atelier.red, 0.75)
                                 : c.lockRoot.authMode ? Qt.alpha(Atelier.accent, 0.7) : Atelier.outline
-                            Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
+                            Behavior on border.color { CAnim {} }
                         }
                         Text {
                             anchors.left: parent.left; anchors.leftMargin: 20
@@ -356,7 +356,7 @@ Item {
                                     color: Atelier.accent
                                     scale: 0
                                     Component.onCompleted: scale = 1
-                                    Behavior on scale { NumberAnimation { duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.curveOpen } }
+                                    Behavior on scale { Anim { type: "fastSpatial" } }
                                 }
                             }
                         }
@@ -385,6 +385,7 @@ Item {
                         font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm
                         font.weight: c.lockRoot.message ? Font.DemiBold : Font.Normal
                         color: c.lockRoot.message ? Atelier.red : Atelier.subtext
+                        Behavior on color { CAnim {} }
                     }
 
                     // sleep · restart · power (power asks once)
@@ -627,7 +628,7 @@ Item {
                 GradientStop { position: 0; color: Qt.alpha(slim.tint, 0.7) }
                 GradientStop { position: 1; color: slim.tint }
             }
-            Behavior on width { NumberAnimation { duration: Atelier.durMedium } }
+            Behavior on width { Anim { type: "spatial" } }
         }
     }
 
@@ -645,8 +646,8 @@ Item {
         border.width: 1
         border.color: Qt.alpha(tint, 0.38)
         scale: tbMa.pressed ? 0.92 : 1
-        Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
-        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+        Behavior on scale { Anim { type: "fastSpatial" } }
+        Behavior on color { CAnim {} }
         Text { anchors.centerIn: parent; text: tb.icon; font.family: Atelier.font; font.pixelSize: tb.size * 0.38; color: tb.tint }
         MouseArea { id: tbMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: tb.clicked() }
     }

@@ -49,6 +49,7 @@ ColumnLayout {
             wrapMode: Text.Wrap
             text: Plugins.status
             color: Plugins.status.indexOf("Failed") === 0 ? Atelier.red : Atelier.subtext
+            Behavior on color { CAnim {} }
             font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd
         }
     }

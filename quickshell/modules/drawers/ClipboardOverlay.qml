@@ -194,10 +194,11 @@ Item {
                         implicitWidth: fRow.implicitWidth + 20
                         implicitHeight: 28
                         radius: Atelier.radiusMd
-                        color: on ? Qt.alpha(modelData.tint, 0.18) : (fMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+                        color: on ? Qt.alpha(modelData.tint, 0.18) : Atelier.container
+                        StateLayer { mouseArea: fMa }
                         border.width: 1
                         border.color: on ? Qt.alpha(modelData.tint, 0.45) : Atelier.outline
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                        Behavior on color { CAnim {} }
                         RowLayout {
                             id: fRow
                             anchors.centerIn: parent
@@ -234,10 +235,11 @@ Item {
                     width: list.width
                     implicitHeight: modelData.kind === "image" ? 74 : Math.max(48, rowText.implicitHeight + 24)
                     radius: Atelier.radiusMd
-                    color: current ? Qt.alpha(Atelier.accent, 0.12) : (rowMa.containsMouse ? Atelier.containerHigh : Atelier.container)
+                    color: current ? Qt.alpha(Atelier.accent, 0.12) : Atelier.container
+                    StateLayer { mouseArea: rowMa }
                     border.width: 1
                     border.color: current ? Qt.alpha(Atelier.accent, 0.4) : Atelier.outline
-                    Behavior on color { ColorAnimation { duration: Atelier.durFast } }
+                    Behavior on color { CAnim {} }
 
                     MouseArea {
                         id: rowMa
@@ -300,6 +302,7 @@ Item {
                                 font.pixelSize: Atelier.fsMd
                                 font.weight: row.modelData.kind === "image" ? Font.DemiBold : Font.Normal
                                 color: row.modelData.kind === "link" ? Atelier.sky : Atelier.text
+                                Behavior on color { CAnim {} }
                                 wrapMode: Text.WrapAnywhere
                                 maximumLineCount: 2
                                 elide: Text.ElideRight
@@ -321,7 +324,7 @@ Item {
                             radius: Atelier.radiusMd
                             opacity: rowMa.containsMouse || delMa.containsMouse || row.current ? 1 : 0
                             color: delMa.containsMouse ? Qt.alpha(Atelier.red, 0.22) : "transparent"
-                            Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                            Behavior on opacity { Anim { type: "effects" } }
                             Text { anchors.centerIn: parent; text: "󰆴"; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: delMa.containsMouse ? Atelier.red : Atelier.subtext }
                             MouseArea { id: delMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: clipRoot.remove(row.modelData) }
                         }

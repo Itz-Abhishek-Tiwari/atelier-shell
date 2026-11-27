@@ -155,7 +155,7 @@ Singleton {
                 property string wifiAddress: ""         // Wi-Fi mode: the iPhone's IP; empty = <name>.local
             }
 
-            // what Programming, Game, Showcase and Battery saver mode change (services/Perf.qml + hypr/atelier-mode.lua;
+            // what Programming, Game and Battery saver mode change (services/Perf.qml + hypr/atelier-mode.lua;
             // Settings → Modes). Normal mode is just your own look (the Windows page).
             property JsonObject modes: JsonObject {
                 property bool devOpaque: true            // opaque windows: crisp text, no blur behind them
@@ -187,17 +187,6 @@ Singleton {
                 property bool saverDnd: false
                 property bool saverHideWidgets: true     // don't draw (or refresh) the desktop widget
                 property bool saverLeanShell: true       // no shell shadows, solid instead of glass
-                property string showcaseWindowStyle: "liquid"     // hyprimate window animation: liquid | cloth | paper | swarm | bubble | smoke | burn | construction
-                property string showcaseWorkspaceStyle: "off"     // off | rotation | planet_hop | cube | lava
-                property real showcaseStrength: 0.65     // how hard the window effect deforms (liquid, cloth, bubble, smoke)
-                property int showcaseDuration: 0         // ms, 0 = the style's own timing
-                property bool showcaseOnOpen: true       // animate opening windows
-                property bool showcaseOnClose: true      // animate closing windows
-                property bool showcaseOnMove: false      // animate dragging / moving windows (the costliest: redrawn every frame while you drag)
-                property int showcaseBlurPasses: 2       // at least this many blur passes (your Windows setting if higher)
-                property string showcasePower: "performance"
-                property bool showcaseCaffeine: false
-                property bool showcaseDnd: false
             }
 
             property JsonObject controlCenter: JsonObject {   // modules/drawers/ControlCenter.qml
@@ -544,9 +533,7 @@ Singleton {
             + ", animations = " + (p === "saver" ? "false" : m[p + "Animations"]) + (p === "dev" ? ", dim = " + m.devDim + ", anim_speed = " + Number(m.devAnimSpeed).toFixed(2)
                                                                  : p === "saver" ? ", dim = " + m.saverDim
                                                                  : ", tearing = " + m.gameTearing) + " }";
-        return "    modes = {\n        dev = " + mode("dev") + ",\n        game = " + mode("game") + ",\n        saver = " + mode("saver") + ",\n        showcase = { window_style = \"" + m.showcaseWindowStyle + "\", workspace_style = \"" + m.showcaseWorkspaceStyle + "\", blur_passes = " + Math.round(m.showcaseBlurPasses)
-            + ", strength = " + Number(m.showcaseStrength).toFixed(2) + ", duration = " + Math.round(m.showcaseDuration)
-            + ", on_open = " + m.showcaseOnOpen + ", on_close = " + m.showcaseOnClose + ", on_move = " + m.showcaseOnMove + " },\n    },\n";
+        return "    modes = {\n        dev = " + mode("dev") + ",\n        game = " + mode("game") + ",\n        saver = " + mode("saver") + ",\n    },\n";
     }
     readonly property string hyprLua: {
         const w = adapter.windows;

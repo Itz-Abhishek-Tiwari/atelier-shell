@@ -1,0 +1,19 @@
+[Desktop Entry]
+Type=Application
+Name=Atelier Music
+GenericName=Music player
+Comment=Search and play YouTube Music in the Atelier design
+Exec=@HOME@/.local/bin/atelier-music
+Icon=multimedia-audio-player
+Terminal=false
+Categories=AudioVideo;Audio;Player;
+Keywords=youtube;music;ytm;songs;player;radio;lyrics;
+Actions=toggle;next;
+
+[Desktop Action toggle]
+Name=Play / Pause
+Exec=@HOME@/.local/bin/atelier-music toggle
+
+[Desktop Action next]
+Name=Next track
+Exec=@HOME@/.local/bin/atelier-music next

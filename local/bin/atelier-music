@@ -1,0 +1,21 @@
+#!/bin/sh
+# Atelier Music (apps/music): open the window, or focus it when it is already open.
+#   atelier-music              open / focus
+#   atelier-music <cmd> …      control the player without the window: toggle | next | prev | status
+#                              | search "q" (prints JSON) — see apps/music/backend/ytmd.py
+app="$(dirname "$(readlink -f "$0")")/../../apps/music"
+
+if [ $# -gt 0 ]; then
+    exec python3 -I "$app/backend/ytmd.py" "$@"
+fi
+
+addr=$(hyprctl clients -j 2>/dev/null | python3 -I -c '
+import json, sys
+for c in json.load(sys.stdin):
+    if c.get("class") == "org.quickshell" and c.get("title", "").endswith("Atelier Music"):
+        print(c["address"]); break' 2>/dev/null)
+
+if [ -n "$addr" ]; then
+    exec hyprctl dispatch "hl.dsp.focus({ window = \"address:$addr\" })" >/dev/null
+fi
+exec qs -n -d -p "$app/shell.qml" >/dev/null 2>&1

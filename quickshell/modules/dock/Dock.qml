@@ -165,7 +165,7 @@ Item {
         // eases out when it leaves (it used to pop on/off and jump with every pointer event)
         readonly property bool magnifying: hover.hovered && !menu.visible && root.magnifyBy > 0
         property real amount: magnifying ? 1 : 0
-        Behavior on amount { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.OutCubic } }
+        Behavior on amount { NumberAnimation { duration: Atelier.durMedium; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel } }
         property real px: 0
         Behavior on px { enabled: win.amount > 0.01; SmoothedAnimation { duration: 90; velocity: -1 } }
         Connections {
@@ -384,7 +384,7 @@ Item {
         function bounce() { bounceAnim.restart(); }
         SequentialAnimation {
             id: bounceAnim
-            NumberAnimation { target: sl; property: "lift"; to: -14; duration: Atelier.durFast; easing.type: Easing.OutQuad }
+            NumberAnimation { target: sl; property: "lift"; to: -14; duration: Atelier.durFast; easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.standardDecel }
             NumberAnimation { target: sl; property: "lift"; to: 0; duration: 420; easing.type: Easing.OutBounce }
         }
 
@@ -395,7 +395,7 @@ Item {
             anchors.bottom: parent.bottom
             anchors.bottomMargin: -sl.lift
             scale: ma.pressed ? 0.9 : 1
-            Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+            Behavior on scale { Anim { type: "fastSpatial" } }
 
             IconImage {
                 visible: sl.glyph === ""
@@ -459,7 +459,8 @@ Item {
         width: parent ? parent.width : 0
         height: 30
         radius: 9
-        color: mrMa.containsMouse ? Atelier.containerHigh : "transparent"
+        color: "transparent"
+        StateLayer { mouseArea: mrMa }
         Row {
             anchors.verticalCenter: parent.verticalCenter
             x: 8

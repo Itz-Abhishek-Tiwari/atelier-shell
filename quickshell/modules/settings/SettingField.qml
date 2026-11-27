@@ -1,4 +1,5 @@
 import QtQuick
+import qs.components
 import qs.config
 
 // Text field row; `committed` fires on Enter or when focus leaves the field.
@@ -17,7 +18,7 @@ SettingRow {
         color: Atelier.containerHigh
         border.width: 1
         border.color: input.activeFocus ? Qt.alpha(Atelier.accent, 0.6) : Atelier.outline
-        Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
+        Behavior on border.color { CAnim {} }
 
         TextInput {
             id: input

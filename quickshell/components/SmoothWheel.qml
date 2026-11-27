@@ -1,4 +1,5 @@
 import QtQuick
+import qs.config
 
 // Smooth mouse-wheel scrolling for a Flickable/ListView/GridView.
 // Qt's default wheel handling on Wayland jumps in big uneven steps; this animates
@@ -38,6 +39,6 @@ WheelHandler {
         target: root.flickable
         property: "contentY"
         duration: 260
-        easing.type: Easing.OutCubic
+        easing.type: Easing.BezierSpline; easing.bezierCurve: Atelier.m3.emphasizedDecel
     }
 }

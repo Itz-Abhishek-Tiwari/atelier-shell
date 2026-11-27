@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Widgets
 import Quickshell.Services.Mpris
+import qs.components
 import qs.config
 import qs.services
 
@@ -82,7 +83,7 @@ Item {
             radius: Atelier.radiusSm
             color: g.active ? Qt.alpha(Atelier.accent, 0.2) : Atelier.containerHigh
             opacity: g.active || gma.containsMouse ? 1 : 0
-            Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+            Behavior on opacity { Anim { type: "effects" } }
         }
         Text {
             anchors.centerIn: parent
@@ -90,7 +91,7 @@ Item {
             font.family: Atelier.font; font.pixelSize: g.size
             color: g.tint
             scale: gma.pressed ? 0.85 : 1
-            Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+            Behavior on scale { Anim { type: "fastSpatial" } }
         }
         Rectangle {
             visible: g.dot
@@ -132,7 +133,7 @@ Item {
                 radius: Atelier.radiusMd
                 color: Atelier.accentFill
                 scale: logoMa.pressed ? 0.9 : logoMa.containsMouse ? 1.06 : 1
-                Behavior on scale { NumberAnimation { duration: Atelier.durFast } }
+                Behavior on scale { Anim { type: "fastSpatial" } }
                 Text { anchors.centerIn: parent; text: "󰣇"; font.family: Atelier.font; font.pixelSize: 15; color: Atelier.onFill }
             }
             MouseArea { id: logoMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: bar.openLauncher() }
@@ -181,7 +182,7 @@ Item {
                             radius: Atelier.radiusSm
                             color: Atelier.containerHigh
                             opacity: wma.containsMouse ? 1 : 0
-                            Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                            Behavior on opacity { Anim { type: "effects" } }
                         }
                         IconImage {
                             visible: w.icon !== ""
@@ -198,6 +199,7 @@ Item {
                             text: w.num
                             font.family: Atelier.font; font.pixelSize: 12; font.bold: w.on
                             color: w.on ? Atelier.accent : Atelier.subtext
+                            Behavior on color { CAnim {} }
                         }
                         Rectangle {
                             visible: !w.used && !w.on
@@ -347,7 +349,7 @@ Item {
                 radius: Atelier.radiusMd
                 color: clock.on ? Qt.alpha(Atelier.accent, 0.2) : Atelier.containerHigh
                 opacity: clock.on || clockMa.containsMouse ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: Atelier.durFast } }
+                Behavior on opacity { Anim { type: "effects" } }
             }
             Grid {
                 id: clockGrid
@@ -399,6 +401,7 @@ Item {
                 text: bar.muted ? "󰝟" : bar.volume > 0.6 ? "󰕾" : bar.volume > 0.25 ? "󰖀" : "󰕿"
                 font.family: Atelier.font; font.pixelSize: 12
                 color: bar.muted ? Atelier.red : Atelier.text
+                Behavior on color { CAnim {} }
             }
             MouseArea {
                 anchors.fill: parent

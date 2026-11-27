@@ -215,11 +215,12 @@ Item {
                         readonly property var toplevel: root.animActive ? root.toplevelFor(modelData.addr) : null
                         width: root.tileW; height: root.tileH
                         radius: Atelier.radiusLg
-                        color: on ? Atelier.containerHigh : (tm.containsMouse ? Atelier.containerHigh : Atelier.container)
+                        color: on ? Atelier.containerHigh : Atelier.container
+                        StateLayer { mouseArea: tm }
                         border.width: on ? 2 : 1
                         border.color: on ? Atelier.accent : Atelier.outline
-                        Behavior on color { ColorAnimation { duration: Atelier.durFast } }
-                        Behavior on border.color { ColorAnimation { duration: Atelier.durFast } }
+                        Behavior on color { CAnim {} }
+                        Behavior on border.color { CAnim {} }
 
                         ColumnLayout {
                             anchors.fill: parent
@@ -259,6 +260,7 @@ Item {
                                     text: root.nameFor(tile.modelData)
                                     font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: tile.on ? Font.DemiBold : Font.Medium
                                     color: tile.on ? Atelier.text : Atelier.subtext1
+                                    Behavior on color { CAnim {} }
                                 }
                             }
                         }
