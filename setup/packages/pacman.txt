@@ -23,6 +23,12 @@ pipewire
 pipewire-pulse
 wireplumber
 playerctl
+# Atelier Music (apps/music): mpv plays, yt-dlp is the stream fallback, ffmpeg tags downloads,
+# python-dbus + python-gobject put it on MPRIS (media keys, the shell's Music drawer)
+mpv
+yt-dlp
+python-dbus
+python-gobject
 upower
 brightnessctl
 # plugged-in drives: mount / eject without a password (quickshell/scripts/drive.sh)
@@ -170,8 +176,3 @@ ufw
 zram-generator
 sof-firmware
 hostapd
-
-# Showcase mode: build deps of the hyprimate plugin (setup/hyprimate.sh)
-cmake
-ninja
-nlohmann-json
