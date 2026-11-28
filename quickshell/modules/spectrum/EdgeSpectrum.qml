@@ -28,15 +28,21 @@ Scope {
     property bool shown: false
     onWantedChanged: if (wanted) { hide.stop(); shown = true; } else hide.restart()
     Timer { id: hide; interval: 2500; onTriggered: root.shown = false }
-    Component.onCompleted: shown = wanted
+    Component.onCompleted: { shown = wanted; if (shown) shownChanged(); }
 
     Binding { target: Spectrum; property: "active"; value: root.wanted }
 
+    // The screen is picked once, when the window is created. Binding it live to the focused
+    // monitor made Quickshell call setScreen() on a mapped window on every focus change, which
+    // segfaulted it (QWindow::setFlag inside ProxyWindowBase::onExposed, Nov 28 2026).
+    property var targetScreen: null
+    onShownChanged: if (shown) targetScreen = Quickshell.screens.find(s => s.name === (Hyprland.focusedMonitor ? Hyprland.focusedMonitor.name : "")) ?? Quickshell.screens[0] ?? null
+
     LazyLoader {
-        active: root.shown
+        active: root.shown && root.targetScreen !== null
         PanelWindow {
             id: win
-            screen: Quickshell.screens.find(s => s.name === (Hyprland.focusedMonitor ? Hyprland.focusedMonitor.name : "")) ?? Quickshell.screens[0]
+            screen: root.targetScreen
             anchors { bottom: true; left: true; right: true }
             margins.left: Atelier.insetLeft
             margins.right: Atelier.insetRight

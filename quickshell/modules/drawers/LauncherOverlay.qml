@@ -310,6 +310,10 @@ Item {
     Process {
         id: chatProcess
         workingDirectory: "/tmp"
+        // glibc sends the A and AAAA lookups in parallel from one socket; this network drops one
+        // of them, so every first lookup stalled 5 s (getent: 5.3 s → 0.2 s with this option).
+        // It hit all three CLIs and the Gemini call before they even connected.
+        environment: ({ RES_OPTIONS: "single-request" })
         stdout: StdioCollector {
             id: chatOutput
             waitForEnd: false

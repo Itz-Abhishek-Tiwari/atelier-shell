@@ -69,7 +69,10 @@ Scope {
     readonly property string frozenFile: Quickshell.cachePath("screenshot-freeze.png")
 
     // the monitor with focus
-    readonly property var targetScreen: {
+    // Picked when a capture starts, not bound live: re-targeting a mapped window on a focus
+    // change crashes Quickshell (setScreen on a visible window).
+    property var targetScreen: pickScreen()
+    function pickScreen() {
         const name = Hyprland.focusedMonitor ? Hyprland.focusedMonitor.name : "";
         return Quickshell.screens.find(s => s.name === name) || Quickshell.screens[0];
     }
@@ -77,6 +80,7 @@ Scope {
     // ── API ─────────────────────────────────────────────────────────────────
     function open(m, delay) {
         if (busy || picking) return;
+        targetScreen = pickScreen();
         recordMode = false;
         _open(m, delay);
     }
