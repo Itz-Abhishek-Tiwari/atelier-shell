@@ -458,7 +458,7 @@ Item {
         signal clicked()
         width: parent ? parent.width : 0
         height: 30
-        radius: 9
+        radius: Atelier.radiusSm
         color: "transparent"
         StateLayer { mouseArea: mrMa }
         Row {

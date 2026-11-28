@@ -107,7 +107,7 @@ Item {
                 implicitWidth: 30; implicitHeight: 30; radius: Atelier.radiusLg
                 color: root.awaitingPick ? Qt.alpha(Atelier.accent, 0.16) : "transparent"
                 StateLayer { mouseArea: pkMa }
-                Text { anchors.centerIn: parent; text: "󰈊"; font.family: Atelier.font; font.pixelSize: 14
+                Text { anchors.centerIn: parent; text: "󰈊"; font.family: Atelier.font; font.pixelSize: Atelier.iconSm
                        color: root.awaitingPick ? Atelier.accent : (pkMa.containsMouse ? Atelier.text : Atelier.subtext) }
                 MouseArea { id: pkMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                             onEntered: root.hovered = ""; onClicked: { root.awaitingPick = true; ColorPicker.pick(); } }

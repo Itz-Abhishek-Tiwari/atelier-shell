@@ -49,7 +49,7 @@ ColumnLayout {
                     spacing: 3
                     Text { text: about.sys[0] || "…"; font.family: Atelier.fontUi; font.pixelSize: 22; font.weight: Font.Bold; color: Atelier.text }
                     Text { visible: !!about.hw.device.name; text: "󰌢  " + (about.hw.device.name || "")
-                        font.family: Atelier.fontUi; font.pixelSize: 14; font.weight: Font.Medium; color: Atelier.text }
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl; font.weight: Font.Medium; color: Atelier.text }
                     Text { visible: !!about.hw.device.summary; text: about.hw.device.summary || ""
                         font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext1 }
                     Text { text: (about.sys[1] || "") + " · Atelier desktop"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext }

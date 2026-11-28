@@ -264,7 +264,7 @@ Item {
                                 readonly property bool on: root.tab === modelData.id
                                 implicitWidth: tRow.implicitWidth + 22
                                 implicitHeight: 26
-                                radius: 13
+                                radius: Math.min(height / 2, Atelier.radiusSm)
                                 color: on ? Qt.alpha(modelData.tint, 0.18) : "transparent"
                                 Behavior on color { CAnim {} }
                                 StateLayer { mouseArea: tMa }
@@ -343,7 +343,7 @@ Item {
                     StateLayer { mouseArea: toneMa }
                     border.width: 1
                     border.color: Atelier.outline
-                    Text { anchors.centerIn: parent; text: root.toneSwatches[Settings.emoji.tone] || "✋"; font.family: Atelier.fontEmoji; font.pixelSize: 17 }
+                    Text { anchors.centerIn: parent; text: root.toneSwatches[Settings.emoji.tone] || "✋"; font.family: Atelier.fontEmoji; font.pixelSize: Atelier.iconMd }
                     MouseArea {
                         id: toneMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                         onClicked: Settings.emoji.tone = (Settings.emoji.tone + 1) % 6
@@ -355,7 +355,7 @@ Item {
                     color: keyMa.containsMouse || root.editingKey ? Atelier.containerHigh : Atelier.container
                     border.width: 1
                     border.color: Atelier.outline
-                    Text { anchors.centerIn: parent; text: "󰌆"; font.family: Atelier.font; font.pixelSize: 14; color: Atelier.subtext }
+                    Text { anchors.centerIn: parent; text: "󰌆"; font.family: Atelier.font; font.pixelSize: Atelier.iconSm; color: Atelier.subtext }
                     MouseArea { id: keyMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.editingKey = !root.editingKey }
                 }
             }
@@ -653,7 +653,7 @@ Item {
                 Text {
                     visible: !!parent.cur
                     text: root.glyph(parent.cur)
-                    font.family: Atelier.fontEmoji; font.pixelSize: 20
+                    font.family: Atelier.fontEmoji; font.pixelSize: Atelier.iconMd
                 }
                 Text {
                     Layout.fillWidth: true

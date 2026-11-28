@@ -178,7 +178,7 @@ Item {
                     color: Qt.alpha(Atelier.accent, 0.14)
                     border.width: 1
                     border.color: Qt.alpha(Atelier.accent, 0.35)
-                    Text { anchors.centerIn: parent; text: "󰊴"; font.family: Atelier.font; font.pixelSize: 17; color: Atelier.accent }
+                    Text { anchors.centerIn: parent; text: "󰊴"; font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: Atelier.accent }
                 }
                 ColumnLayout {
                     spacing: 0
@@ -286,7 +286,7 @@ Item {
                             Layout.fillWidth: true
                             text: gv.current ? gv.current.title : ""
                             font.family: Atelier.fontUi
-                            font.pixelSize: 24
+                            font.pixelSize: Atelier.iconLg
                             font.weight: Font.DemiBold
                             color: Atelier.text
                             elide: Text.ElideRight
@@ -320,8 +320,8 @@ Item {
                             id: playRow
                             anchors.centerIn: parent
                             spacing: 8
-                            Text { text: "󰐊"; font.family: Atelier.font; font.pixelSize: 17; color: Atelier.onFill }
-                            Text { text: "Play"; font.family: Atelier.fontUi; font.pixelSize: 14; font.weight: Font.DemiBold; color: Atelier.onFill }
+                            Text { text: "󰐊"; font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: Atelier.onFill }
+                            Text { text: "Play"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl; font.weight: Font.DemiBold; color: Atelier.onFill }
                         }
                         MouseArea {
                             id: playMa

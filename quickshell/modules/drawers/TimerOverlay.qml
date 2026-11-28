@@ -255,7 +255,7 @@ Item {
                                                 Layout.minimumWidth: 0
                                                 spacing: 0
                                                 Text { text: card.modelData.done ? "Done" : Timers.fmt(card.remain + (card.modelData.running ? 900 : 0), false)
-                                                       font.family: Atelier.font; font.pixelSize: 17; font.weight: Font.Bold
+                                                       font.family: Atelier.font; font.pixelSize: Atelier.iconMd; font.weight: Font.Bold
                                                        color: card.modelData.done ? Atelier.green : card.modelData.running ? Atelier.text : Atelier.subtext1 }
                                                 Text { Layout.fillWidth: true; elide: Text.ElideRight
                                                        text: (card.modelData.label ? card.modelData.label + "  ·  " : "") + Timers.fmt(card.modelData.total, false)

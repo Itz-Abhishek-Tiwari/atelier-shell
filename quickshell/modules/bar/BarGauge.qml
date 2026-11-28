@@ -311,10 +311,10 @@ Item {
                 spacing: root.v ? 0 : 3
                 horizontalItemAlignment: Grid.AlignHCenter
                 verticalItemAlignment: Grid.AlignVCenter
-                Text { text: "󰊢"; font.family: Atelier.font; font.pixelSize: 14
+                Text { text: "󰊢"; font.family: Atelier.font; font.pixelSize: Atelier.iconSm
                        color: GitStatus.dirty > 0 ? Atelier.peach : Atelier.green }
                 Text { visible: GitStatus.dirty > 0; text: GitStatus.dirty > 99 ? "99+" : GitStatus.dirty
-                       font.family: Atelier.font; font.pixelSize: 9; font.bold: true; color: Atelier.subtext }
+                       font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; font.bold: true; color: Atelier.subtext }
             }
             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Quickshell.execDetached(["wl-copy", GitStatus.branch]) }
         }
@@ -334,7 +334,7 @@ Item {
                 horizontalItemAlignment: Grid.AlignHCenter
                 verticalItemAlignment: Grid.AlignVCenter
                 Rectangle { width: 8; height: 8; radius: 4; color: Atelier.red }
-                Text { text: Recorder.elapsedText; font.family: Atelier.font; font.pixelSize: 9; font.bold: true; color: Atelier.red }
+                Text { text: Recorder.elapsedText; font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; font.bold: true; color: Atelier.red }
             }
             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Recorder.stop() }
         }
@@ -378,7 +378,7 @@ Item {
                                  : Qt.formatDate(bar.now, "ddd d").toUpperCase()
                     horizontalAlignment: Text.AlignHCenter
                     lineHeight: 0.95
-                    font.family: Atelier.font; font.pixelSize: 9; font.bold: true; font.letterSpacing: 0.5
+                    font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; font.bold: true; font.letterSpacing: 0.5
                     color: Atelier.subtext
                 }
             }

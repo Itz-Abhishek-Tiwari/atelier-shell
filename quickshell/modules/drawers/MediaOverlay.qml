@@ -268,7 +268,7 @@ Item {
                     Text {
                         Layout.fillWidth: true
                         text: root.hasPlayer ? (root.title || "Unknown track") : "Nothing playing"
-                        font.family: Atelier.fontUi; font.pixelSize: 17; font.weight: Font.DemiBold
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsHead; font.weight: Font.DemiBold
                         color: Atelier.text
                         elide: Text.ElideRight
                     }
@@ -562,7 +562,7 @@ Item {
                             wrapMode: Text.WordWrap
                             text: root.plainLyrics
                             lineHeight: 1.25
-                            font.family: Atelier.fontUi; font.pixelSize: 14
+                            font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl
                             color: Atelier.text
                         }
                     }
@@ -677,7 +677,7 @@ Item {
                             Text {
                                 visible: od.on
                                 text: "󰄬"
-                                font.family: Atelier.font; font.pixelSize: 16
+                                font.family: Atelier.font; font.pixelSize: Atelier.iconMd
                                 color: Atelier.accent
                             }
                         }

@@ -164,7 +164,7 @@ Item {
                         anchors.centerIn: parent
                         text: "󰅁"
                         font.family: calOverlayRoot.fontMono
-                        font.pixelSize: 14
+                        font.pixelSize: Atelier.iconSm
                         color: Atelier.text
                     }
 
@@ -212,7 +212,7 @@ Item {
                         anchors.centerIn: parent
                         text: "󰅂"
                         font.family: calOverlayRoot.fontMono
-                        font.pixelSize: 14
+                        font.pixelSize: Atelier.iconSm
                         color: Atelier.text
                     }
 

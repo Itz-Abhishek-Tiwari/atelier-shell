@@ -574,7 +574,7 @@ Item {
                                 Text {
                                     text: modelData.signal >= 75 ? "󰤨" : (modelData.signal >= 50 ? "󰤥" : (modelData.signal >= 25 ? "󰤢" : "󰤟"))
                                     font.family: wifiOverlayRoot.fontMono
-                                    font.pixelSize: 14
+                                    font.pixelSize: Atelier.iconSm
                                     color: modelData.inUse ? wifiOverlayRoot.colPrimary : wifiOverlayRoot.colSubtext
                                     Behavior on color { CAnim {} }
                                 }

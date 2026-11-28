@@ -35,7 +35,7 @@ SettingRow {
                     onActivated: root.picked(modelData.id)
                     width: label.implicitWidth + 26
                     height: 26
-                    radius: 13
+                    radius: Math.min(height / 2, Atelier.radiusSm)
                     color: on ? Atelier.fill(root.hue) : "transparent"
                     Behavior on color { CAnim {} }
                     StateLayer { mouseArea: ma }

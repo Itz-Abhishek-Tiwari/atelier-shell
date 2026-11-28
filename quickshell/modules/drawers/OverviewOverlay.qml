@@ -328,7 +328,7 @@ Item {
                 anchors.centerIn: parent
                 visible: card.wins.length === 0
                 spacing: 2
-                Text { anchors.horizontalCenter: parent.horizontalCenter; text: "󰐕"; font.family: Atelier.font; font.pixelSize: 20; color: Qt.alpha(Atelier.text, hover.hovered ? 0.8 : 0.45) }
+                Text { anchors.horizontalCenter: parent.horizontalCenter; text: "󰐕"; font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: Qt.alpha(Atelier.text, hover.hovered ? 0.8 : 0.45) }
                 Text { anchors.horizontalCenter: parent.horizontalCenter; text: "Empty"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMicro; color: Qt.alpha(Atelier.text, hover.hovered ? 0.8 : 0.45) }
             }
         }

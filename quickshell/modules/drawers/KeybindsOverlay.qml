@@ -149,8 +149,8 @@ Item {
                 id: header
                 Layout.fillWidth: true
                 spacing: 8
-                Text { text: "󰌌"; font.family: Atelier.font; font.pixelSize: 16; color: Atelier.accent }
-                Text { text: "Keyboard shortcuts"; font.family: Atelier.fontUi; font.pixelSize: 14; font.weight: Font.DemiBold; color: Atelier.text }
+                Text { text: "󰌌"; font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: Atelier.accent }
+                Text { text: "Keyboard shortcuts"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl; font.weight: Font.DemiBold; color: Atelier.text }
                 Chip { text: root.total; mono: true; tint: Atelier.accent; implicitHeight: 20; pad: 7 }
                 Item { Layout.fillWidth: true }
 

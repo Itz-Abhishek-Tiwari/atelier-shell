@@ -67,7 +67,7 @@ Item {
             y: root.v ? (c.hasBadge ? 3 : (parent.height - height) / 2) : (parent.height - height) / 2
             text: c.icon
             font.family: Atelier.font
-            font.pixelSize: 18
+            font.pixelSize: Atelier.iconMd
             color: c.tint
             scale: ma.pressed ? 0.85 : ma.containsMouse ? 1.1 : 1
             Behavior on scale { Anim { type: "fastSpatial" } }
@@ -78,7 +78,7 @@ Item {
             x: root.v ? (parent.width - width) / 2 : glyph.x + glyph.width + 2
             y: root.v ? parent.height - height - 1 : (parent.height - height) / 2
             text: c.badge
-            font.family: Atelier.font; font.pixelSize: 9; font.bold: true
+            font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; font.bold: true
             color: Atelier.subtext
         }
         MouseArea {
@@ -219,7 +219,7 @@ Item {
                 horizontalItemAlignment: Grid.AlignHCenter
                 verticalItemAlignment: Grid.AlignVCenter
                 Rectangle { width: 8; height: 8; radius: 4; color: Atelier.red }
-                Text { text: Recorder.elapsedText; font.family: Atelier.font; font.pixelSize: 9; font.bold: true; color: Atelier.red }
+                Text { text: Recorder.elapsedText; font.family: Atelier.font; font.pixelSize: Atelier.fsMicro; font.bold: true; color: Atelier.red }
             }
             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Recorder.stop() }
         }
@@ -250,10 +250,10 @@ Item {
                 horizontalItemAlignment: Grid.AlignHCenter
                 verticalItemAlignment: Grid.AlignVCenter
                 readonly property color ink: Atelier.text
-                Text { text: Atelier.hour12(bar.now); font.family: Atelier.font; font.pixelSize: 14; font.bold: true
+                Text { text: Atelier.hour12(bar.now); font.family: Atelier.font; font.pixelSize: Atelier.iconSm; font.bold: true
                        color: Atelier.accent }
-                Text { visible: !root.v; text: ":"; font.family: Atelier.font; font.pixelSize: 14; font.bold: true; color: clockGrid.ink }
-                Text { text: Qt.formatTime(bar.now, "mm"); font.family: Atelier.font; font.pixelSize: 14; font.bold: true; color: clockGrid.ink }
+                Text { visible: !root.v; text: ":"; font.family: Atelier.font; font.pixelSize: Atelier.iconSm; font.bold: true; color: clockGrid.ink }
+                Text { text: Qt.formatTime(bar.now, "mm"); font.family: Atelier.font; font.pixelSize: Atelier.iconSm; font.bold: true; color: clockGrid.ink }
                 Text {   // AM / PM ("" in 24-hour mode)
                     visible: text !== ""
                     topPadding: root.v ? 3 : 0

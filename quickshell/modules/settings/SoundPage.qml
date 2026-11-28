@@ -222,7 +222,7 @@ ColumnLayout {
         label: page.nodeName(node)
         RowLayout {
             spacing: 8
-            Text { text: page.deviceIcon(dr.node, dr.input); font.family: Atelier.font; font.pixelSize: 14; color: Atelier.subtext }
+            Text { text: page.deviceIcon(dr.node, dr.input); font.family: Atelier.font; font.pixelSize: Atelier.iconSm; color: Atelier.subtext }
             Chip {
                 icon: dr.current ? "󰄬" : ""
                 text: dr.current ? "In use" : "Use"

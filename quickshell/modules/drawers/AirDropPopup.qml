@@ -136,7 +136,7 @@ Item {
                             : AirDrop.phase === "done" ? "Received from " + AirDrop.sender
                             : AirDrop.phase === "declined" ? "Declined"
                             : "AirDrop failed"
-                        font.family: Atelier.fontUi; font.pixelSize: 14; font.weight: Font.DemiBold
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl; font.weight: Font.DemiBold
                         color: Atelier.text
                     }
                     Text {
@@ -236,7 +236,7 @@ Item {
                                     // cellphone · tablet · laptop · generic
                                     text: n.indexOf("iphone") >= 0 ? "\u{F011C}" : n.indexOf("ipad") >= 0 ? "\u{F04F7}"
                                         : n.indexOf("mac") >= 0 ? "\u{F0322}" : "\u{F0003}"
-                                    font.family: Atelier.font; font.pixelSize: 17; color: Atelier.blue
+                                    font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: Atelier.blue
                                 }
                             }
                             Text {
@@ -246,7 +246,7 @@ Item {
                                 font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.Medium
                                 color: Atelier.text
                             }
-                            Text { text: "\u{F0142}"; font.family: Atelier.font; font.pixelSize: 16; color: Atelier.subtext }
+                            Text { text: "\u{F0142}"; font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: Atelier.subtext }
                         }
                         MouseArea { id: dMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                             onClicked: AirDrop.sendTo(modelData.name) }

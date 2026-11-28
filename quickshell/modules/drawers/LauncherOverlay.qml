@@ -530,14 +530,14 @@ Item {
                             Rectangle {
                                 anchors.fill: parent
                                 visible: row.modelData.kind !== "app"
-                                radius: 11
+                                radius: Atelier.radiusSm
                                 color: row.modelData.color ? Qt.alpha(row.modelData.color, 0.16) : "transparent"
 
                                 Text {
                                     anchors.centerIn: parent
                                     text: row.modelData.glyph || ""
                                     font.family: launchRoot.fontMono
-                                    font.pixelSize: 17
+                                    font.pixelSize: Atelier.iconMd
                                     color: row.modelData.color || launchRoot.colText
                                 }
                             }
@@ -655,7 +655,7 @@ Item {
                         return c === "=" ? "󰃬" : c === "?" ? "󰖟" : c === ">" ? "󱓞" : c === "$" ? "󰆍" : "󰍉";
                     }
                     font.family: Atelier.fontUi
-                    font.pixelSize: 18
+                    font.pixelSize: Atelier.iconMd
                     color: launchRoot.colMauve
                     Layout.alignment: Qt.AlignVCenter
                 }
@@ -664,7 +664,7 @@ Item {
                     id: searchInput
                     Layout.fillWidth: true
                     font.family: Atelier.fontUi
-                    font.pixelSize: 14
+                    font.pixelSize: Atelier.iconSm
                     font.bold: true
                     color: launchRoot.colText
                     selectByMouse: true

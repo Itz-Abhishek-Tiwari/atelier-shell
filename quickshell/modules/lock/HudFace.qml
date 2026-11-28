@@ -217,7 +217,7 @@ Item {
                 anchors.left: ring.right; anchors.leftMargin: 28 * root.u
                 anchors.verticalCenter: ring.verticalCenter
                 spacing: 4 * root.u
-                Text { text: ph.hasBattery ? (ph.charging ? "CHARGING" : "ON BATTERY") : "MAINS"; font.family: root.mono; font.pixelSize: 24 * root.u; color: Atelier.text }
+                Text { text: ph.hasBattery ? (ph.charging ? "CHARGING" : "ON BATTERY") : "MAINS"; font.family: root.mono; font.pixelSize: Atelier.iconLg * root.u; color: Atelier.text }
                 Text { visible: ph.hasBattery; text: ph.batPct + " PERCENT"; font.family: root.mono; font.pixelSize: 20 * root.u; color: Qt.alpha(Atelier.text, 0.55) }
             }
         }
@@ -230,8 +230,8 @@ Item {
                 anchors.left: parent.left; anchors.leftMargin: 24 * root.u
                 anchors.verticalCenter: parent.verticalCenter; anchors.verticalCenterOffset: 14 * root.u
                 spacing: 8 * root.u
-                Text { text: SysState.wifiIcon + "  " + (SysState.wifiConnected ? SysState.ssid : "OFFLINE"); font.family: root.mono; font.pixelSize: 24 * root.u; color: Atelier.text }
-                Text { text: "󰂚  " + ph.notifs.length + " UNREAD"; font.family: root.mono; font.pixelSize: 24 * root.u; color: ph.notifs.length > 0 ? Atelier.accent : Qt.alpha(Atelier.text, 0.55) }
+                Text { text: SysState.wifiIcon + "  " + (SysState.wifiConnected ? SysState.ssid : "OFFLINE"); font.family: root.mono; font.pixelSize: Atelier.iconLg * root.u; color: Atelier.text }
+                Text { text: "󰂚  " + ph.notifs.length + " UNREAD"; font.family: root.mono; font.pixelSize: Atelier.iconLg * root.u; color: ph.notifs.length > 0 ? Atelier.accent : Qt.alpha(Atelier.text, 0.55) }
             }
         }
     }

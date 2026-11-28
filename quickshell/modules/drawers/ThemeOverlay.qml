@@ -292,7 +292,7 @@ Item {
                             anchors.left: parent.left
                             anchors.leftMargin: 8
                             anchors.verticalCenter: parent.verticalCenter
-                            width: 36; height: 36; radius: 11
+                            width: 36; height: 36; radius: Atelier.radiusSm
                             color: row.s.base
                             border.width: 1
                             border.color: Qt.alpha(row.s.text, 0.16)
@@ -375,7 +375,7 @@ Item {
                     id: stage
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    radius: 20
+                    radius: Atelier.radiusMd
                     color: pv.glass               // the frame + bar surface
                     border.width: 1
                     border.color: Atelier.outline
@@ -545,7 +545,7 @@ Item {
                             anchors.centerIn: parent
                             spacing: 8
                             Text {
-                                text: "󰑐"; font.family: Atelier.font; font.pixelSize: 14; color: Atelier.accent
+                                text: "󰑐"; font.family: Atelier.font; font.pixelSize: Atelier.iconSm; color: Atelier.accent
                                 RotationAnimation on rotation { running: root.applying !== "" && root.visible; loops: Animation.Infinite; from: 0; to: 360; duration: 900 }
                             }
                             Text { text: "Applying…"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; color: Atelier.text }
@@ -564,7 +564,7 @@ Item {
                             spacing: 8
                             Text {
                                 text: root.sel ? root.sel.name : ""
-                                font.family: Atelier.fontUi; font.pixelSize: 16; font.weight: Font.DemiBold
+                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsHead; font.weight: Font.DemiBold
                                 color: Atelier.text
                             }
                             Chip {
@@ -588,7 +588,7 @@ Item {
                         readonly property bool inUse: !!(root.sel && root.sel.id === Atelier.themeId)
                         implicitWidth: applyRow.implicitWidth + 32
                         implicitHeight: 38
-                        radius: 19
+                        radius: Math.min(height / 2, Atelier.radiusSm)
                         color: inUse ? Qt.alpha(Atelier.green, 0.14) : Qt.alpha(Atelier.accent, applyMa.containsMouse ? 0.3 : 0.2)
                         border.width: 1
                         border.color: inUse ? Qt.alpha(Atelier.green, 0.4) : Qt.alpha(Atelier.accent, 0.5)
@@ -599,7 +599,7 @@ Item {
                             id: applyRow
                             anchors.centerIn: parent
                             spacing: 7
-                            Text { anchors.verticalCenter: parent.verticalCenter; text: applyBtn.inUse ? "󰄬" : "󰏘"; font.family: Atelier.font; font.pixelSize: 14; color: applyBtn.inUse ? Atelier.green : Atelier.accent }
+                            Text { anchors.verticalCenter: parent.verticalCenter; text: applyBtn.inUse ? "󰄬" : "󰏘"; font.family: Atelier.font; font.pixelSize: Atelier.iconSm; color: applyBtn.inUse ? Atelier.green : Atelier.accent }
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: applyBtn.inUse ? "In use" : "Apply"

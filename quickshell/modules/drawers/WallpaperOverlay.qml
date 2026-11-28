@@ -580,7 +580,7 @@ Item {
                                 anchors.margins: 8
                                 height: 22
                                 width: infoT.implicitWidth + 16
-                                radius: 11
+                                radius: Math.min(height / 2, Atelier.radiusSm)
                                 color: Qt.rgba(0, 0, 0, 0.55)
                                 Text {
                                     id: infoT

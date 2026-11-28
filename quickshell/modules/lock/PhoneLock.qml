@@ -454,7 +454,7 @@ Item {
                     Column {
                         x: 30 * p.u; y: 22 * p.u; width: parent.width - 60 * p.u
                         spacing: 10 * p.u
-                        Text { text: p.countText; font.family: p.display; font.pixelSize: 24 * p.u; font.weight: Font.DemiBold; color: "white" }
+                        Text { text: p.countText; font.family: p.display; font.pixelSize: Atelier.iconLg * p.u; font.weight: Font.DemiBold; color: "white" }
                         Repeater {
                             model: p.notifs.slice(0, 3)
                             Row {
@@ -509,7 +509,7 @@ Item {
                             font.family: p.display; font.pixelSize: 26 * p.u; font.weight: Font.Medium; color: Qt.rgba(1, 1, 1, 0.8) }
                     }
                     Text { visible: p.temp !== ""; text: "󰖐  " + p.temp + (p.condition ? "  " + p.condition : "")
-                        font.family: p.display; font.pixelSize: 24 * p.u; color: Qt.rgba(1, 1, 1, 0.8) }
+                        font.family: p.display; font.pixelSize: Atelier.iconLg * p.u; color: Qt.rgba(1, 1, 1, 0.8) }
                 }
             }
             Column {
@@ -594,7 +594,7 @@ Item {
                     Column {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 8 * p.u
-                        Text { text: Qt.formatDate(p.now, "dddd").toUpperCase(); font.family: p.display; font.pixelSize: 24 * p.u
+                        Text { text: Qt.formatDate(p.now, "dddd").toUpperCase(); font.family: p.display; font.pixelSize: Atelier.iconLg * p.u
                             font.weight: Font.DemiBold; font.letterSpacing: 6 * p.u; color: shelf.parent.hot }
                         Text { text: Qt.formatDate(p.now, "d MMMM"); font.family: p.display; font.pixelSize: 44 * p.u; font.weight: Font.Medium; color: "white" }
                         Text { visible: p.temp !== ""; text: "󰖐  " + p.temp + (p.condition ? " · " + p.condition : "")
@@ -767,14 +767,14 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     spacing: 40 * p.u
                     Text { visible: p.temp !== ""; anchors.verticalCenter: parent.verticalCenter; text: p.temp.toUpperCase()
-                        font.family: parent.parent.parent.mono; font.pixelSize: 24 * p.u; font.letterSpacing: 4 * p.u; color: "white" }
+                        font.family: parent.parent.parent.mono; font.pixelSize: Atelier.iconLg * p.u; font.letterSpacing: 4 * p.u; color: "white" }
                     // battery as 10 dots
                     Row {
                         visible: p.hasBattery
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 12 * p.u
                         Text { anchors.verticalCenter: parent.verticalCenter; text: "BAT"; font.family: parent.parent.parent.parent.mono
-                            font.pixelSize: 24 * p.u; font.letterSpacing: 4 * p.u; color: "white" }
+                            font.pixelSize: Atelier.iconLg * p.u; font.letterSpacing: 4 * p.u; color: "white" }
                         Row {
                             anchors.verticalCenter: parent.verticalCenter
                             spacing: 5 * p.u
@@ -788,10 +788,10 @@ Item {
                             }
                         }
                         Text { anchors.verticalCenter: parent.verticalCenter; text: p.batPct + "%" + (p.charging ? " +" : "")
-                            font.family: parent.parent.parent.parent.mono; font.pixelSize: 24 * p.u; color: "white" }
+                            font.family: parent.parent.parent.parent.mono; font.pixelSize: Atelier.iconLg * p.u; color: "white" }
                     }
                     Text { visible: p.notifs.length > 0; anchors.verticalCenter: parent.verticalCenter; text: p.notifs.length + " NOTIF"
-                        font.family: parent.parent.parent.mono; font.pixelSize: 24 * p.u; font.letterSpacing: 4 * p.u; color: "white" }
+                        font.family: parent.parent.parent.mono; font.pixelSize: Atelier.iconLg * p.u; font.letterSpacing: 4 * p.u; color: "white" }
                 }
             }
             Text {
@@ -892,7 +892,7 @@ Item {
                     Text {
                         anchors.centerIn: parent
                         text: p.lockRoot.checking ? "󰑐" : "󰁔"
-                        font.family: Atelier.font; font.pixelSize: 24 * p.u; color: "white"
+                        font.family: Atelier.font; font.pixelSize: Atelier.iconLg * p.u; color: "white"
                         RotationAnimation on rotation { running: p.lockRoot.checking; loops: Animation.Infinite; from: 0; to: 360; duration: 800 }
                     }
                     MouseArea { id: goMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: p.lockRoot.submit() }
@@ -935,7 +935,7 @@ Item {
                         radius: p.variant === "dot" ? 0 : p.variant === "material" ? 20 * p.u : width / 2
                         color: Qt.rgba(1, 1, 1, pwMa.containsMouse ? 0.3 : 0.16)
                         Behavior on color { CAnim {} }
-                        Text { anchors.centerIn: parent; text: pw.modelData.icon; font.family: Atelier.font; font.pixelSize: 24 * p.u; color: "white" }
+                        Text { anchors.centerIn: parent; text: pw.modelData.icon; font.family: Atelier.font; font.pixelSize: Atelier.iconLg * p.u; color: "white" }
                         MouseArea {
                             id: pwMa
                             anchors.fill: parent
@@ -1014,7 +1014,7 @@ Item {
                     width: 38 * p.u; height: 38 * p.u
                     readonly property string src: Notifs.iconFor(modelData)
                     IconImage { anchors.fill: parent; visible: parent.src !== ""; source: parent.src; asynchronous: true }
-                    Text { anchors.centerIn: parent; visible: parent.src === ""; text: "󰂚"; font.family: Atelier.font; font.pixelSize: 24 * p.u; color: "white" }
+                    Text { anchors.centerIn: parent; visible: parent.src === ""; text: "󰂚"; font.family: Atelier.font; font.pixelSize: Atelier.iconLg * p.u; color: "white" }
                 }
                 Column {
                     anchors.left: nIcon.right; anchors.leftMargin: 14 * p.u
@@ -1037,7 +1037,7 @@ Item {
             visible: ns.showMore && p.notifs.length > ns.max
             anchors.horizontalCenter: parent.horizontalCenter
             text: "+" + (p.notifs.length - ns.max) + " more"
-            font.family: p.display; font.pixelSize: 18 * p.u; font.weight: Font.Medium; color: Qt.rgba(1, 1, 1, 0.75)
+            font.family: p.display; font.pixelSize: Atelier.iconMd * p.u; font.weight: Font.Medium; color: Qt.rgba(1, 1, 1, 0.75)
         }
     }
 
@@ -1078,7 +1078,7 @@ Item {
             Text { width: parent.width; text: p.player ? (p.player.trackTitle || p.player.identity) : ""; elide: Text.ElideRight
                 font.family: p.display; font.pixelSize: 21 * p.u; font.weight: Font.DemiBold; color: "white" }
             Text { width: parent.width; text: p.player ? (p.player.trackArtist || "") : ""; elide: Text.ElideRight
-                font.family: p.display; font.pixelSize: 18 * p.u; color: Qt.rgba(1, 1, 1, 0.75) }
+                font.family: p.display; font.pixelSize: Atelier.iconMd * p.u; color: Qt.rgba(1, 1, 1, 0.75) }
         }
         Text {
             id: ppBtn
@@ -1103,7 +1103,7 @@ Item {
             anchors.centerIn: parent
             spacing: 10 * p.u
             Text { visible: hint.glyph !== ""; anchors.verticalCenter: parent.verticalCenter; text: hint.glyph
-                font.family: Atelier.font; font.pixelSize: 18 * p.u; color: Qt.rgba(1, 1, 1, 0.9) }
+                font.family: Atelier.font; font.pixelSize: Atelier.iconMd * p.u; color: Qt.rgba(1, 1, 1, 0.9) }
             Text { anchors.verticalCenter: parent.verticalCenter; text: "Start typing to unlock"
                 font.family: p.display; font.pixelSize: 19 * p.u; font.weight: Font.Medium; color: Qt.rgba(1, 1, 1, 0.92) }
         }
@@ -1147,7 +1147,7 @@ Item {
             anchors.centerIn: parent
             spacing: -2 * p.u
             Text { anchors.horizontalCenter: parent.horizontalCenter; text: gg.cap
-                font.family: /^[A-Z]+$/.test(gg.cap) ? p.display : Atelier.font; font.pixelSize: 18 * p.u; font.weight: Font.DemiBold
+                font.family: /^[A-Z]+$/.test(gg.cap) ? p.display : Atelier.font; font.pixelSize: Atelier.iconMd * p.u; font.weight: Font.DemiBold
                 color: Qt.rgba(1, 1, 1, 0.85) }
             Text { anchors.horizontalCenter: parent.horizontalCenter; text: gg.big
                 font.family: p.display; font.pixelSize: 34 * p.u; font.weight: Font.DemiBold; color: "white" }
@@ -1264,7 +1264,7 @@ Item {
                 Repeater {
                     model: mm.mondayFirst ? ["M", "T", "W", "T", "F", "S", "S"] : ["S", "M", "T", "W", "T", "F", "S"]
                     Text { required property string modelData; width: mm.cell; height: mm.cell * 0.7; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
-                        text: modelData; font.family: p.display; font.pixelSize: 18 * p.u; font.weight: Font.DemiBold; color: Qt.rgba(1, 1, 1, 0.55) }
+                        text: modelData; font.family: p.display; font.pixelSize: Atelier.iconMd * p.u; font.weight: Font.DemiBold; color: Qt.rgba(1, 1, 1, 0.55) }
                 }
                 Repeater {
                     model: Math.ceil((mm.lead + mm.days) / 7) * 7

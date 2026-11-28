@@ -576,19 +576,19 @@ Item {
             Text {
                 visible: Privacy.mic
                 text: "󰍬"
-                font.family: Atelier.font; font.pixelSize: 14
+                font.family: Atelier.font; font.pixelSize: Atelier.iconSm
                 color: Atelier.peach
             }
             Text {
                 visible: Privacy.camera
                 text: "󰄀"
-                font.family: Atelier.font; font.pixelSize: 14
+                font.family: Atelier.font; font.pixelSize: Atelier.iconSm
                 color: Atelier.green
             }
             Text {
                 visible: Privacy.screen
                 text: "󰍹"
-                font.family: Atelier.font; font.pixelSize: 14
+                font.family: Atelier.font; font.pixelSize: Atelier.iconSm
                 color: Atelier.red
             }
         }
@@ -640,7 +640,7 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: Atelier.hour12(bar.now)
                     font.family: Atelier.font
-                    font.pixelSize: 14
+                    font.pixelSize: Atelier.iconSm
                     font.bold: true
                     color: Atelier.accent
                 }
@@ -648,7 +648,7 @@ Item {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: Qt.formatTime(bar.now, "mm")
                     font.family: Atelier.font
-                    font.pixelSize: 14
+                    font.pixelSize: Atelier.iconSm
                     font.bold: true
                     color: Atelier.text
                 }
@@ -680,7 +680,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     text: Atelier.hour12(bar.now)
                     font.family: Atelier.font
-                    font.pixelSize: 14
+                    font.pixelSize: Atelier.iconSm
                     font.bold: true
                     color: Atelier.accent
                 }
@@ -688,7 +688,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     text: ":"
                     font.family: Atelier.font
-                    font.pixelSize: 14
+                    font.pixelSize: Atelier.iconSm
                     font.bold: true
                     color: Atelier.accent
                     leftPadding: -3
@@ -698,7 +698,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     text: Qt.formatTime(bar.now, "mm")
                     font.family: Atelier.font
-                    font.pixelSize: 14
+                    font.pixelSize: Atelier.iconSm
                     font.bold: true
                     color: Atelier.text
                 }
@@ -707,7 +707,7 @@ Item {
                     visible: text !== ""
                     text: Atelier.ampm(bar.now)
                     font.family: Atelier.font
-                    font.pixelSize: 9
+                    font.pixelSize: Atelier.fsMicro
                     font.bold: true
                     color: Atelier.blue
                 }
@@ -779,7 +779,7 @@ Item {
                     Text {
                         text: Math.round(bar.batPct * 100)
                         font.family: Atelier.font
-                        font.pixelSize: 9
+                        font.pixelSize: Atelier.fsMicro
                         font.bold: true
                         color: Atelier.subtext
                     }

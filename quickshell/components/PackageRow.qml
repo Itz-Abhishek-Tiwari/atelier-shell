@@ -47,7 +47,7 @@ Item {
                 radius: Atelier.radiusSm
                 color: Qt.alpha(row.glyphTint, 0.14)
                 border.width: 1; border.color: Qt.alpha(row.glyphTint, 0.3)
-                Text { anchors.centerIn: parent; text: row.glyph; font.family: Atelier.font; font.pixelSize: 18; color: row.glyphTint }
+                Text { anchors.centerIn: parent; text: row.glyph; font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: row.glyphTint }
             }
         }
         ColumnLayout {

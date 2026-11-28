@@ -162,7 +162,7 @@ Item {
                 Text {
                     text: "Applications"
                     font.family: Atelier.fontUi
-                    font.pixelSize: 17
+                    font.pixelSize: Atelier.fsHead
                     font.weight: Font.DemiBold
                     color: Atelier.text
                 }
@@ -185,7 +185,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "󰍉"
                         font.family: Atelier.font
-                        font.pixelSize: 14
+                        font.pixelSize: Atelier.iconSm
                         color: Atelier.subtext
                     }
                     TextField {
@@ -340,7 +340,7 @@ Item {
             Rectangle {   // letter tile when the theme lacks the icon
                 anchors.fill: parent
                 visible: iconBox.src === ""
-                radius: 13
+                radius: Atelier.radiusSm
                 color: Qt.alpha(Atelier.lavender, 0.16)
                 Text {
                     anchors.centerIn: parent

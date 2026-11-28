@@ -68,7 +68,7 @@ Item {
         anchors.bottomMargin: 12
         text: lvl.icon
         font.family: Atelier.font
-        font.pixelSize: 18
+        font.pixelSize: Atelier.iconMd
         color: lvl.dimmed ? Atelier.red : (lvl.shown > 0.1 ? Atelier.onFill : Atelier.text)
         Behavior on color { CAnim {} }
     }

@@ -61,7 +61,7 @@ ColumnLayout {
                     Rectangle {
                         width: 38; height: 38; radius: Atelier.radiusMd
                         color: Qt.alpha(card.modelData.tint, card.on ? 0.30 : 0.16)
-                        Text { anchors.centerIn: parent; text: card.modelData.icon; font.family: Atelier.font; font.pixelSize: 20; color: card.modelData.tint }
+                        Text { anchors.centerIn: parent; text: card.modelData.icon; font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: card.modelData.tint }
                     }
                     Text { text: card.modelData.label; width: parent.width; elide: Text.ElideRight
                         font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold; color: Atelier.text }

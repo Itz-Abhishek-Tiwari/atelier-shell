@@ -215,7 +215,7 @@ Item {
                             anchors.verticalCenterOffset: -7
                             text: sessBtn.modelData.icon
                             font.family: powerRoot.fontMono
-                            font.pixelSize: 24
+                            font.pixelSize: Atelier.iconLg
                             color: sessBtn.isActive ? sessBtn.modelData.accent : powerRoot.colText
                             Behavior on color { CAnim {} }
                         }

@@ -33,7 +33,7 @@ ColumnLayout {
                     width: 32; height: 32; radius: Atelier.radiusLg
                     color: Atelier.accentFill
                     border.width: 3; border.color: Atelier.container
-                    Text { anchors.centerIn: parent; text: Profile.busy ? "…" : "󰄀"; font.family: Atelier.font; font.pixelSize: 14; color: Atelier.onFill }
+                    Text { anchors.centerIn: parent; text: Profile.busy ? "…" : "󰄀"; font.family: Atelier.font; font.pixelSize: Atelier.iconSm; color: Atelier.onFill }
                 }
                 MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Profile.pick() }
             }

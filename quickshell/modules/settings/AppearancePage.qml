@@ -95,7 +95,7 @@ ColumnLayout {
                     Layout.fillWidth: true
                     Layout.preferredWidth: 1
                     spacing: 6
-                    Text { text: Atelier.themeName; font.family: Atelier.fontUi; font.pixelSize: 20; font.weight: Font.Bold; color: Atelier.text }
+                    Text { text: Atelier.themeName; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsTitle; font.weight: Font.Bold; color: Atelier.text }
                     Text {
                         Layout.fillWidth: true
                         text: (Atelier.isLight ? "Light" : "Dark") + " theme · the shell, Hyprland, terminals, VS Code, GTK and Qt apps follow it"

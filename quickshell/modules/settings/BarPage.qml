@@ -194,7 +194,7 @@ ColumnLayout {
                         anchors.fill: parent
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        font.family: Atelier.font; font.pixelSize: 16
+                        font.family: Atelier.font; font.pixelSize: Atelier.iconMd
                         color: Atelier[appRow.modelData.color] !== undefined ? Atelier[appRow.modelData.color] : Atelier.text
                         text: appRow.modelData.icon
                         onEditingFinished: if (text !== appRow.modelData.icon) win.setPinned(appRow.index, "icon", text)
@@ -240,7 +240,7 @@ ColumnLayout {
                 Rectangle {
                     implicitWidth: 34; implicitHeight: 34; radius: Atelier.radiusLg
                     color: delMa.containsMouse ? Qt.alpha(Atelier.red, 0.22) : Atelier.containerHigh
-                    Text { anchors.centerIn: parent; text: "󰆴"; font.family: Atelier.font; font.pixelSize: 14; color: delMa.containsMouse ? Atelier.red : Atelier.subtext }
+                    Text { anchors.centerIn: parent; text: "󰆴"; font.family: Atelier.font; font.pixelSize: Atelier.iconSm; color: delMa.containsMouse ? Atelier.red : Atelier.subtext }
                     MouseArea { id: delMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: win.removePinned(appRow.index) }
                 }
             }

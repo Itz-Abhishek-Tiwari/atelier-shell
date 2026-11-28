@@ -25,7 +25,7 @@ ActionSurface {
 
     implicitHeight: variant === "tinted" ? 26 : 34
     implicitWidth: row.implicitWidth + 2 * pad
-    radius: height / 2
+    radius: Math.min(height / 2, Atelier.radiusSm)   // a soft rectangle, not a web pill
     color: variant === "primary" ? Atelier.fill(tint)
         : variant === "secondary" && !selected ? Atelier.containerHigh : Qt.alpha(tint, 0.14)
     border.width: 1

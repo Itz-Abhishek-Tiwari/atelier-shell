@@ -97,7 +97,7 @@ Item {
                     anchors.fill: parent
                     anchors.leftMargin: 14; anchors.rightMargin: 12
                     spacing: 10
-                    Text { text: Privacy.micMuted ? "󰍭" : "󰍬"; font.family: Atelier.font; font.pixelSize: 17
+                    Text { text: Privacy.micMuted ? "󰍭" : "󰍬"; font.family: Atelier.font; font.pixelSize: Atelier.iconMd
                            color: Privacy.micMuted ? Atelier.red : Atelier.peach }
                     ColumnLayout {
                         Layout.fillWidth: true

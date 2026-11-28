@@ -154,18 +154,18 @@ Item {
             anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
             Rectangle {
                 width: seg1.width + 36 * root.u; height: statusBar.height; color: Atelier.green
-                Text { id: seg1; anchors.centerIn: parent; text: "[0] zsh*"; font.family: root.mono; font.pixelSize: 24 * root.u; font.bold: true; color: Atelier.crust }
+                Text { id: seg1; anchors.centerIn: parent; text: "[0] zsh*"; font.family: root.mono; font.pixelSize: Atelier.iconLg * root.u; font.bold: true; color: Atelier.crust }
             }
-            Text { anchors.verticalCenter: parent.verticalCenter; leftPadding: 22 * root.u; text: "locked  ·  type to unlock"; font.family: root.mono; font.pixelSize: 24 * root.u; color: Qt.alpha(Atelier.text, 0.6) }
+            Text { anchors.verticalCenter: parent.verticalCenter; leftPadding: 22 * root.u; text: "locked  ·  type to unlock"; font.family: root.mono; font.pixelSize: Atelier.iconLg * root.u; color: Qt.alpha(Atelier.text, 0.6) }
         }
         Row {
             anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter
             spacing: 0
-            Text { visible: ph.notifs.length > 0; anchors.verticalCenter: parent.verticalCenter; rightPadding: 26 * root.u; text: "󰂚 " + ph.notifs.length; font.family: root.mono; font.pixelSize: 24 * root.u; color: Atelier.yellow }
-            Text { visible: ph.hasBattery; anchors.verticalCenter: parent.verticalCenter; rightPadding: 26 * root.u; text: (ph.charging ? "󰂄 " : "󰁹 ") + ph.batPct + "%"; font.family: root.mono; font.pixelSize: 24 * root.u; color: ph.batPct <= 15 && !ph.charging ? Atelier.red : Atelier.text }
+            Text { visible: ph.notifs.length > 0; anchors.verticalCenter: parent.verticalCenter; rightPadding: 26 * root.u; text: "󰂚 " + ph.notifs.length; font.family: root.mono; font.pixelSize: Atelier.iconLg * root.u; color: Atelier.yellow }
+            Text { visible: ph.hasBattery; anchors.verticalCenter: parent.verticalCenter; rightPadding: 26 * root.u; text: (ph.charging ? "󰂄 " : "󰁹 ") + ph.batPct + "%"; font.family: root.mono; font.pixelSize: Atelier.iconLg * root.u; color: ph.batPct <= 15 && !ph.charging ? Atelier.red : Atelier.text }
             Rectangle {
                 width: seg2.width + 36 * root.u; height: statusBar.height; color: Atelier.accent
-                Text { id: seg2; anchors.centerIn: parent; text: ph.h1 + ":" + ph.mm + (ph.ampm ? " " + ph.ampm : ""); font.family: root.mono; font.pixelSize: 24 * root.u; font.bold: true; color: Atelier.crust }
+                Text { id: seg2; anchors.centerIn: parent; text: ph.h1 + ":" + ph.mm + (ph.ampm ? " " + ph.ampm : ""); font.family: root.mono; font.pixelSize: Atelier.iconLg * root.u; font.bold: true; color: Atelier.crust }
             }
         }
     }

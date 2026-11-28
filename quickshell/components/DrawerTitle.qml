@@ -17,7 +17,7 @@ RowLayout {
         color: Qt.alpha(dt.tint, 0.14)
         border.width: 1
         border.color: Qt.alpha(dt.tint, 0.35)
-        Text { anchors.centerIn: parent; text: dt.icon; font.family: Atelier.font; font.pixelSize: 17; color: dt.tint }
+        Text { anchors.centerIn: parent; text: dt.icon; font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: dt.tint }
     }
     ColumnLayout {
         Layout.fillWidth: true

@@ -190,7 +190,7 @@ ColumnLayout {
                 Rectangle {
                     implicitWidth: 52; implicitHeight: 52; radius: Atelier.radiusMd
                     color: Qt.alpha(Atelier.accent, 0.16)
-                    Text { anchors.centerIn: parent; text: "󰃢"; font.family: Atelier.font; font.pixelSize: 24; color: Atelier.accent }
+                    Text { anchors.centerIn: parent; text: "󰃢"; font.family: Atelier.font; font.pixelSize: Atelier.iconLg; color: Atelier.accent }
                 }
                 ColumnLayout {
                     Layout.fillWidth: true
@@ -216,7 +216,7 @@ ColumnLayout {
                     Layout.minimumWidth: implicitWidth
                     implicitWidth: cleanLabel.implicitWidth + 40
                     implicitHeight: 40
-                    radius: 20
+                    radius: Math.min(height / 2, Atelier.radiusSm)
                     readonly property bool can: !quickProc.running && !storage.scanning && quick.total > 0
                     opacity: can ? 1 : 0.45
                     color: quick.ask ? Atelier.fill(Atelier.red) : Atelier.fill(Atelier.accent)

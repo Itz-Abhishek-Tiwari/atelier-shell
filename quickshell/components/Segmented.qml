@@ -32,7 +32,7 @@ Rectangle {
                 onActivated: sg.picked(modelData.id)
                 width: sg.segmentWidth
                 height: segRow.height
-                radius: height / 2
+                radius: Math.max(2, Atelier.radiusSm - 2)
                 color: on ? Atelier.accentFill : "transparent"
                 Behavior on color { CAnim {} }
                 StateLayer { mouseArea: segMa; color: parent.on ? Atelier.onFill : Atelier.text }

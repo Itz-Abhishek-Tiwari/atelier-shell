@@ -265,11 +265,11 @@ Item {
                                         anchors.left: parent.left; anchors.leftMargin: 12
                                         spacing: 10
                                         Rectangle {
-                                            width: 34; height: 34; radius: 10
+                                            width: 34; height: 34; radius: Atelier.radiusSm
                                             anchors.verticalCenter: parent.verticalCenter
                                             color: Qt.alpha(tile.hue, 0.16)
                                             Text { anchors.centerIn: parent; text: tile.modelData.icon
-                                                   font.family: Atelier.font; font.pixelSize: 17; color: tile.hue }
+                                                   font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: tile.hue }
                                         }
                                         Text { anchors.verticalCenter: parent.verticalCenter; text: tile.modelData.label
                                                font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; font.weight: Font.DemiBold

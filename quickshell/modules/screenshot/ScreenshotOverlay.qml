@@ -391,7 +391,7 @@ Scope {
                         readonly property bool on: root.mode === modelData.id
                         implicitWidth: modeRow.implicitWidth + 24
                         implicitHeight: 38
-                        radius: 19
+                        radius: Math.min(height / 2, Atelier.radiusSm)
                         color: on ? Atelier.accentFill : Atelier.container
                         Behavior on color { CAnim {} }
                         StateLayer { mouseArea: modeMa }
@@ -412,7 +412,7 @@ Scope {
                 Rectangle {
                     implicitWidth: recRow.implicitWidth + 22
                     implicitHeight: 38
-                    radius: 19
+                    radius: Math.min(height / 2, Atelier.radiusSm)
                     color: root.recordMode ? Qt.alpha(Atelier.red, 0.22) : Atelier.container
                     StateLayer { mouseArea: recMa }
                     border.width: root.recordMode ? 1 : 0
@@ -422,7 +422,7 @@ Scope {
                         id: recRow
                         anchors.centerIn: parent
                         spacing: 6
-                        Text { text: "󰑋"; font.family: Atelier.font; font.pixelSize: 14; color: root.recordMode ? Atelier.red : Atelier.text }
+                        Text { text: "󰑋"; font.family: Atelier.font; font.pixelSize: Atelier.iconSm; color: root.recordMode ? Atelier.red : Atelier.text }
                         Text { text: "Record"; font.family: Atelier.font; font.pixelSize: Atelier.fsSm; font.bold: true; color: root.recordMode ? Atelier.red : Atelier.text }
                     }
                     MouseArea { id: recMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.recordMode = !root.recordMode }
@@ -433,7 +433,7 @@ Scope {
                     visible: !root.recordMode
                     implicitWidth: editRow.implicitWidth + 22
                     implicitHeight: 38
-                    radius: 19
+                    radius: Math.min(height / 2, Atelier.radiusSm)
                     color: root.editAfter ? Qt.alpha(Atelier.yellow, 0.25) : Atelier.container
                     StateLayer { mouseArea: editMa }
                     border.width: root.editAfter ? 1 : 0
@@ -442,7 +442,7 @@ Scope {
                         id: editRow
                         anchors.centerIn: parent
                         spacing: 6
-                        Text { text: "󰏫"; font.family: Atelier.font; font.pixelSize: 14; color: root.editAfter ? Atelier.yellow : Atelier.text }
+                        Text { text: "󰏫"; font.family: Atelier.font; font.pixelSize: Atelier.iconSm; color: root.editAfter ? Atelier.yellow : Atelier.text }
                         Text { text: "Edit"; font.family: Atelier.font; font.pixelSize: Atelier.fsSm; font.bold: true; color: root.editAfter ? Atelier.yellow : Atelier.text }
                     }
                     MouseArea { id: editMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.editAfter = !root.editAfter }
@@ -453,16 +453,16 @@ Scope {
                     visible: root.mode !== "region"
                     implicitWidth: 38
                     implicitHeight: 38
-                    radius: 19
+                    radius: Math.min(height / 2, Atelier.radiusSm)
                     color: capMa.containsMouse ? Qt.alpha(Atelier.green, 0.3) : Qt.alpha(Atelier.green, 0.18)
                     opacity: picker.hasSel ? 1 : 0.4
-                    Text { anchors.centerIn: parent; text: "󰄀"; font.family: Atelier.font; font.pixelSize: 16; color: Atelier.green }
+                    Text { anchors.centerIn: parent; text: "󰄀"; font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: Atelier.green }
                     MouseArea { id: capMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: if (picker.hasSel) root.commit(picker.sx, picker.sy, picker.sw, picker.sh) }
                 }
                 Rectangle {
                     implicitWidth: 38
                     implicitHeight: 38
-                    radius: 19
+                    radius: Math.min(height / 2, Atelier.radiusSm)
                     color: xMa.containsMouse ? Qt.alpha(Atelier.red, 0.25) : Atelier.container
                     Text { anchors.centerIn: parent; text: "󰅖"; font.family: Atelier.font; font.pixelSize: Atelier.fsXl; color: xMa.containsMouse ? Atelier.red : Atelier.text }
                     MouseArea { id: xMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.cancel() }
@@ -594,7 +594,7 @@ Scope {
         implicitHeight: 32
         radius: Atelier.radiusMd
         color: pbMa.containsMouse ? Qt.alpha(tint, 0.25) : Atelier.container
-        Text { anchors.centerIn: parent; text: pb.icon; font.family: Atelier.font; font.pixelSize: 14; color: pbMa.containsMouse ? pb.tint : Atelier.text }
+        Text { anchors.centerIn: parent; text: pb.icon; font.family: Atelier.font; font.pixelSize: Atelier.iconSm; color: pbMa.containsMouse ? pb.tint : Atelier.text }
         MouseArea { id: pbMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: pb.clicked() }
     }
 }

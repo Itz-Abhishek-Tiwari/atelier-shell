@@ -303,7 +303,7 @@ Item {
                     RowLayout {
                         Layout.alignment: Qt.AlignHCenter
                         spacing: 8
-                        Text { text: "󰸗"; font.family: Atelier.font; font.pixelSize: 14; color: Atelier.peach }
+                        Text { text: "󰸗"; font.family: Atelier.font; font.pixelSize: Atelier.iconSm; color: Atelier.peach }
                         Text { text: Qt.formatDate(c.now, "dddd, d MMMM"); font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl; color: Atelier.subtext1 }
                     }
 
@@ -343,7 +343,7 @@ Item {
                         Layout.alignment: Qt.AlignHCenter
                         Layout.topMargin: 10
                         text: c.userName
-                        font.family: Atelier.fontUi; font.pixelSize: 17; font.weight: Font.DemiBold
+                        font.family: Atelier.fontUi; font.pixelSize: Atelier.fsHead; font.weight: Font.DemiBold
                         color: Atelier.text
                     }
 
@@ -397,7 +397,7 @@ Item {
                             Text {
                                 anchors.centerIn: parent
                                 text: c.lockRoot.checking ? "󰑐" : "󰁔"
-                                font.family: Atelier.font; font.pixelSize: 16
+                                font.family: Atelier.font; font.pixelSize: Atelier.iconMd
                                 color: Atelier.accent
                                 RotationAnimation on rotation { running: c.lockRoot.checking; loops: Animation.Infinite; from: 0; to: 360; duration: 800 }
                             }
@@ -519,7 +519,7 @@ Item {
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 spacing: 2
-                                Text { Layout.fillWidth: true; text: c.player ? (c.player.trackTitle || c.player.identity) : ""; font.family: Atelier.fontUi; font.pixelSize: 14; font.weight: Font.DemiBold; color: Atelier.text; elide: Text.ElideRight }
+                                Text { Layout.fillWidth: true; text: c.player ? (c.player.trackTitle || c.player.identity) : ""; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl; font.weight: Font.DemiBold; color: Atelier.text; elide: Text.ElideRight }
                                 Text { Layout.fillWidth: true; text: c.player ? (c.player.trackArtist || "") : ""; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMd; color: Atelier.subtext; elide: Text.ElideRight }
                             }
                         }

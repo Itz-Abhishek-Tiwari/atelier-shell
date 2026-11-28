@@ -209,7 +209,7 @@ Item {
                     }
                     ColumnLayout {
                         spacing: 0
-                        Text { text: Atelier.userName; font.family: Atelier.fontUi; font.pixelSize: 14; font.weight: Font.DemiBold; color: Atelier.text }
+                        Text { text: Atelier.userName; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl; font.weight: Font.DemiBold; color: Atelier.text }
                         Text { text: "Settings · " + Atelier.themeName; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; color: Atelier.subtext }
                     }
                 }
@@ -308,7 +308,7 @@ Item {
                                 Rectangle {
                                     visible: !srow.isHeader
                                     anchors.fill: parent
-                                    radius: 9
+                                    radius: Atelier.radiusSm
                                     color: srow.on ? Qt.alpha(Atelier.accent, 0.16) : "transparent"
                                     Behavior on color { CAnim {} }
                                     StateLayer { mouseArea: ma }

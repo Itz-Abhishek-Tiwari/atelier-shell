@@ -123,8 +123,8 @@ Item {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8
-                Text { text: "󰅌"; font.family: Atelier.font; font.pixelSize: 16; color: Atelier.yellow }
-                Text { text: "Clipboard"; font.family: Atelier.fontUi; font.pixelSize: 14; font.weight: Font.DemiBold; color: Atelier.text }
+                Text { text: "󰅌"; font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: Atelier.yellow }
+                Text { text: "Clipboard"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsXl; font.weight: Font.DemiBold; color: Atelier.text }
                 Chip { text: clipRoot.entries.length; mono: true; tint: Atelier.yellow; implicitHeight: 20; pad: 7 }
                 Item { Layout.fillWidth: true }
 
@@ -269,7 +269,7 @@ Item {
                                 anchors.centerIn: parent
                                 text: row.modelData.kind === "link" ? "󰌹" : "󰦨"
                                 font.family: Atelier.font
-                                font.pixelSize: 14
+                                font.pixelSize: Atelier.iconSm
                                 color: row.tint
                             }
                         }
@@ -352,7 +352,7 @@ Item {
                 RowLayout {
                     anchors.centerIn: parent
                     spacing: 10
-                    Text { text: "󰅌"; font.family: Atelier.font; font.pixelSize: 18; color: Atelier.subtext; opacity: 0.6 }
+                    Text { text: "󰅌"; font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: Atelier.subtext; opacity: 0.6 }
                     Text {
                         text: clipRoot.entries.length === 0 ? "Nothing copied yet" : "No matches"
                         font.family: Atelier.fontUi

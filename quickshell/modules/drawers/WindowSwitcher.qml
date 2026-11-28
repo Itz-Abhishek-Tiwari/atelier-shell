@@ -183,7 +183,7 @@ Item {
                         implicitSize: 22
                         source: root.current ? root.iconFor(root.current) : ""
                     }
-                    Text { anchors.centerIn: parent; visible: !root.current; text: "󰖲"; font.family: Atelier.font; font.pixelSize: 17; color: Atelier.accent }
+                    Text { anchors.centerIn: parent; visible: !root.current; text: "󰖲"; font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: Atelier.accent }
                 }
                 ColumnLayout {
                     Layout.fillWidth: true
@@ -230,7 +230,7 @@ Item {
                             ClippingRectangle {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
-                                radius: 11
+                                radius: Atelier.radiusSm
                                 color: Atelier.base
                                 ScreencopyView {
                                     id: shot

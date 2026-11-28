@@ -87,12 +87,21 @@ Singleton {
     readonly property int fsMd: 12      // body
     readonly property int fsLg: 13      // emphasised body, buttons
     readonly property int fsXl: 15      // card and drawer titles
+    readonly property int fsHead: 17    // drawer / section headings
     readonly property int fsTitle: 22   // page titles
+    // glyph (icon-font) sizes: small inline / standard / large
+    readonly property int iconSm: 14
+    readonly property int iconMd: 18
+    readonly property int iconLg: 24
 
     // Corner radii: small controls / cards / panels
-    readonly property int radiusSm: 10
-    readonly property int radiusMd: 14
-    readonly property int radiusLg: 18
+    // They follow Settings → Appearance → Corner roundness, so cards, chips and fields stay
+    // concentric with the frame: 24 px (default) gives 10 / 14 / 18, a square frame gives crisp
+    // 3 / 4 / 5 px controls instead of bubbly web-style cards.
+    readonly property real _rk: Math.max(0, Math.min(1, rounding / 24))
+    readonly property int radiusSm: Math.round(3 + 7 * _rk)
+    readonly property int radiusMd: Math.round(4 + 10 * _rk)
+    readonly property int radiusLg: Math.round(5 + 13 * _rk)
 
     // 12-hour clock helpers (the atelier style: "03:49" + an AM/PM chip)
     readonly property bool clock24: Settings.general.clock24

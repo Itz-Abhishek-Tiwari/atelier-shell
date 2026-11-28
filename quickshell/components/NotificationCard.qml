@@ -166,7 +166,7 @@ Rectangle {
                     Layout.minimumWidth: 0
                     text: root.notif ? (root.notif.summary || root.appLabel) : ""
                     font.family: Atelier.fontUi
-                    font.pixelSize: 14
+                    font.pixelSize: Atelier.iconSm
                     font.weight: Font.DemiBold
                     color: Atelier.text
                     elide: Text.ElideRight
@@ -430,7 +430,7 @@ Rectangle {
         signal clicked()
         implicitWidth: tbRow.implicitWidth + 16
         implicitHeight: 22
-        radius: 11
+        radius: Math.min(height / 2, Atelier.radiusSm)
         color: accent ? Qt.alpha(Atelier.accent, (Atelier.isLight ? 0.14 : 0.2) + (tbMa.containsMouse ? 0.06 : 0))
              : (tbMa.containsMouse ? Atelier.containerHigh : "transparent")
         Behavior on color { CAnim {} }

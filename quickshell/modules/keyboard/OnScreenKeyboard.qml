@@ -175,7 +175,7 @@ PanelWindow {
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 10
-                Text { text: "󰌌"; font.family: Atelier.font; font.pixelSize: 16; color: Atelier.accent }
+                Text { text: "󰌌"; font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: Atelier.accent }
                 Text { text: "On-screen keyboard"; font.family: Atelier.fontUi; font.pixelSize: Atelier.fsLg; font.weight: Font.DemiBold; color: Atelier.text }
                 Text {
                     visible: root.hasWtype

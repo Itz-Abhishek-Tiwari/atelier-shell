@@ -333,7 +333,7 @@ get_devices()
                                 Text {
                                     text: modelData.icon || "󰂯"
                                     font.family: btOverlayRoot.fontMono
-                                    font.pixelSize: 14
+                                    font.pixelSize: Atelier.iconSm
                                     color: modelData.connected ? btOverlayRoot.colPrimary : btOverlayRoot.colSubtext
                                     Behavior on color { CAnim {} }
                                 }

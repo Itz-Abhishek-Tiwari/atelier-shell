@@ -101,7 +101,7 @@ Item {
                 Layout.fillWidth: true
                 spacing: 8
                 Rectangle {
-                    implicitWidth: 26; implicitHeight: 26; radius: 9
+                    implicitWidth: 26; implicitHeight: 26; radius: Atelier.radiusSm
                     color: Qt.alpha(st.tint, 0.14)
                     Text { anchors.centerIn: parent; text: st.icon; font.family: Atelier.font; font.pixelSize: Atelier.fsLg; color: st.tint }
                 }
@@ -503,7 +503,7 @@ Item {
                                         Image { anchors.fill: parent; visible: use.iconSrc !== ""; source: use.iconSrc
                                                 sourceSize: Qt.size(44, 44); smooth: true; asynchronous: true }
                                         Text { anchors.centerIn: parent; visible: use.iconSrc === ""; text: "󰣆"
-                                               font.family: Atelier.font; font.pixelSize: 14; color: Atelier.teal }
+                                               font.family: Atelier.font; font.pixelSize: Atelier.iconSm; color: Atelier.teal }
                                     }
                                     ColumnLayout {
                                         Layout.fillWidth: true

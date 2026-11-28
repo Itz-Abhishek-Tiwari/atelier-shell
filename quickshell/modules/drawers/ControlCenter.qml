@@ -387,7 +387,7 @@ Item {
                                 Row {
                                     anchors.centerIn: parent
                                     spacing: 8
-                                    Text { anchors.verticalCenter: parent.verticalCenter; text: Weather.glyph(modelData.code); font.family: Atelier.font; font.pixelSize: 18; color: Atelier.sapphire }
+                                    Text { anchors.verticalCenter: parent.verticalCenter; text: Weather.glyph(modelData.code); font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: Atelier.sapphire }
                                     Column {
                                         anchors.verticalCenter: parent.verticalCenter
                                         Text { text: index === 0 ? "Today" : Qt.formatDate(new Date(modelData.date + "T12:00:00"), "ddd"); font.family: Atelier.fontUi; font.pixelSize: Atelier.fsMicro; color: Atelier.subtext }
@@ -422,7 +422,7 @@ Item {
                     Rectangle {
                         implicitWidth: 34; implicitHeight: 34; radius: Atelier.radiusLg
                         color: IPhone.connected ? Qt.alpha(Atelier.accent, 0.14) : Atelier.containerHigh
-                        Text { anchors.centerIn: parent; text: "󰄜"; font.family: Atelier.font; font.pixelSize: 16
+                        Text { anchors.centerIn: parent; text: "󰄜"; font.family: Atelier.font; font.pixelSize: Atelier.iconMd
                             color: IPhone.connected ? Atelier.accent : Atelier.subtext }
                     }
                     ColumnLayout {
@@ -478,7 +478,7 @@ Item {
                     Rectangle {
                         implicitWidth: 34; implicitHeight: 34; radius: Atelier.radiusLg
                         color: Qt.alpha(Atelier.teal, 0.14)
-                        Text { anchors.centerIn: parent; text: "󰚰"; font.family: Atelier.font; font.pixelSize: 16; color: Atelier.teal }
+                        Text { anchors.centerIn: parent; text: "󰚰"; font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: Atelier.teal }
                     }
                     ColumnLayout {
                         Layout.fillWidth: true
@@ -526,7 +526,7 @@ Item {
                         Rectangle {
                             implicitWidth: 34; implicitHeight: 34; radius: Atelier.radiusLg
                             color: Qt.alpha(Atelier.sapphire, 0.14)
-                            Text { anchors.centerIn: parent; text: "󱊞"; font.family: Atelier.font; font.pixelSize: 16; color: Atelier.sapphire }
+                            Text { anchors.centerIn: parent; text: "󱊞"; font.family: Atelier.font; font.pixelSize: Atelier.iconMd; color: Atelier.sapphire }
                         }
                         ColumnLayout {
                             Layout.fillWidth: true
@@ -619,7 +619,7 @@ Item {
                                 anchors.centerIn: parent
                                 spacing: 3
                                 Text { anchors.horizontalCenter: parent.horizontalCenter; text: tile.modelData.icon
-                                    font.family: Atelier.font; font.pixelSize: 20
+                                    font.family: Atelier.font; font.pixelSize: Atelier.iconMd
                                     color: tile.on ? tile.modelData.tint : Atelier.subtext
                                     Behavior on color { CAnim {} } }
                                 Text { anchors.horizontalCenter: parent.horizontalCenter; text: tile.modelData.short
@@ -658,7 +658,7 @@ Item {
                                 anchors.centerIn: parent
                                 text: modelData.icon
                                 font.family: Atelier.font
-                                font.pixelSize: 17
+                                font.pixelSize: Atelier.iconMd
                                 color: scMa.containsMouse ? Atelier.text : Atelier.subtext
                                 Behavior on color { CAnim {} }
                             }
@@ -902,7 +902,7 @@ Item {
             anchors.centerIn: parent
             width: parent.width - 8
             spacing: 5
-            Text { anchors.horizontalCenter: parent.horizontalCenter; text: qt.d.icon; font.family: Atelier.font; font.pixelSize: 18
+            Text { anchors.horizontalCenter: parent.horizontalCenter; text: qt.d.icon; font.family: Atelier.font; font.pixelSize: Atelier.iconMd
                 color: qt.on ? root.toneInk(qt.d.red) : (qt.d.warn ? Atelier.peach : Atelier.text) }
             Text { width: parent.width; horizontalAlignment: Text.AlignHCenter; text: qt.d.short; elide: Text.ElideRight
                 font.family: Atelier.fontUi; font.pixelSize: Atelier.fsSm; font.weight: Font.Medium
@@ -1039,7 +1039,7 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredWidth: 1
                         implicitHeight: 40
-                        radius: 20
+                        radius: Math.min(height / 2, Atelier.radiusSm)
                         color: Atelier.container
                         StateLayer { mouseArea: chipMa }
                         border.width: 1; border.color: d.on ? Qt.alpha(Atelier.accent, 0.45) : Atelier.outline
@@ -1085,7 +1085,7 @@ Item {
                         scale: icMa.pressed ? 0.9 : (icMa.containsMouse ? 1.06 : 1)
                         Behavior on color { CAnim {} }
                         Behavior on scale { Anim { type: "fastSpatial" } }
-                        Text { anchors.centerIn: parent; text: parent.d.icon; font.family: Atelier.font; font.pixelSize: 16
+                        Text { anchors.centerIn: parent; text: parent.d.icon; font.family: Atelier.font; font.pixelSize: Atelier.iconMd
                             color: parent.d.on ? root.toneInk(parent.d.red) : parent.d.warn ? Atelier.peach : Atelier.subtext }
                         MouseArea {
                             id: icMa
@@ -1145,7 +1145,7 @@ Item {
                                     implicitWidth: 32; implicitHeight: 32; radius: Atelier.radiusLg
                                     color: parent.parent.d.on ? (parent.parent.d.warn ? Qt.alpha(Atelier.peach, 0.25) : root.tone(false, true)) : Atelier.containerHigh
                                     Behavior on color { CAnim {} }
-                                    Text { anchors.centerIn: parent; text: parent.parent.parent.d.icon; font.family: Atelier.font; font.pixelSize: 14
+                                    Text { anchors.centerIn: parent; text: parent.parent.parent.d.icon; font.family: Atelier.font; font.pixelSize: Atelier.iconSm
                                         color: parent.parent.parent.d.on ? (parent.parent.parent.d.warn ? Atelier.peach : Atelier.accent) : Atelier.subtext }
                                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root.act(parent.parent.parent.modelData) }
                                 }
